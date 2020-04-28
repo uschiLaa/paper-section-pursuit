@@ -1,0 +1,1684 @@
+---
+title: |
+  Hole or grain? A Section Pursuit Index for Finding Hidden Structure in Multiple Dimensions
+author:
+  - name: Ursula Laa
+    affil: a, b
+    email: ursula.laa@monash.edu
+  - name: Dianne Cook
+    affil: a
+    email: dicook@monash.edu
+  - name: Andreas Buja
+    affil: c
+    email: andreasbuja@gmail.com
+  - name: German Valencia
+    affil: b
+    email: german.valencia@monash.edu
+affiliation:
+  - num: a
+    address: |
+      Department of Econometrics and Business Statistics, Monash University
+  - num: b
+    address: |
+      School of Physics and Astronomy, Monash University
+  - num: c
+    address: |
+      Statistics Department, The Wharton School, University of Pennsylvania
+bibliography: interactcadsample.bib
+appendix: appendix.tex
+abstract: |
+  Multivariate data is often visualized using linear projections, produced by techniques such as principal component analysis, linear discriminant analysis, and projection pursuit.  A problem with projections is that they obscure low and high density regions near the center of the distribution. Sections, or slices, can help to reveal them. This paper develops a section pursuit method, building on the extensive work in projection pursuit, to search for interesting slices of the data. Linear projections are used to define sections of the parameter space, and to calculate interestingness by comparing the distribution of observations, inside and outside a section. By optimizing this index, it is possible to reveal features such as holes (low density) or grains (high density). The optimization is incorporated into a guided tour so that the search for structure can be dynamic. The approach can be useful for problems when data distributions depart from uniform or normal, as in visually exploring nonlinear manifolds, and functions in multivariate space. Two applications of section pursuit are shown: exploring decision boundaries from classification models, and exploring subspaces induced by complex inequality conditions from multiple parameter model. The new methods are available in R, in the `tourr` package.
+keywords: |
+  multivariate data, dimension reduction, projection pursuit, statistical graphics, data visualization, exploratory data analysis, data science
+header-includes: |
+  \usepackage{hyperref}
+  \usepackage[utf8]{inputenc}
+  \usepackage{xcolor}
+  \def\tightlist{}
+output: rticles::tf_article
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE, 
+  message = FALSE, 
+  warning = FALSE,
+  error = FALSE,
+  out.width = "100%",
+  fig.width = 10,
+  fig.height = 8)
+
+library(latex2exp)
+library(tidyverse)
+library(gridExtra)
+library(geozoo)
+library(tourr)
+library(viridis)
+library(spinebil)
+library(classifly)
+library(ggpubr) # for extracting legend into separage plot
+library(e1071) # has svm function  
+library(ggrepel)
+
+source("source/binning.R")
+source("source/index.R")
+source("source/sliceTrace.R")
+source("source/neighbourhoodTrace.R")
+source("source/tour-guided-section.R")
+
+
+```
+
+# Introduction
+
+<!-- Motivation -->
+
+The visualization of high-dimensional data often utilizes linear projection.  For example, in principal component analysis plotting the principal components is effectively a projection of the data. Projections form the basis for a grand tour [@As85] of high-dimensional data. Projection pursuit [@kr69,@FT74] is used to find interesting low-dimensional views of the data by optimizing an index function over all possible projections. Projections can obscure non-uniform patterns near the data center, or hollowness. These features may be visible in non-linear mappings (such as multidimensional scaling [@mds]), but these methods often lack interpretability. @laa2019slice introduced a slice tour that shows sections through high-dimensions instead of projections, and helps to reveal hidden structure. Showing slices can also be useful in combination with conditional function or model visualization [@JSSv081i05,@sliceplorer].
+
+The space of slices of high-dimensional space is larger than the space of projections. The slice tour [@laa2019slice] is based on projections and the grand tour, thus simplifying the space to be explored. The slices allow the distribution inside a section to be compared to the projected distribution outside the section. This is an unguided process, and providing a method to find interesting slices would be beneficial. 
+
+Here we propose "section pursuit", which searches the space of projections for the most interesting sections of the data. The "interestingness" of each section is computed as a measure of dissimilarity between the distribution of projected points inside and outside the section. Finding conditional features in large data sets will provide better understanding of the data, and can help improve modelling. 
+
+This paper is organized as follows. The next section provides background on tours and projection pursuit. Section \ref{sec:index} describes an index designed to detect concavities, and explores the behavior of the index on simulated examples. A new plot to visualize index functions is described in Section \ref{sec:viz}. The application  of section pursuit to exploring high-dimensional classification  models and constrained high-dimensional spaces is discussed in Section \ref{sec:applications}.  
+
+# Background \label{sec:background}
+
+## Grand tour and slice tour
+
+The grand tour shows a geodesically interpolated sequence of randomly selected projections in an animation. The interpolation allows the viewer to interpret each view in the context of the previously seen projection, thus providing additional insights compared to static projections. By observing how the data distribution changes under a rotation of the low-dimensional projection, the viewer can extrapolate from the low-dimensional shapes to the distribution in high dimensions. The underlying computational methods were described in @BCAH05, and an implementation in R [@rlang] is available in the \texttt{tourr} package [@tourr].
+
+Recent work in @laa2019slice implemented a display of interpolated slices of the data space. The slices are defined for projection planes, such that observations with an orthogonal distance from the plane below some cutoff $h$ are considered to be inside the slice. The display has been added to the \texttt{tourr} package and can be used to show slices for projection planes obtained when running a grand tour.
+
+The first two columns of Figure \ref{fig:allSlices} show scatterplots of the points in a 4D data set inside an informative (S1) and an uninformative (S2) slice through the origin, for two simulated data sets (A, B). Note that the data is defined in a 4D sphere, which generates the circular shape. The sampling results in hollow regions inside the sphere by rejecting points within shapes defined by selected hyperspherical harmonics [@doi:10.1063/1.3054274]. The hollowness is hidden in projections of the data, as shown in the final column of Figure \ref{fig:allSlices}. It is much simpler to define sections on high-dimensional spheres than cubes, and this is the approach used for all the data in this paper. Data defined in a cube, most data, is trimmed or supplemented to be contained in a sphere. 
+
+
+```{r allSlices, fig.cap="Slices of two 4D data sets (A, B) shown using scatterplots of points inside 2D sections. The first slice (S1) is informative and reveals the hollow regions in the data, while the second slice (S2) is un-informative. The last column shows projections of the data onto a 2D plane, hiding the hollowness.", fig.height=5, fig.width=9, out.width='80%',fig.align = "center"}
+
+z20out <- read.csv("data/z20out.CSV", header=FALSE)
+z20out <- apply(z20out, 2, function(x) (x-mean(x))/sd(x))
+
+z331out <- read.csv("data/z331out.CSV", header=FALSE)
+z331out <- apply(z331out, 2, function(x) (x-mean(x))/sd(x))
+
+# need to write out matrix to use distance calculation from tourr package
+prj1 <- matrix(c(1, 0, 0, 0, 0, 1, 0, 0), ncol=2, byrow=FALSE)
+prj2 <- matrix(c(0, 0, 1, 0, 0, 0, 0, 1), ncol=2, byrow=FALSE)
+
+# calculate distances
+dists11 <- tourr:::anchored_orthogonal_distance(prj1, z20out, anchor=c(0,0,0,0))
+dists12 <- tourr:::anchored_orthogonal_distance(prj2, z20out, anchor=c(0,0,0,0))
+dists21 <- tourr:::anchored_orthogonal_distance(prj1, z331out, anchor=c(0,0,0,0))
+dists22 <- tourr:::anchored_orthogonal_distance(prj2, z331out, anchor=c(0,0,0,0))
+
+h = 0.5
+
+p1 <- ggplot(as_tibble(z20out[dists11 < h,]), aes(x=V1, y=V2)) +
+         geom_point() + theme_bw() +
+        theme(aspect.ratio=1, axis.title.x=element_blank(), axis.title.y=element_blank())
+
+p2 <- ggplot(as_tibble(z20out) %>% sample_frac(0.2), aes(x=V1, y=V2)) +
+         geom_point() + theme_bw() + theme(aspect.ratio=1, axis.title.x=element_blank(), axis.title.y=element_blank())
+
+p3 <- ggplot(as_tibble(z331out[dists21 < h,]), aes(x=V1, y=V2)) +
+         geom_point() + theme_bw() + theme(aspect.ratio=1, axis.title.x=element_blank(), axis.title.y=element_blank())
+
+p4 <- ggplot(as_tibble(z331out[dists21 >= h,]) %>% sample_frac(0.2), aes(x=V1, y=V2)) +
+         geom_point() + theme_bw() + theme(aspect.ratio=1, axis.title.x=element_blank(), axis.title.y=element_blank())
+
+p5 <- ggplot(as_tibble(z20out[dists12 < h,]), aes(x=V3, y=V4)) +
+         geom_point() + theme_bw() + theme(aspect.ratio=1, axis.title.x=element_blank(), axis.title.y=element_blank()) 
+
+p6 <- ggplot(as_tibble(z331out[dists22 < h,]), aes(x=V3, y=V4)) +
+         geom_point() + theme_bw() + theme(aspect.ratio=1, axis.title.x=element_blank(), axis.title.y=element_blank()) 
+
+
+textA <- text_grob(" A", face="bold", size=15)
+textB <- text_grob(" B", face="bold", size=15)
+text1 <- text_grob("Informative slice S1", face="bold", size=15)
+text2 <- text_grob("Uninformative slice S2", face="bold", size=15)
+text3 <- text_grob("Projection", face="bold", size=15)
+blank <- ggplot() +theme_minimal()
+
+
+
+grid.arrange(blank, text1, text2, text3, textA, p1, p5, p2, textB, p3, p6, p4,
+             ncol=4, widths=c(0.1,1,1,1), heights=c(0.1,1,1))
+
+```
+
+## Projection pursuit and guided tour
+
+Projection pursuit is the procedure of selecting interesting low-dimensional projections by optimizing a criterion function over the space of all possible projections. The criterion (or index) function is typically designed to take larger values for more "interesting" views of the data, and maximizing the index can reveal structure in the distribution. 
+
+The concepts of projection pursuit and the grand tour can be combined into the guided tour [@CBCH94], which interpolates between projection planes selected through the optimization of a projection pursuit index. A guided tour presents the viewer with interesting views of the dataset in the context of the full distribution, moving from less to more informative projections.
+
+Tour methods can also be used to understand the behavior of projection pursuit index functions [@laa2020], for example by examining how the index value changes along an interpolated sequence of projections.
+
+
+# A new index for finding interesting sections \label{sec:index}
+
+## Notation
+
+Let $Y=XA$, where $X$ is an $n\times p$ data matrix, $A$ is a $p\times d$ (orthonormal) projection matrix. To generate a slice, following @laa2019slice, compute the orthogonal distance between every point and plane (defined by $A$), call this $h_i$. Observations are considered inside a slice (section) if $h_i < h$. 
+
+The index is defined for binned data. The projected data, $Y$, is binned into $K$ bins, $b_k, k=1, ..., K$. The counts of observations inside versus outside the slice for each bin are computed. The total number of counts in bin $k$ is $S_{k}=\sum_{i} I(Y_i \in b_{k})I(h_i < h)$ inside the section and $C_{k}=\sum_{i} I(Y_i \in b_{k})I(h_i \geq h)$ outside the section. The relative counts are thus $s_k = S_k / \sum_i S_i$ and $c_k = C_k / \sum_i C_i$.
+
+## Index definition
+
+Indexes for comparing the distribution of observations in the section versus outside can be defined (building on @doi:10.1198/1061860043119) as:
+
+\begin{equation}
+I_A^{low} = \sum_{k}\left[\left(c_{k}-s_{k}\right)\right]_{>\varepsilon},
+\label{eq:index}
+\end{equation}
+
+\begin{equation}
+I_A^{up} = \sum_{k}\left[\left(s_{k}-c_{k}\right)\right]_{>\varepsilon}
+\label{eq:indexup}
+\end{equation}
+
+\noindent where $s_{k}$ and $c_{k}$ are the relative counts of observations in bin $b_{k}$ inside and outside the section. The first definition $I_A^{low}$ takes large values if there is a hollow region of low density inside the slice, while the second definition $I_A^{up}$ can be useful when looking for regions of higher density ("needles in a haystack").
+The $[.]_{>\varepsilon}$ notation indicates that we drop all bins where the difference in counts is below some threshold $\varepsilon$,
+\begin{equation}
+[a - b]_{>\varepsilon} = \begin{cases}
+    a - b, & \text{if $a - b > \varepsilon$}\\
+    0, & \text{if $a-b \leq \varepsilon$.}
+  \end{cases}
+\end{equation}
+Only bins where the difference is positive are summed. The $\varepsilon$ avoids summing noise and suppresses an artificial dependence on the number of bins. The value of $\varepsilon$ should be estimated based on the expected size of sampling fluctuation, which may depend on assuming a distribution, the number of samples $N$, the number of bins $K$, the slice thickness $h$ and the dimension $p$. An estimate for $\varepsilon$ assuming a uniform distribution inside a hypersphere is given in Section \ref{sec:epsilon}. In general $I_A^{low}=I_A^{up}$ only if $\varepsilon=0$.
+
+## Binning procedures
+
+A  desirable property for projection pursuit, into $d$-dimensions, and thus also desirable for section pursuit, is that the index be rotational invariant. That  is, regardless of the basis in the $d$-D plane defining the projection, the index value should be identical. With sections, this is more complicated, because interior and exterior distributions need to be comparable. Thus a restriction is imposed on the observed data: that it falls within a $p$-dimensional hypersphere. Data is typically observed in a hypercube, so this prescription requires a departure from the norm which, however,is still practical. In cases of simulated data, such as when looking at multivariate models, the sampling scheme can be adjusted. Observed data, on the other hand, requires shaving off the corners. This procedure is expected to be harmless  because it is interior structure that is of interest. In addition, this  approach is designed for reasonably small $p$ so that the vast gap between spheres and cubes in high dimensions is not a concern. For very high-dimensional data, some dimension reduction is expected in pre-processing.
+
+The hypersphere constraint suggests a preference for binning in polar coordinates. Considering 2D slices we therefore bin in radius $r$ and angle $\theta$. When the observations are uniformly distributed in a hypersphere, the angular distribution will be uniform across all values of $\theta$ and thus $K_{\theta}$ equidistant angular bins are used.
+
+The radial binning is more complicated. The reason is that the radial distribution depends on the data dimension, $p$. As $p$ increases, the projected data piles more in the center. A varying radial bin size could be used to offset this effect, where the bounds of the $K_r$ radial bins take into account the expected distribution of points given $p$. However, the expected radial distribution will differ between a slice and a projection of the data, so the effect is accounted for instead by reweighting bin counts. The calculations are as follows. 
+
+Consider the expected distribution to be a uniform distribution within a hypersphere in $p$ dimensions projected onto a 2D plane. The cumulative distribution function (CDF) for the radial distribution in the projection, derived in the Appendix, is given by:
+
+\begin{equation}
+f(r;p,R) = 1-\left(1-\left(\frac{r}{R}\right)^2\right)^{p/2},
+\label{eq:cdf}
+\end{equation}
+and depends on the hypersphere radius $R$ and on $p$. For illustration we show the CDF dependence on $r/R$ (where $0<r\leq R$) for different values of $p$ in Fig. \ref{fig:cdf}. For large values of $p$ the majority of points is found within a small relative radius $r/R$, e.g. for $p=10$ we see that 75\% of points are within $r/R<1/2$.
+
+```{r cdf, fig.cap="CDF of the 2D projected radial distribution of a p-dimensional hypersphere, for selected values of p. As p increases, a larger fraction of the points will be found at small values of the radius.", fig.height=2.5, fig.width=4, out.width='50%', fig.align = "center"}
+
+# define index as function of c
+cdf <- function(p){
+  function(r){
+    1 - (1 - r^2)^(p/2)
+  }
+}
+
+  
+# plot dependence for selected values
+ggplot(data = data.frame(r = c(0,1)), mapping = aes(x = r)) +
+  stat_function(
+        fun = cdf(2),
+        mapping = aes(color = "ca")) +
+  stat_function(
+        fun = cdf(4),
+        mapping = aes(color = "cb")) +
+    stat_function(
+        fun = cdf(10),
+        mapping = aes(color = "cc")) +
+  scale_color_manual(name = "p",
+                     values = RColorBrewer::brewer.pal(3, "Dark2"),
+                     labels = c("2", "4", "10")) +
+  xlab("r/R") + ylab("CDF") + theme_bw() + theme(legend.position="top", legend.margin = margin(0,1,-1,1))
+
+```
+
+### Reweighting bin counts
+
+While the radial distribution of the points projected from a full $p$ dimensional hypersphere follows the CDF in Eq.(\ref{eq:cdf}), the distribution in the slice is approximately uniform in the disk (as long as $h \ll R$). Within the slice, the adjustment only accounts for relative areas in radial bins for a 2D uniform distribution.
+Thus, only re-weighting of bins to account for the piling from high dimensions  needs to be conducted for the observations outside the slice. The weights can be calculated from the CDF.  
+
+The fraction of points in the radial bin $i$ between $r_1$ and $r_2$ is
+\begin{equation}
+f_{i}(p, R) = f(r_2; p, R) - f(r_1; p, R).
+\label{eq:frac}
+\end{equation}
+Consider $K_r$ radial bins, with total bin count $N_i$ in bin $i$, $i = 1,...,K_r$, and relative counts are $n_i = N_i / \sum_j N_j$.
+We define the bin-wise weights as
+\begin{equation}
+w_i(p, R, K_r) = \frac{1}{K_r f_i(p,R)},
+\end{equation}
+and the reweighed bin count as
+\begin{equation}
+s_i(p, R, K_r) = n_i w_i(p, R, K_r)
+\label{eq:reweight}
+\end{equation}
+corresponding to the weighted relative number of points in each bin, so that  $s_i(p,R,K_r) = 1/K_r$ for a uniform hypersphere. We calculate the outside weights as $w_i(p, R, K_r)$ and the inside weights as $w_i(2, R, K_r)$. Recall that we are assuming that the slice thickness can be neglected, $h\ll R$.
+
+Figure \ref{fig:data_and_densities} illustrates the effect of the adjustment using polar histograms for the simulated example data B, with and without re-weighting. The rows show raw and weighted bin counts, respectively, and the columns contain plots of  the distributions of points inside, outside the slice and the difference between the two. The re-weighting has the desired effect of focusing the attention more effectively on the central structure.
+
+```{r data_and_densities, fig.cap="Illustration of the polar binning, effect of re-weighting bin counts in the index function computation, on sample data set B and for the informative slice S1. Rows show raw and weighted bin counts, respectively. Columns show the distributions of inside, outside and the difference. The effect of the re-weighting focuses the attention more effectively on the cavity structure.", out.width='90%', fig.align = "center"}
+# Plot the density of the inside vs outside points
+# for noon-structure vs structure
+
+# read in example data
+z331out <- read.csv("data/z331out.CSV", header=FALSE)
+# center and scale
+z331out <- apply(z331out, 2, function(x) (x-mean(x))/sd(x))
+
+# use projection onto variables 1 and 2
+# need to write out matrix to use distance calculation from tourr package
+prj <- matrix(c(1, 0, 0, 0, 0, 1, 0, 0), ncol=2, byrow=FALSE)
+mat <- z331out[,1:2] # Same as data %*% prj
+colnames(mat) <- c("x", "y")
+
+# calculate distances
+dists <- tourr:::anchored_orthogonal_distance(prj, z331out, anchor=c(0,0,0,0))
+h = 0.5
+
+# square binning
+a <- min(mat)
+b <- max(mat)
+# get breaks, adding small tolerance to avoid numerical issues
+sq_breaks <- linear_breaks(15, a*1.01, b*1.01)
+sq_binned <- slice_binning(mat, dists, h, sq_breaks, sq_breaks) %>%
+  binwise_diff() # this is for formatting and calculating rel difference
+
+# polar binning
+r_max <- sqrt(max(mat[,1]^2 + mat[,2]^2))
+#r_breaks <- radial_breaks(5, 4, r_max)
+r_breaks <- linear_breaks(5, 0, r_max)
+a_breaks <- angular_breaks(20)
+pol_binned <- slice_binning(mat, dists, h, r_breaks, a_breaks, bintype="polar")
+
+pol_plot <- pol_binned %>%
+  group_by(inSlice) %>%
+  mutate(n = n/sum(n)) %>%
+  binwise_diff() %>%
+  polar_plotting()
+
+pol_plot_weighted <- pol_binned %>%
+  add_column(w = weights_bincount_radial(pol_binned, 4)) %>%
+  group_by(inSlice) %>%
+  mutate(n_tot = n/sum(n)) %>%
+  mutate(n = n_tot * w) %>%
+  binwise_diff() %>%
+  polar_plotting()
+
+p1 <- ggplot(as_tibble(z331out[dists < h,]), aes(x=V1, y=V2)) +
+         geom_point() + theme_bw() + theme(aspect.ratio=1) +
+  ggtitle("a. Inside")
+p2 <- ggplot(as_tibble(z331out[dists >= h,]) %>%
+               sample_n(nrow(as_tibble(z331out[dists < 0.5,]))), 
+             aes(x=V1, y=V2)) +
+         geom_point() + theme_bw() + theme(aspect.ratio=1) +
+  ggtitle("d. Outside")
+#grid.arrange(p1, p2, ncol=2)
+p3 <- ggplot(sq_binned, aes(x=xbin, y=ybin, fill = inside)) + 
+  geom_tile() +
+  scale_fill_distiller("", palette="Blues", direction = 1) +
+  xlab("") + ylab("") + theme_bw() + theme(aspect.ratio=1,
+                              legend.position="none",
+                              axis.text = element_blank()) +
+  ggtitle("b. Square bin")
+p4 <- ggplot(sq_binned, aes(x=xbin, y=ybin, fill = outside)) + 
+  geom_tile() +
+  scale_fill_distiller("", palette="Blues", direction = 1) +
+  xlab("") + ylab("") + theme_bw() + theme(aspect.ratio=1,
+                              legend.position="none",
+                              axis.text = element_blank()) +
+  ggtitle("e. Square bin")
+
+p5 <- ggplot() + 
+  geom_polygon(data=pol_plot, aes(x=x, y=y, group=factor(id), fill=inside)) +
+  scale_fill_distiller("", palette="Blues", direction = 1) +
+  xlab("") + ylab("") + theme_bw() + theme(aspect.ratio=1,
+                              legend.position="none",
+                              axis.text = element_blank())  +
+  ggtitle("a. Inside")
+
+p6 <- ggplot() + 
+  geom_polygon(data=pol_plot, aes(x=x, y=y, group=factor(id), fill=outside)) +
+  scale_fill_distiller("", palette="Blues", direction = 1) +
+  xlab("") + ylab("") + theme_bw() + theme(aspect.ratio=1,
+                              legend.position="none",
+                              axis.text = element_blank())  +
+  ggtitle("b. Outside")
+
+p5w <- ggplot() + 
+  geom_polygon(data=pol_plot_weighted, aes(x=x, y=y, group=factor(id), fill=inside)) +
+  scale_fill_distiller("", palette="Blues", direction = 1) +
+  xlab("") + ylab("") + theme_bw() + theme(aspect.ratio=1,
+                              legend.position="none",
+                              axis.text = element_blank())  +
+  ggtitle("d. Inside, weighted")
+
+p6w <- ggplot() + 
+  geom_polygon(data=pol_plot_weighted, aes(x=x, y=y, group=factor(id), fill=outside)) +
+  scale_fill_distiller("", palette="Blues", direction = 1) +
+  xlab("") + ylab("") + theme_bw() + theme(aspect.ratio=1,
+                              legend.position="none",
+                              axis.text = element_blank())  +
+  ggtitle("e. Outside, weighted")
+
+p7 <- ggplot(sq_binned, aes(x=xbin, y=ybin, fill = rel_diff_in)) + 
+  geom_tile() +
+  scale_fill_distiller("", palette = "PuRd", direction = 1) +
+  xlab("") + ylab("") + theme_bw() + theme(aspect.ratio=1,
+                              legend.position="none",
+                              axis.text = element_blank()) +
+  ggtitle("a. Inside - outside")
+p9 <- ggplot(sq_binned, aes(x=xbin, y=ybin, fill = rel_diff_out)) + 
+  geom_tile() +
+  scale_fill_distiller("", palette = "PuRd", direction = 1) +
+  xlab("") + ylab("") + theme_bw() + theme(aspect.ratio=1,
+                              legend.position="none",
+                              axis.text = element_blank()) +
+  ggtitle("c. Outside - inside")
+
+p8 <- ggplot() + 
+  geom_polygon(data=pol_plot, aes(x=x, y=y, group=factor(id), fill=rel_diff_in)) +
+  scale_fill_distiller("", palette = "PuRd", direction = 1) +
+  xlab("") + ylab("") + theme_bw() + theme(aspect.ratio=1,
+                              legend.position="none",
+                              axis.text = element_blank())  +
+  ggtitle("b. Inside - outside")
+p10 <- ggplot() + 
+  geom_polygon(data=pol_plot, aes(x=x, y=y, group=id, fill=rel_diff_out)) +
+  scale_fill_distiller("", palette = "PuRd", direction = 1) +
+  xlab("") + ylab("") + theme_bw() + theme(aspect.ratio=1,
+                              legend.position="none",
+                              axis.text = element_blank())  +
+  ggtitle("c. Outside - inside")
+
+p8w <- ggplot() + 
+  geom_polygon(data=pol_plot_weighted, aes(x=x, y=y, group=factor(id), fill=rel_diff_in)) +
+  scale_fill_distiller("", palette = "PuRd", direction = 1) +
+  xlab("") + ylab("") + theme_bw() + theme(aspect.ratio=1,
+                              legend.position="none",
+                              axis.text = element_blank())  +
+  ggtitle("b. Inside - outside, weighted")
+p10w <- ggplot() + 
+  geom_polygon(data=pol_plot_weighted, aes(x=x, y=y, group=id, fill=rel_diff_out)) +
+  scale_fill_distiller("", palette = "PuRd", direction = 1) +
+  xlab("") + ylab("") + theme_bw() + theme(aspect.ratio=1,
+                              legend.position="none",
+                              axis.text = element_blank())  +
+  ggtitle("f. Outside - inside, weighted")
+
+#grid.arrange(p1, p3, p5, p2, p4, p6, ncol=3)
+#taking out square binning, add weighted binning plot
+grid.arrange(p5, p6, p10, p5w, p6w, p10w, ncol=3)
+
+
+```
+
+
+### Binning across different planes
+
+The index needs to be optimized over the set of all possible projections to find interesting concavities. This requires the binned data to be comparable, thus the bins are fixed for all planes. For each slice we first center the projected data before binning it.
+
+In the simulated examples in this paper the radius of the hypersphere is known, and is used to define the radial boundary. In applied problems the radius of a random projection can be used to estimate it, with a procedure for handling points that fall outside that boundary.
+
+Note that the fixed angular binning can break rotational invariance of the index in a small way, and this can be noticed during optimization. One approach to mitigate this effect could be to evaluate the index at several small rotations within a single angular bin window and combine the values.
+
+## Sufficient sample size
+
+As dimensionality increases the number of sample points required to resolve features in a thin slice of the data increases exponentially. Care must be taken that the sample is large enough. We estimate the number of required sample points as a function of the chosen parameters, starting again from the hyperspherical distribution in $p$ dimensions.
+Following @laa2019slice, given a sample of $N$ points in $p$ dimensions, distributed uniformly in a hypersphere of radius $R$, the number of points inside a slice through the center of the distribution $N_S$ is 
+
+\begin{equation}
+N_S = \frac{N}{2} \left(\frac{h}{R}\right)^{p-2} \left(p - (p-2)\left(\frac{h}{R}\right)^{2}\right).
+\label{eq:count}
+\end{equation}
+
+\noindent We denote $x=h/R$ the resolution. It determines the minimum relative size of features that can be seen in a slice.
+When adding noise dimensions, in order to keep the resolution $x$ fixed, the sample size needs to increase approximately as $x^{\Delta p}$, where $\Delta p$ is the increase in number of dimensions.
+
+## Estimating the magnitude of noise, $\varepsilon$ \label{sec:epsilon}
+
+We can estimate the expected sampling variability based on $N$. The dominant uncertainty will be on the bin count inside the slice which typically will have much smaller statistics than the outside distribution (notice that this may not be true for bins at large radius which, depending on the bin size,  can have a very low number of observations). We estimate the number of points in each bin $i$ inside the slice as
+\begin{equation}
+N_S^i = \frac{N_S}{K_{\theta}} \cdot f_i(2, R),
+\end{equation}
+with $N_S$ given by Eq.(\ref{eq:count}), $K_{\theta}$ the number of angular bins and $f_i$ defined in Eq.(\ref{eq:frac}).
+The relative Poisson error on this count is
+\begin{equation}
+\delta_S^i = \frac{\sqrt{N_S^i}}{N_S^i} = 
+\frac{R}{\sqrt{r_2^2 - r_1^2}} \sqrt{\frac{2 K_{\theta}}{N}} x^{(2-p)/2}
+\frac{1}{\sqrt{\left(p - (p-2) x^{2}\right)}}, 
+\end{equation}
+and the expected relative count after reweighting is $1/K$ in all bins (where $K=K_r K_{\theta}$). We therefore expect sampling fluctuations of order 
+\begin{equation}
+\delta = \delta_S^i / K. 
+\label{eq:eps}
+\end{equation}
+
+To suppress index fluctuations to below one standard deviation, we set $\varepsilon = \delta$. Figure \ref{fig:path_eps} compares the index behavior for two values of $\varepsilon$, $0$ and $\delta$. Three 4D data sets are used: examples A and B (shown in Figure \ref{fig:allSlices}), and a reference set C consisting of observations sampled uniformly within a $p$-dimensional sphere. Color indicates the number of bins used to calculate the index. The difference in index value when $\varepsilon=0$ clearly indicates a dependence on the number of bins, which is undesirable. Setting $\varepsilon = \delta$ mostly removes these differences.
+
+```{r path_eps, fig.cap="Examining the effect of $\\varepsilon$ on the index value for varying number of bins. Three simulated data sets are used:  A, B and C. The horizontal axis traces the index from an uninteresting to interesting sliced projection (defined by slice S2 and S1 respectively), for $\\varepsilon=0, \\delta$. Colour indicates number of bins. Ideally, the index value should be the same, regardless of choice of bins, which is achieved in practice by $\\varepsilon=\\delta$.", fig.height=5, fig.width=7,  out.width='90%',fig.align = "center"}
+
+set.seed(500)
+
+sp <- sphere.solid.random(4, 30000)$points
+sp <- apply(sp, 2, function(x) (x-mean(x))/sd(x))
+
+# maximum radius
+r1 <- max(sqrt(rowSums(z331out^2)))
+r2 <- max(sqrt(rowSums(z20out^2)))
+r3 <- max(sqrt(rowSums(sp^2)))
+
+# set up binning options
+r_breaks_5_1 <- linear_breaks(5, 0, r1)
+r_breaks_10_1 <- linear_breaks(10, 0, r1)
+r_breaks_5_2 <- linear_breaks(5, 0, r2)
+r_breaks_10_2 <- linear_breaks(10, 0, r2)
+r_breaks_5_3 <- linear_breaks(5, 0, r3)
+r_breaks_10_3 <- linear_breaks(10, 0, r3)
+a_breaks_10 <- angular_breaks(10)
+a_breaks_20 <- angular_breaks(20)
+
+m1 <- basisMatrix(1,2,4)
+m2 <- basisMatrix(3,4,4)
+m <- list(m2, m1)
+
+getTr_br <- function(q, d, i, flip=1, eps=TRUE){
+  if(i==1){
+    r_breaks_5 <- r_breaks_5_1
+    r_breaks_10 <- r_breaks_10_1
+    r_max <- r1
+  }
+  if(i==2){
+    r_breaks_5 <- r_breaks_5_2
+    r_breaks_10 <- r_breaks_10_2
+    r_max <- r2
+  }
+  if(i==3){
+    r_breaks_5 <- r_breaks_5_3
+    r_breaks_10 <- r_breaks_10_3
+    r_max <- r3
+  }
+
+
+  e1 <- estimate_eps(nrow(d), ncol(d), 0.5/r_max, 5*10, 10, r_breaks_5)
+  e2 <- estimate_eps(nrow(d), ncol(d), 0.5/r_max, 5*20, 20, r_breaks_5)
+  e3 <- estimate_eps(nrow(d), ncol(d), 0.5/r_max, 10*10, 10, r_breaks_10)
+  e4 <- estimate_eps(nrow(d), ncol(d), 0.5/r_max, 10*20, 20, r_breaks_10)
+
+  if (!eps){
+    e1 <- rep(0, length(e1))
+    e2 <- rep(0, length(e2))
+    e3 <- rep(0, length(e3))
+    e4 <- rep(0, length(e4))
+  }
+  
+  i1 <- slice_index(r_breaks_5, a_breaks_10, e1, bintype="polar", power=q,
+                    reweight=T, flip = flip)
+  i2 <- slice_index(r_breaks_5, a_breaks_20, e2, bintype="polar", power=q,
+                    reweight=T, flip = flip)
+  i3 <- slice_index(r_breaks_10, a_breaks_10, e3, bintype="polar", power=q,
+                    reweight=T, flip = flip)
+  i4 <- slice_index(r_breaks_10, a_breaks_20, e4, bintype="polar", power=q,
+                    reweight=T, flip = flip)
+  
+  indexList <- list(i1, i2, i3, i4)
+  indexLabels <- c( "5, 10", "5, 20", "10, 10", "10, 20")
+  getSliceTrace(d, m, indexList, indexLabels, h=0.5)
+}
+
+if(!file.exists("cache/path_eps.rda")){
+  tr1 <- getTr_br(1, z331out, 1, eps = FALSE)
+  tr2 <- getTr_br(1, z331out, 1)
+  tr3 <- getTr_br(1, z20out, 2, eps = FALSE)
+  tr4 <- getTr_br(1, z20out, 2)
+  tr5 <- getTr_br(1, sp, 3, eps = FALSE)
+  tr6 <- getTr_br(1, sp, 3)
+  save(tr1, tr2, tr3, tr4, tr5, tr6, file = "cache/path_eps.rda")
+} else{
+    load("cache/path_eps.rda")
+
+}
+
+cols <- RColorBrewer::brewer.pal(4, "Dark2")
+col_breaks <- c( "5, 10", "5, 20", "10, 10", "10, 20")
+ymax <- 0.6
+
+p1 <- as_tibble(tr1) %>%
+  gather(binning, index, -t) %>%
+  ggplot(aes(t, index, color=binning)) +
+  geom_line() +
+  theme_bw() +
+  theme(legend.position = "none") +
+  ylim(0, ymax) +
+  scale_colour_manual(values = cols, breaks = col_breaks) +
+  ylab(TeX("$I_A^{low}$")) +
+  ggtitle(TeX("B, $\\epsilon = 0$"))
+
+p2 <- as_tibble(tr2) %>%
+  gather(binning, index, -t) %>%
+  ggplot(aes(t, index, color=binning)) +
+  geom_line() +
+  theme_bw() +
+  theme(legend.position = "none") +
+  ylim(0, ymax) +
+  ylab(TeX("$I_A^{low}$")) +
+  scale_colour_manual(values = cols, breaks = col_breaks) +
+  ggtitle("B")
+
+
+p3 <- as_tibble(tr3) %>%
+  gather(binning, index, -t) %>%
+  ggplot(aes(t, index, color=binning)) +
+  geom_line() +
+  theme_bw() +
+  theme(legend.position = "none") +
+  ylim(0, ymax) +
+  ylab(TeX("$I_A^{low}$")) +
+  scale_colour_manual(values = cols, breaks = col_breaks) +
+  ggtitle(TeX("A, $\\epsilon = 0$"))
+
+p4 <- as_tibble(tr4) %>%
+  gather(binning, index, -t) %>%
+  ggplot(aes(t, index, color=binning)) +
+  geom_line() +
+  theme_bw() +
+  theme(legend.position = "none") +
+  ylim(0, ymax) +
+  ylab(TeX("$I_A^{low}$")) +
+  scale_colour_manual(values = cols, breaks = col_breaks) +
+  ggtitle("A")
+
+
+p5 <- as_tibble(tr5) %>%
+  gather(binning, index, -t) %>%
+  ggplot(aes(t, index, color=binning)) +
+  geom_line() +
+  theme_bw() +
+  theme(legend.position = "none") +
+  ylim(0, ymax) +
+  ylab(TeX("$I_A^{low}$")) +
+  scale_colour_manual(values = cols, breaks = col_breaks) +
+  ggtitle(TeX("C, $\\epsilon = 0$"))
+
+p6 <- as_tibble(tr6) %>%
+  gather(binning, index, -t) %>%
+  ggplot(aes(t, index, color=binning)) +
+  geom_line() +
+  theme_bw() +
+  scale_colour_manual(values = cols, breaks = col_breaks) +
+  theme(legend.justification=c(0,1), 
+        legend.position=c(0.05, 0.95),  
+        legend.background = element_blank(),
+        legend.key = element_blank()) +
+  ylim(0, ymax) +
+  ylab(TeX("$I_A^{low}$")) +
+  ggtitle("C")
+
+grid.arrange(p3, p1, p5, p4, p2, p6, ncol=3)
+```
+
+## Generalised index \label{sec:generalise}
+
+The idea of section pursuit is completely general. The index considered here is compelling as it allows to use the projected distribution as a reference when looking for interesting slices of the data. 
+
+<!--### Generalisation of the index-->
+The definitions in Eq.(\ref{eq:index},\ref{eq:indexup}) can be generalized for example as
+\begin{equation}
+I_A^{low} = \sum_{k}w_{k}\left(\left[c_{k}^{1/q}-s_{k}^{1/q}\right]_{>\varepsilon}\right)^{q}
+\label{eq:index2}
+\end{equation}
+\begin{equation}
+I_A^{up} = \sum_{k}w_{k}\left(\left[s_{k}^{1/q}-c_{k}^{1/q}\right]_{>\varepsilon}\right)^{q}
+\label{eq:index2up}
+\end{equation}
+where $w_k$ can be used to (de)emphasize certain bins, e.g. to up-weight information in the center of the distribution. 
+
+The exponent $q$ can be used to tune the sensitivity, a small $q$ will enhance sensitivity to small differences (and thus might over-emphasize fluctuations), a large $q$ will suppress fluctuations and is mainly sensitive to large differences (and might thus miss features that are too similar to the background distribution). Selecting $q=1$ corresponds to an $L_1$ type norm, and $q=2$ to an $L_2$ type norm. In addition we will also consider $q=1/2$.
+The overall range of plausible index values depends on $q$ and in practice we use an estimate of the range to rescale the index value to fall in $[0,1]$.
+Notice that, in this definition the index is no longer symmetric under exchanging the distributions inside and outside the section, even when $\varepsilon=0$.
+
+### Additional considerations
+
+<!-- ### Correlation between bin counts-->
+It may also be reasonable to consider using a kernel, instead of discrete bins, to produce some spatial smoothing. The effect would be to focus attention on large differences in specific regions rather than small differences anywhere. 
+
+<!--### Slice only index-->
+
+A completely different approach  to producing a section index, would be to apply any existing projection pursuit index on a sliced projection instead of the full projected data. Only observations inside the slice are then used for the index calculation. 
+
+### Index behavior \label{sec:behaviour}
+
+To examine the behavior of the generalized index for choices of $q, K$ and $\varepsilon$, a re-parametrization is used. Consider an outside distribution that is uniform across all $K$ bins,
+\begin{equation}
+c_{k} = \frac{1}{K},
+\end{equation}
+and a distribution inside the slice to be uniform across $K' < K$ bins,
+\begin{equation}
+s_{k} = \begin{cases}
+    \frac{1}{K'}, & \text{if $k \leq K'$}\\
+    0, & \text{if $k > K'$}
+  \end{cases}
+\end{equation}
+i.e.\ there are $K-K'$ empty bins inside the slice.
+We can then parametrize the relation between $K$ and $K'$ as $K' = \gamma K$ with $\gamma \in [0,1]$.
+
+To focus on the dependence on $q$, drop the bin-dependent weights $w_k$ from the description and set $\varepsilon=0$. Using the parametrization in terms of $\gamma$, the index can then be written as
+
+\begin{equation}
+I_A^{up}(q, \gamma) = ([1-\gamma^{1/q}]_+)^q,
+\label{eq:p1}
+\end{equation}
+
+\noindent while 
+\begin{equation}
+I_A^{low}(\gamma) = 1-\gamma.
+\end{equation}
+(In this latter form the dependence on $q$ drops out because only bins where $s_k=0$ are counted.)
+
+This allows us to estimate the typical range depending on $q$. The range of $I_A^{up}(q, \gamma)$ will be different for different values of $q$, and this range difference needs to be ignored for comparison purposes. For $q=1$ the index range is $[0,0.9]$. For $q=2$ the index range is approximately $[0, 0.5]$. We rescale the index depending on the selected value of $q$ against $I_A^{up}(q, \gamma=0.1)$, resulting in a common range $[0,1]$.
+
+Fig. \ref{fig:behavior} shows the effect of $q$ for $\gamma \in [0.1, 1]$, i.e.\ between 10\% and 100\% overlap in the distributions, and the effect of $\gamma$ for a range of  $q \in [0.1, 1]$. When $q=1$ the index is linearly dependent on $\gamma$. For $q=2$ most of the sensitivity lies towards small values of $\gamma$. For $q=1/2$  most of the sensitivity lies towards large values of $\gamma$. The parameter $q$ enables the index to be made more sensitive to small regions of difference as opposed to large areas. 
+
+```{r behavior, fig.cap="Examining the sensitivity of the index to the parameter $q$. Rescaled values of $I_A^{up}$ as a function of $\\gamma$, for fixed values of $q$ (left), and as a function of $q$ for fixed values of $\\gamma$ (right). The parameter $q$ shifts emphasis between small regions and large regions of difference.", fig.height=2.5, fig.width=6, fig.align = "center"}
+
+# define index as function of c
+idx_c <- function(q){
+  resc <- 1/(1-0.1^(1/q))^q
+  function(c){
+    ret <- 1-c^(1/q)
+    ret <- pmax(0, ret)
+    resc * ret^q
+  }
+}
+
+idx_q <- function(c){
+  function(q){
+    resc <- 1/(1-0.1^(1/q))^q
+    ret <- 1-c^(1/q)
+    ret <- pmax(0, ret)
+    resc * ret^q
+  }
+}
+  
+# plot dependence for selected values
+p1 <- ggplot(data = data.frame(x = c(0.1,1)), mapping = aes(x = x)) +
+  stat_function(
+        fun = idx_c(1),
+        mapping = aes(color = "ca")) +
+  stat_function(
+        fun = idx_c(2),
+        mapping = aes(color = "cb")) +
+    stat_function(
+        fun = idx_c(1/2),
+        mapping = aes(color = "cc")) +
+  scale_color_manual(name = "q",
+                     values = RColorBrewer::brewer.pal(3, "Dark2"),
+                     labels = c("1", "2", "1/2")) +
+  xlab(TeX("$\\gamma$")) + ylab(TeX("$I_A^{up}$")) + theme_bw() + theme(legend.position="top", legend.margin = margin(0,1,-1,1))
+
+
+p2 <- ggplot(data = data.frame(x = c(0.1,2)), mapping = aes(x = x)) +
+  stat_function(
+        fun = idx_q(0.25),
+        mapping = aes(color = "ca")) +
+  stat_function(
+        fun = idx_q(0.5),
+        mapping = aes(color = "cb")) +
+    stat_function(
+        fun = idx_q(0.75),
+        mapping = aes(color = "cc")) +
+    stat_function(
+        fun = idx_q(0.95),
+        mapping = aes(color = "cd")) +
+  scale_color_manual(name = TeX("$\\gamma$"),
+                     values = RColorBrewer::brewer.pal(4, "Set2"),
+                     labels = c("0.25", "0.5", "0.75", "0.95")) +
+  xlab("q") + ylab(TeX("$I_A^{up}$")) + theme_bw() + theme(legend.position="top", legend.margin = margin(0,1,0,1), legend.text  = element_text(size = 7))
+
+grid.arrange(p1, p2, ncol=2)
+```
+
+### Noise
+
+Now, we introduce the use of the noise cutoff, and explore the effect of $q$ on the choice of $\varepsilon$. This can be done in a simple setup:  uniformly draw $N$ samples and bin them in $K$ bins, such that the expected bin count is $N/K$ in all bins (or $1/K$ after normalization). Using the Poisson approximation, the standard deviation for the normalized counts is $\delta=1/\sqrt{N K}$. By drawing two independent samples and calculating the index value 100 times we get an estimate of the expected index value and its variance depending on $q$. Note that since we are assuming pure noise distributions for both samples, $I_A^{low}=I_A^{up}=I_A$. This is shown in Figure \ref{fig:noise} for $N=10000$ and $K=100$. When $q=1$ and approximating the bin counts by a normal distribution, we can also evaluate the expected index value analytically as
+\begin{equation}
+I_A(q=1)_{\mathrm{noise}} = e^{-n^2/4} \sqrt{\frac{K}{\gamma N}},
+\end{equation}
+where $\varepsilon=n\delta$.
+
+We see that for values of $q<1$ the noise becomes inflated, especially when we do not use an appropriate $\varepsilon$ cutoff. For the default choices of $q=1$ and $\varepsilon=\delta$ we find that the expected index value for a noise distribution is about $0.05$.
+
+```{r noise, fig.cap="Examining the  effect of $q$ on the variability of the  index value, when a noise cutoff ($\\varepsilon$) is used. Rescaled values of $I_A$ shown as a function of $q$, for fixed values of $\\varepsilon$, for $N=10000$ and $K=100$. Smaller values of  $q$ inflate the variability in the index, exaggerating  the noise.", fig.height=2, fig.width=3, out.width='50%', fig.align = "center", eval=T}
+
+rel_bin_counts <- function(N, K){
+  hist(runif(N), linear_breaks(K, 0, 1), plot=F)$counts / N
+}
+
+idx_q <- function(ct1, ct2, eps){
+  k <- (ct1 - ct2) > eps
+  ct1 <- ct1[k]
+  ct2 <- ct2[k]
+  function(q){
+    resc <- 1/(1-0.1^(1/q))^q
+    sum((ct1^(1/q) - ct2^(1/q))^q) * resc
+  }
+}
+
+N <- 10000
+K <- 100
+i <- 1
+eps <- 1/sqrt(N/K) * 1/K
+
+out_l <- list()
+
+set.seed(131334)
+while (i <= 100){
+  c1 <- rel_bin_counts(N, K)
+  c2 <- rel_bin_counts(N, K)
+  idx0 <- idx_q(c1, c2, 0)(0.1)
+  idx1 <- idx_q(c1, c2, eps)(0.1)
+  idx2 <- idx_q(c1, c2, 2*eps)(0.1)
+  out_l[[i]] <- list(c1, c2, idx0, idx1, idx2)
+  i <- i + 1
+}
+
+out_l <- out_l[order(sapply(out_l,function(x) x[[3]] ))]
+el0_1 <- out_l[[5]]
+el0_2 <- out_l[[95]]
+el0_3 <- out_l[[50]]
+out_l <- out_l[order(sapply(out_l,function(x) x[[4]] ))]
+el1_1 <- out_l[[5]]
+el1_2 <- out_l[[95]]
+el1_3 <- out_l[[50]]
+out_l <- out_l[order(sapply(out_l,function(x) x[[5]] ))]
+el2_1 <- out_l[[5]]
+el2_2 <- out_l[[95]]
+el2_3 <- out_l[[50]]
+idx_1_e0 <- idx_q(el0_1[[1]], el0_1[[2]], 0)
+idx_1_e1 <- idx_q(el1_1[[1]], el1_1[[2]], eps)
+idx_1_e2 <- idx_q(el2_1[[1]], el2_1[[2]], 2*eps)
+idx_2_e0 <- idx_q(el0_2[[1]], el0_2[[2]], 0)
+idx_2_e1 <- idx_q(el1_2[[1]], el1_2[[2]], eps)
+idx_2_e2 <- idx_q(el2_2[[1]], el2_2[[2]], 2*eps)
+idx_3_e0 <- idx_q(el0_3[[1]], el0_3[[2]], 0)
+idx_3_e1 <- idx_q(el1_3[[1]], el1_3[[2]], eps)
+idx_3_e2 <- idx_q(el2_3[[1]], el2_3[[2]], 2*eps)
+
+band_data <- tibble(x=seq(0.5, 2, 0.01)) %>%
+  mutate(e0_u = Vectorize(idx_1_e0)(x)) %>%
+  mutate(e0_l = Vectorize(idx_2_e0)(x)) %>%
+  mutate(e1_u = Vectorize(idx_1_e1)(x)) %>%
+  mutate(e1_l = Vectorize(idx_2_e1)(x)) %>%
+  mutate(e2_u = Vectorize(idx_1_e2)(x)) %>%
+  mutate(e2_l = Vectorize(idx_2_e2)(x))
+
+
+ggplot(data = data.frame(x = c(0.5,2)), mapping = aes(x = x)) +
+  stat_function(
+        fun = Vectorize(idx_3_e0),
+        mapping = aes(color = "0")) +
+  geom_ribbon(data = band_data, mapping=aes(x = x,
+                  ymin=e0_l,
+                  ymax=e0_u,
+                  fill = "0"), alpha = 0.3) +
+  stat_function(
+        fun = Vectorize(idx_3_e1),
+        mapping = aes(color = "1")) +
+  geom_ribbon(data = band_data, mapping=aes(x = x,
+                  ymin=e1_l,
+                  ymax=e1_u,
+                  fill = "1"), alpha = 0.3) +
+  stat_function(
+        fun = Vectorize(idx_3_e2),
+        mapping = aes(color = "2")) +
+  geom_ribbon(data = band_data, mapping=aes(x = x,
+                  ymin=e2_l,
+                  ymax=e2_u,
+                  fill = "2"), alpha = 0.3) +
+  scale_color_manual(name = TeX("$\\epsilon$"),
+                     values = RColorBrewer::brewer.pal(3, "Dark2"),
+                     labels = unname(TeX(c("$0$", "$\\delta$", "$2\\delta$")))) +
+  scale_fill_manual(name = TeX("$\\epsilon$"),
+                     values = RColorBrewer::brewer.pal(3, "Dark2"),
+                     labels = unname(TeX(c("$0$", "$\\delta$", "$2\\delta$")))) +
+  xlab("q") + ylab(TeX("$I_A$")) + theme_bw() + theme(legend.position=c(0.8,0.6)) 
+```
+
+
+# Visualising the index \label{sec:viz}
+
+A Huber plot [@huberpp] (available in the R package, PPtreeViz [@pptreeviz]) is a useful illustration of a 1D projection pursuit index. It shows the index values for a 2D distribution across all possible 1D projections. This idea is generalized for a 2D projection pursuit index, to illustrate the behavior over a higher dimensional dataset, and  called a *topotrace plot*. The approach is:
+
+1. Select a starting plane, one of particular interest, $A_0$. 
+2. Randomly generate a large number ($m$) of directions to move away from the starting plane, $A_i, i=1, ..., m$.
+3. Generate the geodesic interpolation with a fixed length or angle ($\alpha$) in each direction, $A_{ij}, i=1, ..., m; j=-\alpha, ..., 0, ..., \alpha$.
+4. Calculate the index values along each path, $I_{A_{ij}}$. 
+5. Plot $I_{A_{ij}}$ against $j$,  with a separate trace for each $i$.
+
+The purpose of making these plots is to examine the nature of the function, in terms of local maxima and ridges, and also characteristics such as smoothness and squint angle [@laa2020]. The squint angle describes the distance from the optimal projection where a structure can be seen -- if it is large then the function should be easier to optimize. If the optimal projection is known, then using this as the starting plane, provides views analogous to standing on top of the mountain and looking down in all directions. If a random starting plane is used, most likely this will be a low point from which to view mountains. 
+
+Fig. \ref{fig:traces_q1} shows these plots for the two example datasets A and B, with $\alpha = \pi/2$, $m=100$ randomly selected directions. The left panels show how the index value changes when moving away from the optimal viewing slice S1, the right panel shows paths moving away from the uninformative slice S2. We see that for the dataset A there is a large variability between the index behavior along the different directions. Moving away from S1 we find some flat directions along which the index value remains large. This suggests that the function has ridges. This is expected for this data, as a result of a symmetry in the simulation distribution, the structure remains visible so long as the first variable is dominant along one direction in the plane. This also makes the structure easier to detect, and we find that among the 100 random directions, several traces reach index values close to that of the ideal view. On the other hand, the 100 traces shown for set B have much less variability, and all result in an approximately linear decay of the index value as we move away from the S1 slice. Similarly, they all show approximately linear increase in index value when moving away from S2. We can also see that the index is noisy, sometimes producing jumps in index values under small rotations of the slicing projection.
+
+We can also use this visualization to better understand the generalizations of the index. In Fig. \ref{fig:traces_q2} we show the topotrace plots for the same settings as Fig. \ref{fig:traces_q1}, but with $q=2$. We see that this results in a smaller squint angle, and steeper change of the index near the optimal S1 slice, while the index is flatter away from this view.
+
+
+```{r traces_q1, fig.cap="Topotrace plots showing index function characteristics for the index with $q=1$, $\\alpha=\\pi/2$, $m=100$, for example data sets A (top) and B (bottom) from the starting planes, the informative slice S1 (left) and the uninformative slice S2 (right). Example A indicates ridges in the function because for several traces the index remains high when varying $\\alpha$. Example B has a more gradual decline from the peak. The dependence of the index on $\\alpha$ is not smooth.", fig.height=4, fig.width=5}
+
+if(!file.exists("cache/traces_q1.rda")){
+
+  
+  set.seed(55)
+  
+ z20out <- read.csv("../simple-examples/z20out.CSV", header=FALSE)
+ z20out <- apply(z20out, 2, function(x) (x-mean(x))/sd(x))
+ 
+ z331out <- read.csv("data/z331out.CSV", header=FALSE)
+# center and scale
+ z331out <- apply(z331out, 2, function(x) (x-mean(x))/sd(x))
+  
+  # estimate the maximum radius
+
+  m1 <- basisMatrix(1,2,4)
+  m2 <- basisMatrix(3,4,4)
+
+
+
+  
+  q <- 1
+  e1 <- estimate_eps(nrow(z20out), ncol(z20out), 0.5/r2, 5*20, 20, r_breaks_5_2)
+  e2 <- estimate_eps(nrow(z331out), ncol(z331out), 0.5/r1, 5*20, 20, r_breaks_5_1)
+
+  
+  i1 <- slice_index(r_breaks_5_2, a_breaks_20, e1, bintype="polar", power=q, reweight=T)
+  i2 <- slice_index(r_breaks_5_1, a_breaks_20, e2, bintype="polar", power=q, reweight=T)
+  
+  tr1 <- getNeighbourhoodTrace(z20out, i1, m1, 0.5, 100)
+  tr2 <- getNeighbourhoodTrace(z20out, i1, m2, 0.5, 100)
+  tr3 <- getNeighbourhoodTrace(z331out, i2, m1, 0.5, 100)
+  tr4 <- getNeighbourhoodTrace(z331out, i2, m2, 0.5, 100)
+
+  
+  save(tr1, tr2, tr3, tr4, file = "cache/traces_q1.rda")
+  
+} else {
+  load("cache/traces_q1.rda")
+}
+
+
+
+p1 <- plotNeighbourhoodTrace(tr1, rescY = F) + ylim(c(0,0.4)) + ylab(TeX("$I_A^{low}$")) + geom_text(aes(x=-0.15, y=0.015, label="S1"), angle=90, size=3)
+p2 <- plotNeighbourhoodTrace(tr2, rescY = F) +  ylim(c(0,0.4)) + ylab(TeX("$I_A^{low}$")) + geom_text(aes(x=-0.15, y=0.37, label="S2"), angle=90, size=3)
+p3 <- plotNeighbourhoodTrace(tr3, rescY = F) + ylim(c(0,0.4)) + ylab(TeX("$I_A^{low}$")) + geom_text(aes(x=-0.15, y=0.015, label="S1"), angle=90, size=3)
+p4 <- plotNeighbourhoodTrace(tr4, rescY = F) + ylim(c(0,0.4)) + ylab(TeX("$I_A^{low}$")) + geom_text(aes(x=-0.15, y=0.37, label="S2"), angle=90, size=3)
+
+textA <- text_grob("A", face="bold", size=12)
+textB <- text_grob("B", face="bold", size=12)
+
+
+grid.arrange(textA, p1, p2, textB, p3, p4, ncol=3, widths=c(0.1,1,1))
+
+
+```
+
+```{r traces_q2, fig.cap="Topotrace plots for the index with $q=2$, $\\alpha = \\pi/2$, $m=100$ for set A (top) and set B (bottom) from the informative slice S1 (left) and the uniformative slice S2 (right). The choice of $q=2$ results in a smaller squint angle, and steeper change of the index.", fig.height=4, fig.width=5}
+
+if(!file.exists("cache/traces.rda")){
+
+  
+  set.seed(55)
+  
+ z20out <- read.csv("../simple-examples/z20out.CSV", header=FALSE)
+ z20out <- apply(z20out, 2, function(x) (x-mean(x))/sd(x))
+ 
+ z331out <- read.csv("data/z331out.CSV", header=FALSE)
+# center and scale
+ z331out <- apply(z331out, 2, function(x) (x-mean(x))/sd(x))
+  
+  # estimate the maximum radius
+
+  m1 <- basisMatrix(1,2,4)
+  m2 <- basisMatrix(3,4,4)
+
+
+
+  
+  q <- 2
+  e1 <- estimate_eps(nrow(z20out), ncol(z20out), 0.5/r2, 5*20, 20, r_breaks_5_2)
+  e2 <- estimate_eps(nrow(z331out), ncol(z331out), 0.5/r1, 5*20, 20, r_breaks_5_1)
+
+  
+  i1 <- slice_index(r_breaks_5_2, a_breaks_20, e1, bintype="polar", power=q, reweight=T)
+  i2 <- slice_index(r_breaks_5_1, a_breaks_20, e2, bintype="polar", power=q, reweight=T)
+  
+  tr1 <- getNeighbourhoodTrace(z20out, i1, m1, 0.5, 100)
+  tr2 <- getNeighbourhoodTrace(z20out, i1, m2, 0.5, 100)
+  tr3 <- getNeighbourhoodTrace(z331out, i2, m1, 0.5, 100)
+  tr4 <- getNeighbourhoodTrace(z331out, i2, m2, 0.5, 100)
+
+  
+  save(tr1, tr2, tr3, tr4, file = "cache/traces.rda")
+  
+} else {
+  load("cache/traces.rda")
+}
+
+
+
+p1 <- plotNeighbourhoodTrace(tr1, rescY = F) + ylim(c(0,0.6)) + ylab(TeX("$I_A^{low}$")) + geom_text(aes(x=-0.15, y=0.02, label="S1"), angle=90, size=3)
+p2 <- plotNeighbourhoodTrace(tr2, rescY = F) + ylim(c(0,0.6)) + ylab(TeX("$I_A^{low}$")) + geom_text(aes(x=-0.15, y=0.55, label="S2"), angle=90, size=3)
+p3 <- plotNeighbourhoodTrace(tr3, rescY = F) + ylim(c(0,0.3)) + ylab(TeX("$I_A^{low}$")) + geom_text(aes(x=-0.15, y=0.01, label="S1"), angle=90, size=3)
+p4 <- plotNeighbourhoodTrace(tr4, rescY = F) + ylim(c(0,0.3)) + ylab(TeX("$I_A^{low}$")) + geom_text(aes(x=-0.15, y=0.27, label="S2"), angle=90, size=3)
+
+grid.arrange(textA, p1, p2, textB, p3, p4, ncol=3, widths=c(0.1,1,1))
+
+```
+
+
+```{r traces_6d, fig.cap="Showing neighbourhood traces for the index with q=2, obtained by moving $\\pm \\pi/2$ from the V1-V2 (left) and V3-V4 (right) plane, for the 4D z331out+2noise data. The traces illustrate the typical variation of the index as we move in along the geodesic in a randomly selected direction, for 100 different directions. XXX to be removed?", fig.height=2, fig.width=5, eval=FALSE}
+
+if(!file.exists("cache/traces_6d.rda")){
+
+  
+  set.seed(55)
+  
+  z331p2 <- read.csv("../simple-examples/extra-points.CSV", header=FALSE)
+  z331p2 <- apply(z331p2, 2, function(x) (x-mean(x))/sd(x))
+
+
+  m1 <- basisMatrix(1, 2, 6)
+  m2 <- basisMatrix(3, 4, 6)
+  m3 <- basisMatrix(5, 6, 6)
+
+  # maximum radius
+  rm <- max(sqrt(rowSums(z331p2^2)))
+
+  # set up binning options
+  r_breaks_5 <- linear_breaks(5, 0, rm)
+
+  q <- 2
+  e1 <- estimate_eps(nrow(z331p2), ncol(z331p2), 0.5/rm, 5*20, 20, r_breaks_5)
+
+  
+  i1 <- slice_index(r_breaks_5, a_breaks_20, e1, bintype="polar", power=q, reweight=T, p = 6)
+
+  tr1 <- getNeighbourhoodTrace(z331p2, i1, m1, 0.5, 100)
+  tr2 <- getNeighbourhoodTrace(z331p2, i1, m2, 0.5, 100)
+  tr3 <- getNeighbourhoodTrace(z331p2, i1, m3, 0.5, 100)
+
+  
+  save(tr1, tr2, tr3, file = "cache/traces_6d.rda")
+  
+} else {
+  load("cache/traces_6d.rda")
+}
+
+
+
+p1 <- plotNeighbourhoodTrace(tr1, rescY = F) + ggtitle("z331p2, V1-V2") + ylim(c(0,0.3))
+p2 <- plotNeighbourhoodTrace(tr2, rescY = F) + ggtitle("z331p2, V3-V4") + ylim(c(0,0.3))
+p3 <- plotNeighbourhoodTrace(tr3, rescY = F) + ggtitle("z331p2, V5-V6") + ylim(c(0,0.3))
+
+grid.arrange(p1, p2, p3, ncol=3)
+
+
+```
+
+
+# Applications \label{sec:applications}
+
+## Using the index in practice
+
+In the applications we use the index defined in Eq. \ref{eq:index}. When using the index we follow these steps:
+
+1. Check the underlying assumption that the data is inside a hypersphere. This can be ensured by first centering and scaling all variables, and then dropping points that have a radius above the maximum $r_{max}$.
+2. Choose the number of bins. Setting the bin size for polar binning uses the maximum radius and defines $n_r$ equidistant radial bins and $n_{\theta}$ angular bins. In practice we have found that $n_r=5$ and $n_{\theta}=8$ or $10$ tends to work well.
+3. Decide the slice thickness $h$ to use. We can think of it in terms of a relative resolution $h/r_{max}$. For our examples, $0.25$ worked well, but this will likely change depending on the data.
+4. The binning and resolution, together with the number of variables and number of observations are needed to estimate the uncertainties following Eq.\ref{eq:eps}.
+5. We can now define the slice index, which takes the binning and uncertainty estimates as input. We define the index such that for each slice it reweights the counts according to Eq. \ref{eq:reweight}.
+6. For the optimization we use a modified version of the guided tour that passes the projected points, the distance vector and the thickness $h$ into the index function. This can directly be used together with the optimization routines from the \texttt{tourr} package.
+
+```{r application-setupt}
+getCircle <- function(cntrx, cntry, sclx, scly){
+  theta <- seq(0, 2 * pi, length = 50)
+  circ <- tibble(x=cos(theta), y=sin(theta))
+  circ <- circ %>% 
+    mutate(x=x*sclx+cntrx, y=y*scly+cntry)
+}
+getAxes <- function(fProj, cntrx, cntry, sclx, scly){
+  x1 <- rep(cntrx, length(fProj$P1))
+  y1 <- rep(cntry, length(fProj$P1))
+  x2 <- fProj$P1*sclx+cntrx
+  y2 <- fProj$P2*scly+cntry
+  lab <- fProj$label
+  axes <- tibble(x1=x1, y1=y1, x2=x2, y2=y2, label=lab)
+}
+```
+
+## Classification boundaries
+
+The slice display can be used to understand non-linear classification boundaries [@laa2019slice], visualized following @sam.11271 and using the classifly package [@classifly]. Classifly samples the design space and calculates model predictions. We can use section pursuit to identify slices that reveal the decision boundaries in the design space, by dropping sample points based on the assigned prediction. By selecting a class that is only predicted in a small region we generate the hollow features to be found by section pursuit. The resulting slice can then be viewed showing all assigned classes to resolve the boundary.
+
+### Olives data
+
+We first consider the classical olives data [@olives]. This data set contains measurements of 8 fatty acids for 572 Italian olive oils, collected in 9 different areas, and is available in the classifly package.
+
+We fit a support vector machine (svm) classification model using the implementation in the e1071 R package [@e1071], to predict the area from the fatty acid measurements. For this example we consider 4 of the variables: palmitoleic, stearic, linoleic and arachidic, and we use a radial kernel for the svm model. We use classifly for automated sampling of the design space and evaluation of the predictions. For the visualization we first center and scale the data to have standard deviation one. We then select only those points that are inside a 4D hypersphere.
+
+As an example we select as the area of interest West-Liguria and drop all samples with this predicted class before performing section pursuit. The model predictions are shown in slices and projections in the first two columns of Fig. \ref{fig:olives}, the last column shows the projected data. The views in the first row are defined by the projection onto palmitoleic-stearic and in the second row by the projection onto linoleic-arachidic. The color indicates if the predicted area is West-Liguria (orange) or not (green). We see that the parameters palmitoleic and stearic do not allow us to distinguish the West-Liguria region in the projected data. The region where the svm model predicts this class is hidden in the projection, and it is not predicted anywhere inside the thin slice. On the contrary, linoleic and arachidic can separate the West-Liguria area from the others. Looking at the model predictions, we find that projections can partly reveal the part of the model space resulting in this prediction, while the slice can also resolve the non-linear decision boundary.
+
+Next we run section pursuit on the reduced svm sample. We define the section pursuit index with polar binning, with 5 equidistant radial bins and 10 angular bins. The bin counts are reweighed according to Eq. \ref{eq:reweight}. We set $q=1$ and then optimize the index using the geodesic search available in the tourr package, starting form the slice defined by the projection onto linoleic-arachidic (see Fig. \ref{fig:olives}, second row). The final views obtained in the optimization are shown in the bottom row of Fig. \ref{fig:olives}.
+
+Looking at the data projected onto linoleic and arachidic, and the corresponding slice view of the classifier, we see a non-linear decision boundary that allows to separate the West-Liguria area from the other regions. This non-linearity is hidden in the projected view of the classifier. The section pursuit has identified a slice that has a higher index value and shows a linear decision boundary and with a larger area of the section predicting the selected class. The projected model predictions in this plane do not allow us to resolve this boundary. Interestingly, to maximize the area in the sliced view of the predictor, section pursuit has found a plane that leads to a linear decision boundary on the projected data.
+  
+```{r olives, fig.cap="SVM classification of the West-Liguria region (orange) against all other regions (green) in the olives data. The first and second row are projections onto pairs of variables, the last row shows the final result obtained via section pursuit. The first and second column show the svm classification in a thin slice and as a full projection, the third column shows the projected data. The last column shows guides, including the axes for the final view at the bottom.", fig.height=5, fig.width=6, dev="png", dpi=300}
+
+if(!file.exists("cache/olives.rda")){
+
+  verbose <- FALSE
+  
+  olives_data <- olives[, -c(1,2)] %>%
+    apply(2,  function(x) (x-mean(x))/sd(x))
+  
+  olives_4 <- olives_data[,c(2,3,5,7)] %>%
+    as_tibble() %>%
+    add_column(area = factor(olives$Area))
+  
+  r_max <- 1 # fixing this by hand for now
+  
+  f <- area ~ .
+  o <- classifly(olives_4, f , svm, probability = TRUE, kernel = "radial", n=1e6)
+  o[,1:4] <- apply(o[,1:4], 2,  function(x) (x-mean(x))/sd(x))
+  o_samples <- o %>%
+    as_tibble() %>%
+    filter(.TYPE == "simulated") %>%
+    mutate(r = sqrt(palmitoleic^2 + stearic^2 + linoleic^2 + arachidic^2)) %>%
+    filter(r < r_max)
+  
+  # first just look at plots showing slices through the two planes
+  # palmitoleic-stearic, linoleic-arachidic
+
+  p_mat_1 <- spinebil::basisMatrix(3, 4, 4) # linoleic and arachidic
+  p_mat_2 <- spinebil::basisMatrix(1, 2, 4) # palmitoleic and stearic
+
+  d_s_1 <- tourr:::anchored_orthogonal_distance(p_mat_1, o_samples[,1:4], anchor=rep(0, 4))
+  d_s_2 <- tourr:::anchored_orthogonal_distance(p_mat_2, o_samples[,1:4], anchor=rep(0, 4))
+
+  d_p_1 <- as.matrix(o_samples[,c(3,4)])
+  d_p_2 <- as.matrix(o_samples[,c(1,2)])
+  
+  h <- 0.22
+  
+  # now run the section pursuit
+  
+  d_tour <- o_samples %>%
+    filter(area != "West-Liguria") %>% # West-Liguria
+    select(linoleic, arachidic, palmitoleic, stearic)
+  
+  r_breaks_5 <- linear_breaks(5, 0, r_max)
+  a_breaks_10 <- angular_breaks(10)
+  #e1 <- estimate_eps(nrow(d_tour), ncol(d_tour), 0.22/r_max, 5*10, 10, r_breaks_5)
+  e1 <- rep(0, 5*10) # small sample so we do not use bound from estimated fluctuations
+  idx <- slice_index(r_breaks_5, a_breaks_10, e1, bintype="polar", power=1,
+                    reweight=T)
+  set.seed(128945)
+  thist <- save_history(d_tour,
+                        guided_section_tour(idx, v_rel=0.05, anchor = rep(0,4)),
+                        rescale = F)
+
+  thist <- as.list(thist)
+  prj1 <- thist[[1]]
+  prj2 <- thist[[length(thist)]]
+  
+  d_s_i <- tourr:::anchored_orthogonal_distance(prj1, o_samples[,c(3,4,1,2)], anchor = rep(0,4))
+  d_s_f <- tourr:::anchored_orthogonal_distance(prj2, o_samples[,c(3,4,1,2)], anchor = rep(0,4))
+  
+  d_p_i <- as.matrix(o_samples[,c(3,4,1,2)]) %*% prj1
+  d_p_f <- as.matrix(o_samples[,c(3,4,1,2)]) %*% prj2
+  
+  idx_1 <- idx(d_p_1[o_samples$area != "West-Liguria",], d_s_1[o_samples$area != "West-Liguria",], h)
+  idx_2 <- idx(d_p_2[o_samples$area != "West-Liguria",], d_s_2[o_samples$area != "West-Liguria",], h)
+  idx_i <- idx(d_p_i[o_samples$area != "West-Liguria",], d_s_i[o_samples$area != "West-Liguria",], h)
+  idx_f <- idx(d_p_f[o_samples$area != "West-Liguria",], d_s_f[o_samples$area != "West-Liguria",], h)
+
+  o_with_initial <- o_samples %>%
+    add_column(P1 = d_p_i[,1]) %>%
+    add_column(P2 = d_p_i[,2])
+  
+  o_with_final <- o_samples %>%
+    add_column(P1 = d_p_f[,1]) %>%
+    add_column(P2 = d_p_f[,2])
+
+  p1 <- ggplot(data=o_samples[d_s_2[,1]<h,],
+               mapping=aes(x=palmitoleic, y=stearic, color=(area=="West-Liguria"))) +
+    geom_point(size=0.2) +
+    scale_colour_brewer("", palette = "Dark2") +
+    theme_bw() +
+    theme(aspect.ratio=1, legend.position = "none") +
+    ggtitle(TeX(sprintf("$I_A^{low} = %s$", format(idx_2, digits = 2))))
+    #ggtitle(paste0("Slice, I=",format(idx_2, digits = 2)))
+  
+  p1p <- ggplot(data=o_samples,
+               mapping=aes(x=palmitoleic, y=stearic, color=(area=="West-Liguria"))) +
+    geom_point(size=0.05) +
+    scale_colour_brewer("", palette = "Dark2") +
+    theme_bw() +
+    theme(aspect.ratio=1, legend.position = "none") +
+    ggtitle("Projection")
+  
+  p1d <- ggplot(data=olives,
+               mapping=aes(x=palmitoleic, y=stearic, color=(Area=="West-Liguria"))) +
+    geom_point(size=1) +
+    theme_bw() +
+    theme(aspect.ratio=1, legend.position = "none") +
+    ggtitle("Projected data")
+
+  p2 <- ggplot(data=o_samples[d_s_1[,1]<h,],
+               mapping=aes(x=linoleic, y=arachidic, color=(area=="West-Liguria"))) +
+    scale_colour_brewer("", palette = "Dark2") +
+    geom_point(size=0.2) +
+    theme_bw() +
+    theme(aspect.ratio=1, legend.position = "none") +
+    ggtitle(TeX(sprintf("$I_A^{low} = %s$", format(idx_1, digits = 2))))
+    #ggtitle(paste0("Slice, I=",format(idx_1, digits = 2)))
+  
+  p2p <- ggplot(data=o_samples,
+               mapping=aes(x=linoleic, y=arachidic, color=(area=="West-Liguria"))) +
+    scale_colour_brewer("", palette = "Dark2") +
+    geom_point(size=0.05) +
+    theme_bw() +
+    theme(aspect.ratio=1, legend.position = "none") +
+    ggtitle("Projection")
+  
+  p2d <- ggplot(data=olives,
+               mapping=aes(x=linoleic, y=arachidic, color=(Area=="West-Liguria"))) +
+    scale_colour_brewer("", palette = "Dark2") +
+    geom_point(size=1) +
+    theme_bw() +
+    theme(aspect.ratio=1, legend.position = "none") +
+    ggtitle("Projected data")
+  
+  p4 <- ggplot(data=o_with_final[d_s_f[,1]<h,], mapping=aes(x=P1, y=P2, color=(area=="West-Liguria"))) +
+    scale_colour_brewer("", palette = "Dark2") +
+    geom_point(size=0.2) +
+    theme_bw() +
+    theme(aspect.ratio=1, legend.position = "none") +
+    ggtitle(TeX(sprintf("$I_A^{low} = %s$", format(idx_f, digits = 2))))
+    #ggtitle(paste0("Slice, I=",format(idx_f, digits = 2)))
+  
+  p4p <- ggplot(data=o_with_final, mapping=aes(x=P1, y=P2, color=(area=="West-Liguria"))) +
+    scale_colour_brewer("", palette = "Dark2") +
+    geom_point(size=0.05) +
+    theme_bw() +
+    theme(aspect.ratio=1, legend.position = "none") +
+    ggtitle("Projection")
+  
+  data_p_f <- as.matrix(olives_4[,c(3,4,1,2)]) %*% prj2
+  data_with_final <- olives_4 %>%
+    add_column(P1 = data_p_f[,1]) %>%
+    add_column(P2 = data_p_f[,2])
+  
+  p4d <- ggplot(data=data_with_final, mapping=aes(x=P1, y=P2, color=(area=="West-Liguria"))) +
+    geom_point(size=1) +
+    scale_colour_brewer("", palette = "Dark2") +
+    theme_bw() +
+    theme(aspect.ratio=1, legend.position = "none") +
+    ggtitle("Projected data")
+
+  
+  colnames(prj1) <- c("P1", "P2")
+  prj1 <- as_tibble(prj1) %>%
+    add_column(label=colnames(d_tour))
+
+  colnames(prj2) <- c("P1", "P2")
+  prj2 <- as_tibble(prj2) %>%
+    add_column(label=colnames(d_tour))
+  
+  p5 <- ggplot() +
+    geom_path(data=getCircle(0,0,1.2,1.2), aes(x=x, y=y), color="grey") +
+    geom_segment(data=getAxes(prj1, 0,0,1,1), aes(x=x1, xend=x2, y=y1, yend=y2)) +
+    geom_text(data=getAxes(prj1, 0,0,1,1), aes(x=x2, y=y2, label=label), size=2.5) +
+    theme_void() +
+    theme(aspect.ratio = 1, plot.margin=unit(c(0.1,0.5,0.8,0.5),"cm")) +
+    ggrepel::geom_text_repel()
+  p6 <- ggplot() +
+    geom_path(data=getCircle(0,0,1.2,1.2), aes(x=x, y=y), color="grey") +
+    geom_segment(data=getAxes(prj2, 0,0,1,1), aes(x=x1, xend=x2, y=y1, yend=y2)) +
+    geom_text(data=getAxes(prj2, 0,0,1,1), aes(x=x2, y=y2, label=label), size=2.5) +
+    theme_void() +
+    theme(aspect.ratio = 1, plot.margin=unit(c(0.1,0.5,0.8,0.5),"cm")) +
+    ggrepel::geom_text_repel()
+  
+  save(p1, p1p, p1d, p2, p2p, p2d, p4, p4p, p4d, p6, file = "cache/olives.rda")
+  
+} else{
+  load("cache/olives.rda")
+}
+
+# Formatting the plots
+blank <- ggplot() +theme_minimal()
+p1d <- p1d +
+  theme(legend.position = "right") +
+  scale_colour_brewer(name = 'Area', palette="Dark2", labels = c('other', 'West-Liguria'))
+leg <- get_legend(p1d)
+p_leg <- as_ggplot(leg)
+p1d <- p1d + theme(legend.position = "none",
+                   text = element_text(size=rel(3.1)), plot.title = element_text(size = 10))
+p1 <- p1 + theme(text = element_text(size=rel(3.1)), plot.title = element_text(size = 10))
+p1p <- p1p + theme(text = element_text(size=rel(3.1)), plot.title = element_text(size = 10))
+p2 <- p2 + theme(text = element_text(size=rel(3.1)), plot.title = element_text(size = 10))
+p2p <- p2p + theme(text = element_text(size=rel(3.1)), plot.title = element_text(size = 10))
+p2d <- p2d + theme(text = element_text(size=rel(3.1)), plot.title = element_text(size = 10))
+p4 <- p4 + theme(text = element_text(size=rel(3.1)), plot.title = element_text(size = 10))
+p4p <- p4p + theme(text = element_text(size=rel(3.1)), plot.title = element_text(size = 10))
+p4d <- p4d + theme(text = element_text(size=rel(3.1)), plot.title = element_text(size = 10))
+
+grid.arrange(p1, p1p, p1d, blank, p2, p2p, p2d, p_leg, p4, p4p, p4d, p6, ncol=4, widths=c(2, 2, 2, 1.5))
+  
+```
+
+### PDFSense data
+
+As similar example, but with different behavior, is given by the decision boundaries of a classification model for the PDFSense dataset. This data has 4021 observations in a 56 dimensional parameter space, that are grouped into 3 classes [@Wang:2018heo]. Following the analysis in @Cook:2018mvr we only consider the first six principal components, and train an svm classification model with radial kernel. We again use classifly and select the resulting sample points inside a 6D hypersphere after individual centering and scaling each of the variables.
+
+
+For this example, the classifier wraps tightly around two of the groups (DIS and jets), and most of the space is filled by the third group (VBP). We select only the samples predicting the VBP class, generating a sample with a small hollow region to be found by section pursuit. We again use the index with polar binning, with 5 equidistant radial bins and 8 angular bins. The  $\varepsilon$ cutoff is calculated according to Eq. \ref{eq:eps} and we reweight the bins according to Eq. \ref{eq:reweight}. We set $q=1$ and use the tourr function search\_better to find the view with the maximum index value.
+
+The result is shown in Fig. \ref{fig:pdffit}, comparing the starting projection (top row) and the final view (bottom row). In the final slice view of the classifier predictions we see the decision boundaries between the three classes. The different regions are hidden in the projection of the classifier and of the data. In this case the svm model uses additional information from the orthogonal directions to separate the three classes. By looking at the final slice from section pursuit we have obtained a conditional view that allows us to resolve the resulting boundary.
+
+```{r pdffit, fig.cap="SVM classification of the PDFSense data, with predicted classes mapped to color. The first row shows a random starting projection, the second row is the final projection obtained via section pursuit on the second class shown in orange. The first and second column show the predicted class label from the svm in a thin slice and a projection. The third column shows the projected data in the same plane, and the last column shows the axes of the corresponding projection.", fig.height=4, fig.width=7, dev="png", dpi=300}
+
+if(!file.exists("cache/pdffit_plot.rda")){
+  
+  # the full data used for projection pursuit is quite large and not shared
+  # the code to re-generate it is included below (but slow to run)
+  # the pdffit_plot.rda has enough information to make the result plots
+  # the large datafile is required to make changes to the data before plotting it
+  
+  if(!file.exists("cache/pdffit.rda")){
+
+    # setup: load data, type needs to be factor
+    pdffit <- read_csv("data/pca_center.csv") %>%
+      mutate(type = ifelse(type==1, "a", ifelse(type==2, "b", "c"))) %>%
+      mutate(type = as.factor(type))
+    # we want to predict type depending on the 6 PC
+    f <- type ~ .
+    # call classifly with large number of points sampled
+    o <- classifly(pdffit, f , svm, probability = TRUE, kernel = "radial", n=1e7)
+
+    # some preparation of the resulting dataset
+    # drop the training points from the dataset
+    o <- o %>%
+      filter(.TYPE == "simulated")
+
+    # first we just look for the maximum value
+    omax <- o %>%
+      select(-.ADVANTAGE, -type, -a, -b, -c, -.TYPE, -.BOUNDARY) %>%
+      apply(2, function(x) (x-mean(x))/sd(x))
+    r_max <- max(abs(omax))
+  
+    # now generat the data we will use
+    o_sphere <- as_tibble(omax) %>%
+      #calculate radius for shaving
+      dplyr::mutate(r = sqrt(PC1^2+PC2^2+PC3^2+
+                            PC4^2+PC5^2+PC6^2)) %>%
+      # add type back into the dataset
+      add_column(type = factor(o$type)) %>%
+      # shave and drop radius column
+      filter(r < r_max) %>%
+      select(-r)
+  
+    o_tour <- o_sphere %>%
+      # drop class 1 and 3 (i.e. a and c) and drop type column
+      filter(type == "b") %>%
+      select(-type)
+  
+    # now we can set up the guided tour
+    q <- 1
+    r_breaks_5 <- linear_breaks(5, 0, r_max*1.05)
+    a_breaks_8 <- angular_breaks(8)
+    e1q1 <- estimate_eps(nrow(o_tour), 8, 0.5/r_max, 5*8, 8, r_breaks_5)
+    idx <- slice_index(r_breaks_5, a_breaks_8, e1q1, bintype="polar", power=q, reweight=T, p = 6)
+  
+    set.seed(33121)
+    thist <- save_history(o_tour, guided_section_tour(idx, eps=0.01, anchor = rep(0,6),
+                                                      search_f = tourr:::search_better), rescale = F)
+
+    save(thist, o_sphere, idx, file = "cache/pdffit.rda")
+  
+  } else {
+    load("cache/pdffit.rda")
+  }
+  
+  # prepare data for plotting
+  
+  thist <- as.list(thist)
+  prj1 <- thist[[1]]
+  prj2 <- thist[[length(thist)]]
+  
+  h = 0.3
+
+  d1 <- o_sphere %>%
+    filter(type == "b") %>%
+    select(-type)
+  
+  d2 <- o_sphere %>%
+    select(-type)
+
+
+  clrs <- RColorBrewer::brewer.pal(3, "Dark2")
+  col1 <- clrs[as.numeric(as.factor(o_sphere$type))]
+
+  # calculate distances
+  dists11 <- tourr:::anchored_orthogonal_distance(prj1, d1, anchor=c(0,0,0,0,0,0))
+  dists12 <- tourr:::anchored_orthogonal_distance(prj2, d1, anchor=c(0,0,0,0,0,0))
+  dists21 <- tourr:::anchored_orthogonal_distance(prj1, d2, anchor=c(0,0,0,0,0,0))
+  dists22 <- tourr:::anchored_orthogonal_distance(prj2, d2, anchor=c(0,0,0,0,0,0))
+
+  idx_11 <- idx(as.matrix(d1) %*% prj1, dists11, h)
+  idx_12 <- idx(as.matrix(d1) %*% prj2, dists12, h)
+
+
+  dpr11 <- as.matrix(d1) %*% prj1 %>%
+    as_tibble()
+
+  dpr12 <- as.matrix(d1) %*% prj2 %>%
+    as_tibble()
+
+  dpr21 <- as.matrix(d2) %*% prj1 %>%
+    as_tibble()
+
+  dpr22 <- as.matrix(d2) %*% prj2 %>%
+    as_tibble()
+
+  pdffit <- read_csv("data/pca_center.csv") %>%
+    mutate(type = ifelse(type==1, "a", ifelse(type==2, "b", "c"))) %>%
+    mutate(type = as.factor(type))
+  data_pr1 <- as.matrix(select(pdffit,-type)) %*% prj1
+  data_pr2 <- as.matrix(select(pdffit,-type)) %*% prj2
+  col2 <- clrs[as.numeric(as.factor(pdffit$type))]
+
+  
+  pdffit_w_1 <- mutate(pdffit, P1=data_pr1[,1], P2=data_pr1[,2])
+  pdffit_w_2 <- mutate(pdffit, P1=data_pr2[,1], P2=data_pr2[,2])
+  
+  col21 <- col1[dists21 < h]
+  col22 <- col1[dists22 < h]
+  
+  colnames(dpr11) <- c("P1", "P2")
+  colnames(dpr12) <- c("P1", "P2")
+  colnames(dpr21) <- c("P1", "P2")
+  colnames(dpr22) <- c("P1", "P2")
+  
+  colnames(prj1) <- c("P1", "P2")
+  prj1 <- as_tibble(prj1) %>%
+    add_column(label=c("PC1", "PC2", "PC3", "PC4", "PC5", "PC6"))
+
+  colnames(prj2) <- c("P1", "P2")
+  prj2 <- as_tibble(prj2) %>%
+    add_column(label=c("PC1", "PC2", "PC3", "PC4", "PC5", "PC6"))
+
+  p1 <- ggplot(as_tibble(dpr11[dists11 < h,]), aes(x=P1, y=P2)) +
+    geom_point(size=0.5) + theme_bw() + 
+    #ggtitle(paste0("Slice, I=",format(idx_11, digits = 2))) +
+    ggtitle(TeX(sprintf("$I_A^{low} = %s$", format(idx_11, digits = 2)))) +
+    theme(aspect.ratio=1, plot.title = element_text(size = 10)) 
+  
+  p2 <- ggplot(as_tibble(dpr12[dists12 < h,]), aes(x=P1, y=P2)) +
+    geom_point(size=0.5) + theme_bw() + 
+    ggtitle(TeX(sprintf("$I_A^{low} = %s$", format(idx_12, digits = 2)))) +
+    theme(aspect.ratio=1, plot.title = element_text(size = 10)) 
+  
+  p3 <- ggplot(as_tibble(dpr21[dists21 < h,]), aes(x=P1, y=P2)) +
+    geom_point(color=col21, size=0.5) + theme_bw() + 
+    ggtitle(TeX(sprintf("$I_A^{low} = %s$", format(idx_11, digits = 2)))) +
+    theme(aspect.ratio=1, plot.title = element_text(size = 10)) 
+  
+  p4 <- ggplot(as_tibble(dpr22[dists22 < h,]), aes(x=P1, y=P2)) +
+    geom_point(color=col22, size=0.5) + theme_bw() +
+    ggtitle(TeX(sprintf("$I_A^{low} = %s$", format(idx_12, digits = 2)))) +
+    theme(aspect.ratio=1, plot.title = element_text(size = 10)) 
+  
+  p3p <- ggplot(as_tibble(dpr21), aes(x=P1, y=P2)) +
+    geom_point(color=col1, size=0.05) + theme_bw() +
+    ggtitle("Projection") +
+    theme(aspect.ratio=1, plot.title = element_text(size = 10)) 
+  
+  p4p <- ggplot(as_tibble(dpr22), aes(x=P1, y=P2)) +
+    geom_point(color=col1, size=0.05) + theme_bw() + 
+    ggtitle("Projection") +
+    theme(aspect.ratio=1, plot.title = element_text(size = 10)) 
+  
+  p3d <- ggplot(as_tibble(pdffit_w_1), aes(x=P1, y=P2)) +
+    geom_point(color=col2, size=1) + theme_bw() + 
+    ggtitle("Projected data") +
+    theme(aspect.ratio=1, plot.title = element_text(size = 10)) 
+  
+  p4d <- ggplot(as_tibble(pdffit_w_2), aes(x=P1, y=P2)) +
+    geom_point(color=col2, size=1) + theme_bw() +
+    ggtitle("Projected data") +
+    theme(aspect.ratio=1, plot.title = element_text(size = 10)) 
+  
+  p5 <- ggplot() +
+    geom_path(data=getCircle(0,0,1.2,1.2), aes(x=x, y=y), color="grey") +
+    geom_segment(data=getAxes(prj1, 0,0,1,1), aes(x=x1, xend=x2, y=y1, yend=y2)) +
+    geom_text(data=getAxes(prj1, 0,0,1,1), aes(x=x2, y=y2, label=label), size=2.5) +
+    theme_void() +
+    theme(aspect.ratio = 1, plot.margin=unit(c(0.1,0.5,0.8,0.5),"cm")) +
+    theme(aspect.ratio=1, plot.title = element_text(size = 10)) 
+  
+  p6 <- ggplot() +
+    geom_path(data=getCircle(0,0,1.2,1.2), aes(x=x, y=y), color="grey") +
+    geom_segment(data=getAxes(prj2, 0,0,1,1), aes(x=x1, xend=x2, y=y1, yend=y2)) +
+    geom_text(data=getAxes(prj2, 0,0,1,1), aes(x=x2, y=y2, label=label), size=2.5) +
+    theme_void() +
+    theme(aspect.ratio = 1, plot.margin=unit(c(0.1,0.5,0.8,0.5),"cm")) +
+    theme(aspect.ratio=1, plot.title = element_text(size = 10)) 
+
+  save(p1, p2, p3, p4, p3p, p4p, p3d, p4d, p5, p6, prj1, prj2, file = "cache/pdffit_plot.rda")
+} else{
+  load("cache/pdffit_plot.rda")
+}
+
+grid.arrange(p3, p3p, p3d, p5, p4, p4p, p4d, p6, ncol=4, widths=c(2, 2, 2, 1.5))
+```
+
+
+## Inequality condition
+
+Similar to the decision boundaries of classification models, inequality conditions can induce non-linear boundaries in the parameter space. The inequalities may be complicated functions of multiple parameters, and we can use section pursuit to find visualizations that illustrate the boundaries. These are of interest in physics models for which we often have inequality constraints defining the allowed region of parameter space. By understanding the shape of this region we can gain physics insights guiding theoretical and experimental work. For example, the constraints might result in preferred parameter combinations hinting at a simpler underlying model, or we can reparametrise the allowed region to design targeted experiments to test the model further.
+
+### THDM
+
+A certain type of particle that occurs in particle physics models is the so-called scalar (or Higgs) boson, with properties specified by a "potential" which depends on a set of parameters. These are the basic parameters of the model and they allow one to calculate physical quantities such as the masses of the scalar particles and their interaction strengths. A common problem that arises in this context consists of finding the parameter space that leads to acceptable predictions, that satisfy known theoretical or experimental constraints.
+
+For example, a two-Higgs-doublet model can be written under certain assumptions in terms of the parameter set $\lambda_1,\lambda_2,\lambda_3,\lambda_4,\lambda_5,\alpha,\beta$, where the last two are angles. These angles are commonly discussed in terms of  $\tan(\beta)$ and $\cos(\beta-\alpha)$, as these quantities are closely related to experimental observations. This model contains five scalar particles (types of "Higgs" bosons), dubbed $h,H,A,H^\pm$, the first one corresponding to the famous Higgs boson found at CERN in 2012. The squared masses of these five particles are predicted in terms of the parameters of the model, and we use a form from @Gunion:2002zf (given in the Appendix).
+
+For the model to be viable it needs to satisfy a number of conditions that restrict the parameter space that is allowed. The simplest of these restrictions is that the masses must be real numbers: only parameters for which all squared masses are greater than 0 are viable. We will use this as our example, sampling $\lambda_1,\lambda_2,\lambda_3,\lambda_4,\lambda_5,\tan(\beta),\cos(\beta-\alpha)$ within a 7D hypersphere. We then evaluate the predicted mass spectrum for each sample and flag all points that result in non-physical predictions for (some of) the masses. These points are dropped from the dataset and we use section pursuit to find regions that lead to a non-physical mass spectrum.
+
+For the visualization we first standardize each parameter and then drop all sample points for which the condition is not met. We then apply section pursuit to the reduced sample to find sections that are associated with real masses. We use the index with polar binning, with 5 equidistant radial bins up to the maximum radius, and 10 angular bins. The $\varepsilon$ cutoff is calculated according to Eq. \ref{eq:eps} and we reweight the bins according to Eq. \ref{eq:reweight}. We set $q=1$ and use the search\_better optimization to find the view with the maximum index value.
+
+Two of the resulting views are shown in Fig. \ref{fig:thdm}. The samples that violate the condition are shown in red, the remaining samples (those used for the section pursuit) are shown in black. The top row shows a view encountered along the optimization path, i.e. a section with relatively large index value. The slice is shown on the left and reveals the non-linear boundary defined by the conditions. The corresponding projection is shown in the middle and cannot resolve the feature. The bottom row shows the final view obtained via section pursuit.
+
+Both slices show interesting aspects of the boundary. In the first slice the condition is only violated in a small but well-defined region of the plane. Section pursuit has identified a slice where the condition is often violated, and the final view shows a complex non-linear boundary between the two regions. The boundaries are hidden in the corresponding projections. Looking at the axes representation of this projection, we find that the optimal slice is defined by a combination of all the input parameters, making direct interpretation challenging.
+
+```{r thdm-data, eval=FALSE}
+
+mh2 <- function(b, a, l1, l2, l3, l4, l5){
+  # fixed parameter
+  v <- 246
+  #calculate masses
+  (v^2)/sin(b-a) * (-l1 * cos(b)^3 * sin(a) +
+                             l2 * sin(b)^3 * cos(a) +
+                             1/2 * (l3 + l4+ l5) * cos(b+a) * sin(2*b) )
+}
+mH2 <- function(b, a, l1, l2, l3, l4, l5){
+  v <- 246
+  v^2/cos(b-a) * (l1 * cos(b)^3 * cos(a) + l2 * sin(b)^3 * sin(a) +
+                          1/2 * (l3 + l4 + l5) * sin(b+a) * sin(2*b))
+}
+mhc2 <- function(b, a, l1, l2, l3, l4, l5){
+  v <- 246
+  v^2/(2 * sin(b-a) * cos(b-a)) * ( -sin(2*a) * (l1 * cos(b)^2 - l2 * sin(b)^2) +
+                                            (l3 + l4 + l5) * sin(2*b) * cos(2*a) -
+                                            (l4 + l5) * sin(b-a) * cos(b-a))
+}
+mA2 <- function(b, a, l1, l2, l3, l4, l5){
+  v <- 246
+  v^2 / (2*sin(b-a) * cos(b-a)) * (sin(2*a) * (-l1 * cos(b)^2 + l2*sin(b)^2) +
+                                           (l3+ l4+ l5) * sin(2*b) * cos(2*a) -
+                                           2 * l5*sin(b-a) * cos(b-a))
+}
+
+
+n <- 2e5
+
+thdm_points <- geozoo::sphere.solid.random(p=7, n=n)$points
+colnames(thdm_points) <- c("tb", "cab", "l1", "l2", "l3", "l4", "l5")
+thdm_points <- as_tibble(thdm_points) %>%
+  mutate(tb = tb * 24) %>%
+  mutate(cab = cab * 0.3) %>%
+  mutate(l1 = l1 * 12 + 10,
+         l2 = l2 * 12 + 10,
+         l3 = l3 * 12 + 6,
+         l4 = l4 * 12,
+         l5 = l5 * 12) %>%
+  mutate(b = atan(tb)) %>%
+  mutate(a = (b - acos(cab))) %>%
+  mutate(mh2 = mh2(b, a, l1, l2, l3, l4, l5)) %>%
+  mutate(mH2 = mH2(b, a, l1, l2, l3, l4, l5)) %>%
+  mutate(mhc2 = mhc2(b, a, l1, l2, l3, l4, l5)) %>%
+  mutate(mA2 = mA2(b, a, l1, l2, l3, l4, l5)) %>%
+  mutate(real = as.numeric(mh2>0 & mH2 > 0 & mhc2 > 0 & mA2 > 0))
+
+write_csv(thdm_points, "data/thdm.csv")
+
+```
+
+
+```{r thdm, fig.cap="Slice (left) and projection (middle) views found when optimising the section pursuit index for the THDM sample. Black points satisfy the inequality conditions, red points do not and are dropped in the optimisation. The first row shows a view along the optimisation path, and the last row the final slice selected by section pursuit. The corresponding axes are shown on the right. The selected slices show clear separation of points not satifsying the conditions, which is hidden in the corresponding projections.", fig.height=4, fig.width=5, dev="png", dpi=300}
+if(!file.exists("cache/thdm.rda")){
+  thdm <- read.csv("data/thdm.csv")
+  thdm_tour <- thdm %>%
+    select(tb,cab,l1,l2,l3,l4,l5) %>%
+    apply(2, function(x) (x-mean(x))/sd(x))
+  thdm_labs <- colnames(thdm_tour)
+  r_all <- sqrt(rowSums(thdm_tour^2))
+  r_max <- max(r_all)
+  r_breaks_5 <- linear_breaks(5, 0, r_max)
+  a_breaks_10 <- angular_breaks(10)
+  e1 <- estimate_eps(nrow(thdm_tour[thdm$real==1,]), ncol(thdm_tour[thdm$real==1,]), 0.87/r_max, 5*10, 10, r_breaks_5)
+  idx <- slice_index(r_breaks_5, a_breaks_10, e1, bintype="polar", power=1,
+                    reweight=T, p = 7)
+
+  set.seed(202022)
+  thdm_path <- save_history(thdm_tour[thdm$real==1,], 
+                guided_section_tour(idx, eps=0.5, search_f = tourr:::search_better,
+                                    anchor=rep(0, 7)),
+                rescale = F)
+  thdm_path <- as.list(thdm_path)
+  prj1 <- thdm_path[[1]]
+  prj2 <- thdm_path[[length(thdm_path)]]
+  
+  d_s_i <- tourr:::anchored_orthogonal_distance(prj1, thdm_tour, anchor=rep(0, 7))
+  d_s_f <- tourr:::anchored_orthogonal_distance(prj2, thdm_tour, anchor=rep(0, 7))
+  
+  d_p_i <- as.matrix(thdm_tour) %*% prj1
+  d_p_f <- as.matrix(thdm_tour) %*% prj2
+  
+  colnames(d_p_i) <- c("P1", "P2")
+  colnames(d_p_f) <- c("P1", "P2")
+  colnames(prj1) <- c("P1", "P2")
+  colnames(prj2) <- c("P1", "P2")
+  
+  save(d_p_i, d_p_f, prj1, prj2, d_s_i, d_s_f, thdm_labs, idx, file = "cache/thdm.rda")
+} else{
+    load("cache/thdm.rda")
+}
+
+real <- read.csv("data/thdm.csv")$real
+colV <- if_else(real==1, "black", "red")
+
+thdm_labs <- list(TeX("$tan(\\beta )$", output = "text"), TeX("$cos( \\beta - \\alpha )$", output = "text"),
+               TeX("$\\lambda_1$", output = "text"), TeX("$\\lambda_2$", output = "text"),
+               TeX("$\\lambda_3$", output = "text"), TeX("$\\lambda_4$", output = "text"),
+               TeX("$\\lambda_5$", output = "text"))
+
+  prj1 <- as_tibble(prj1) %>%
+    add_column(label=thdm_labs) %>%
+    mutate(label=unlist(label))
+  prj2 <- as_tibble(prj2) %>%
+    add_column(label=thdm_labs) %>%
+    mutate(label=unlist(label))
+
+
+  h <- 0.87
+  
+  idx_i <- idx(d_p_i[real==1,], d_s_i[real==1,], h)
+  idx_f <- idx(d_p_f[real==1,], d_s_f[real==1,], h)
+
+  p1 <- ggplot(data=as_tibble(d_p_i), mapping=aes(x=P1, y=P2)) +
+    geom_point(data=as_tibble(d_p_i[d_s_i<h & real,]), size=0.5) +
+    geom_point(data=as_tibble(d_p_i[d_s_i<h & !real,]), size=0.5, color="red") +
+    theme_bw() +
+    ggtitle(TeX(sprintf("$I_A^{low} = %s$", format(idx_i, digits = 2)))) +
+    theme(aspect.ratio=1, legend.position = "none")
+  
+  p2 <- ggplot(data=as_tibble(d_p_f), mapping=aes(x=P1, y=P2)) +
+    geom_point(data=as_tibble(d_p_f[d_s_f<h & real,]), size=0.5) +
+    geom_point(data=as_tibble(d_p_f[d_s_f<h & !real,]), size=0.5, color="red") +
+    theme_bw() +
+    ggtitle(TeX(sprintf("$I_A^{low} = %s$", format(idx_f, digits = 2)))) +
+    theme(aspect.ratio=1, legend.position = "none") 
+  
+  p1p <- ggplot(data=as_tibble(d_p_i), mapping=aes(x=P1, y=P2)) +
+    geom_point(size=0.01, color=colV) +
+    theme_bw() +
+    theme(aspect.ratio=1, legend.position = "none") +
+    ggtitle("Projection")
+  
+  p2p <- ggplot(data=as_tibble(d_p_f), mapping=aes(x=P1, y=P2)) +
+    geom_point(size=0.01, color=colV) +
+    theme_bw() +
+    ggtitle("Projection") +
+    theme(aspect.ratio=1, legend.position = "none") 
+  
+  p3 <- ggplot() +
+    geom_path(data=getCircle(0,0,1.2,1.2), aes(x=x, y=y), color="grey") +
+    geom_segment(data=getAxes(prj1, 0,0,1,1), aes(x=x1, xend=x2, y=y1, yend=y2)) +
+    geom_text(data=getAxes(prj1, 0,0,1,1), aes(x=x2, y=y2, label=label), size=2.5, parse = TRUE) +
+    theme_void() +
+    theme(aspect.ratio = 1, plot.margin=unit(c(0.1,0.5,0.8,0.5),"cm")) +
+    geom_text_repel()
+  p4 <- ggplot() +
+    geom_path(data=getCircle(0,0,1.2,1.2), aes(x=x, y=y), color="grey") +
+    geom_segment(data=getAxes(prj2, 0,0,1,1), aes(x=x1, xend=x2, y=y1, yend=y2)) +
+    geom_text(data=getAxes(prj2, 0,0,1,1), aes(x=x2, y=y2, label=label), size=2, parse = TRUE) +
+    theme_void() +
+    theme(aspect.ratio = 1, plot.margin=unit(c(0.1,0.5,0.8,0.5),"cm")) +
+    geom_text_repel()
+
+grid.arrange(p1, p1p, p3, p2, p2p, p4, ncol=3) #,  widths=c(2, 2, 1.5))
+  
+```
+
+
+# Conclusion and discussion
+
+This paper introduces a section pursuit index that can be used to detect hollow or dense features that are visible in slices but hidden in projections. The index uses the distribution outside each current slice as a reference, and computes its difference from the slice distribution. The comparison of the two distributions is calculated as the positive sum of differences of normalized bin counts. To avoid differences arising from the overall shape we consider spherical multivariate distributions. In addition, we use the expected cumulative distribution function to reweight the inside and outside distributions separately, such that the expected counts are uniform across all bins.
+
+The section pursuit index can be used together with the slice display in the tourr package to define a guided slice tour. This means that we can use the available optimization routines, and we can further look at the interpolated optimization path. In practice, to conform to the assumption of an underlying spherical distribution, we can shave off points outside the hypersphere. Since the focus is on detecting hidden features in the center of the distribution, we do not expect to lose important information doing so. In case of simulated data, augmenting the data to be of this form is also an option.
+
+We have shown how to use the section pursuit index to explore non-linear decision boundaries of classification models, or similarly, to explore complex inequality conditions that depend on multiple parameters. In all examples, we have sampled the parameter space and evaluated the classification or inequality conditions for all points. We then dropped points assigned to one particular class, or in conflict with the inequality condition to generate the hollow features in the distribution. For all examples considered, the optimization resulted in slice views that illustrate interesting aspects of the boundaries. Additional potential applications for section pursuit include the exploration of non-standard multivariate confidence regions or Bayesian credible regions.
+
+Depending on the application, different index definitions would be recommended. Several variations on the index would be produced different choices of weights, and parameters in the generalized index definition (Section \ref{sec:generalise}). This paper hasn't fully explored the impact of all the choices, but the same type of diagnostics, in particular, the index visualization presented in Section \ref{sec:viz}, could be used decide.
+
+# Acknowledgements {-}
+
+The authors gratefully acknowledge the support of the Australian Research Council.
+This article was created with knitr [@knitr] and R Markdown [@rmarkdown] with embedded code, using the tidyverse [@tidyverse] packages. We thank the Wharton Statistics department for their hospitality while part of this work was conducted.
+
+#  Supplementary material {-}
+
+- Code and data is available at \url{https://github.com/uschiLaa/paper-section-pursuit}.
+- The Appendix contains the derivation of the radial CDF of a hypersphere projected onto a 2D plane and the equations used to calculate the masses in the two-Higgs-doublet model.
+
+# References {-}
+

@@ -1,0 +1,977 @@
+% interactcadsample.tex
+% v1.03 - April 2017
+
+\documentclass[]{interact}
+
+\usepackage{epstopdf}% To incorporate .eps illustrations using PDFLaTeX, etc.
+\usepackage{subfigure}% Support for small, `sub' figures and tables
+%\usepackage[nolists,tablesfirst]{endfloat}% To `separate' figures and tables from text if required
+
+\usepackage{natbib}% Citation support using natbib.sty
+\bibpunct[, ]{(}{)}{;}{a}{}{,}% Citation support using natbib.sty
+\renewcommand\bibfont{\fontsize{10}{12}\selectfont}% Bibliography support using natbib.sty
+
+\theoremstyle{plain}% Theorem-like structures provided by amsthm.sty
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{proposition}[theorem]{Proposition}
+
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+
+\theoremstyle{remark}
+\newtheorem{remark}{Remark}
+\newtheorem{notation}{Notation}
+
+% see https://stackoverflow.com/a/47122900
+
+\usepackage{hyperref}
+\usepackage[utf8]{inputenc}
+\usepackage{xcolor}
+\def\tightlist{}
+
+\begin{document}
+
+\articletype{}
+
+\title{Hole or grain? A Section Pursuit Index for Finding Hidden Structure in
+Multiple Dimensions}
+
+
+\author{\name{Ursula Laa$^{a, b}$, Dianne Cook$^{a}$, Andreas Buja$^{c}$, German Valencia$^{b}$}
+\affil{$^{a}$Department of Econometrics and Business Statistics, Monash University; $^{b}$School of Physics and Astronomy, Monash University; $^{c}$Statistics Department, The Wharton School, University of Pennsylvania}
+}
+
+\thanks{CONTACT Ursula Laa. Email: \href{mailto:ursula.laa@monash.edu}{\nolinkurl{ursula.laa@monash.edu}}, Dianne Cook. Email: \href{mailto:dicook@monash.edu}{\nolinkurl{dicook@monash.edu}}, Andreas Buja. Email: \href{mailto:andreasbuja@gmail.com}{\nolinkurl{andreasbuja@gmail.com}}, German Valencia. Email: \href{mailto:german.valencia@monash.edu}{\nolinkurl{german.valencia@monash.edu}}}
+
+\maketitle
+
+\begin{abstract}
+Multivariate data is often visualized using linear projections, produced
+by techniques such as principal component analysis, linear discriminant
+analysis, and projection pursuit. A problem with projections is that
+they obscure low and high density regions near the center of the
+distribution. Sections, or slices, can help to reveal them. This paper
+develops a section pursuit method, building on the extensive work in
+projection pursuit, to search for interesting slices of the data. Linear
+projections are used to define sections of the parameter space, and to
+calculate interestingness by comparing the distribution of observations,
+inside and outside a section. By optimizing this index, it is possible
+to reveal features such as holes (low density) or grains (high density).
+The optimization is incorporated into a guided tour so that the search
+for structure can be dynamic. The approach can be useful for problems
+when data distributions depart from uniform or normal, as in visually
+exploring nonlinear manifolds, and functions in multivariate space. Two
+applications of section pursuit are shown: exploring decision boundaries
+from classification models, and exploring subspaces induced by complex
+inequality conditions from multiple parameter model. The new methods are
+available in R, in the \texttt{tourr} package.
+\end{abstract}
+
+\begin{keywords}
+multivariate data, dimension reduction, projection pursuit, statistical
+graphics, data visualization, exploratory data analysis, data science
+\end{keywords}
+
+\hypertarget{introduction}{%
+\section{Introduction}\label{introduction}}
+
+The visualization of high-dimensional data often utilizes linear
+projection. For example, in principal component analysis plotting the
+principal components is effectively a projection of the data.
+Projections form the basis for a grand tour \citep{As85} of
+high-dimensional data. Projection pursuit \citep[\citet{FT74}]{kr69} is
+used to find interesting low-dimensional views of the data by optimizing
+an index function over all possible projections. Projections can obscure
+non-uniform patterns near the data center, or hollowness. These features
+may be visible in non-linear mappings (such as multidimensional scaling
+\citep{mds}), but these methods often lack interpretability.
+\citet{laa2019slice} introduced a slice tour that shows sections through
+high-dimensions instead of projections, and helps to reveal hidden
+structure. Showing slices can also be useful in combination with
+conditional function or model visualization
+\citep[\citet{sliceplorer}]{JSSv081i05}.
+
+The space of slices of high-dimensional space is larger than the space
+of projections. The slice tour \citep{laa2019slice} is based on
+projections and the grand tour, thus simplifying the space to be
+explored. The slices allow the distribution inside a section to be
+compared to the projected distribution outside the section. This is an
+unguided process, and providing a method to find interesting slices
+would be beneficial.
+
+Here we propose ``section pursuit'', which searches the space of
+projections for the most interesting sections of the data. The
+``interestingness'' of each section is computed as a measure of
+dissimilarity between the distribution of projected points inside and
+outside the section. Finding conditional features in large data sets
+will provide better understanding of the data, and can help improve
+modelling.
+
+This paper is organized as follows. The next section provides background
+on tours and projection pursuit. Section \ref{sec:index} describes an
+index designed to detect concavities, and explores the behavior of the
+index on simulated examples. A new plot to visualize index functions is
+described in Section \ref{sec:viz}. The application of section pursuit
+to exploring high-dimensional classification models and constrained
+high-dimensional spaces is discussed in Section \ref{sec:applications}.
+
+\hypertarget{background}{%
+\section{\texorpdfstring{Background
+\label{sec:background}}{Background }}\label{background}}
+
+\hypertarget{grand-tour-and-slice-tour}{%
+\subsection{Grand tour and slice tour}\label{grand-tour-and-slice-tour}}
+
+The grand tour shows a geodesically interpolated sequence of randomly
+selected projections in an animation. The interpolation allows the
+viewer to interpret each view in the context of the previously seen
+projection, thus providing additional insights compared to static
+projections. By observing how the data distribution changes under a
+rotation of the low-dimensional projection, the viewer can extrapolate
+from the low-dimensional shapes to the distribution in high dimensions.
+The underlying computational methods were described in \citet{BCAH05},
+and an implementation in R \citep{rlang} is available in the
+\texttt{tourr} package \citep{tourr}.
+
+Recent work in \citet{laa2019slice} implemented a display of
+interpolated slices of the data space. The slices are defined for
+projection planes, such that observations with an orthogonal distance
+from the plane below some cutoff \(h\) are considered to be inside the
+slice. The display has been added to the \texttt{tourr} package and can
+be used to show slices for projection planes obtained when running a
+grand tour.
+
+The first two columns of Figure \ref{fig:allSlices} show scatterplots of
+the points in a 4D data set inside an informative (S1) and an
+uninformative (S2) slice through the origin, for two simulated data sets
+(A, B). Note that the data is defined in a 4D sphere, which generates
+the circular shape. The sampling results in hollow regions inside the
+sphere by rejecting points within shapes defined by selected
+hyperspherical harmonics \citep{doi:10.1063/1.3054274}. The hollowness
+is hidden in projections of the data, as shown in the final column of
+Figure \ref{fig:allSlices}. It is much simpler to define sections on
+high-dimensional spheres than cubes, and this is the approach used for
+all the data in this paper. Data defined in a cube, most data, is
+trimmed or supplemented to be contained in a sphere.
+
+\begin{figure}
+
+{\centering \includegraphics[width=0.8\linewidth]{section_pursuit_files/figure-latex/allSlices-1} 
+
+}
+
+\caption{Slices of two 4D data sets (A, B) shown using scatterplots of points inside 2D sections. The first slice (S1) is informative and reveals the hollow regions in the data, while the second slice (S2) is un-informative. The last column shows projections of the data onto a 2D plane, hiding the hollowness.}\label{fig:allSlices}
+\end{figure}
+
+\hypertarget{projection-pursuit-and-guided-tour}{%
+\subsection{Projection pursuit and guided
+tour}\label{projection-pursuit-and-guided-tour}}
+
+Projection pursuit is the procedure of selecting interesting
+low-dimensional projections by optimizing a criterion function over the
+space of all possible projections. The criterion (or index) function is
+typically designed to take larger values for more ``interesting'' views
+of the data, and maximizing the index can reveal structure in the
+distribution.
+
+The concepts of projection pursuit and the grand tour can be combined
+into the guided tour \citep{CBCH94}, which interpolates between
+projection planes selected through the optimization of a projection
+pursuit index. A guided tour presents the viewer with interesting views
+of the dataset in the context of the full distribution, moving from less
+to more informative projections.
+
+Tour methods can also be used to understand the behavior of projection
+pursuit index functions \citep{laa2020}, for example by examining how
+the index value changes along an interpolated sequence of projections.
+
+\hypertarget{a-new-index-for-finding-interesting-sections}{%
+\section{\texorpdfstring{A new index for finding interesting sections
+\label{sec:index}}{A new index for finding interesting sections }}\label{a-new-index-for-finding-interesting-sections}}
+
+\hypertarget{notation}{%
+\subsection{Notation}\label{notation}}
+
+Let \(Y=XA\), where \(X\) is an \(n\times p\) data matrix, \(A\) is a
+\(p\times d\) (orthonormal) projection matrix. To generate a slice,
+following \citet{laa2019slice}, compute the orthogonal distance between
+every point and plane (defined by \(A\)), call this \(h_i\).
+Observations are considered inside a slice (section) if \(h_i < h\).
+
+The index is defined for binned data. The projected data, \(Y\), is
+binned into \(K\) bins, \(b_k, k=1, ..., K\). The counts of observations
+inside versus outside the slice for each bin are computed. The total
+number of counts in bin \(k\) is
+\(S_{k}=\sum_{i} I(Y_i \in b_{k})I(h_i < h)\) inside the section and
+\(C_{k}=\sum_{i} I(Y_i \in b_{k})I(h_i \geq h)\) outside the section.
+The relative counts are thus \(s_k = S_k / \sum_i S_i\) and
+\(c_k = C_k / \sum_i C_i\).
+
+\hypertarget{index-definition}{%
+\subsection{Index definition}\label{index-definition}}
+
+Indexes for comparing the distribution of observations in the section
+versus outside can be defined (building on
+\citet{doi:10.1198/1061860043119}) as:
+
+\begin{equation}
+I_A^{low} = \sum_{k}\left[\left(c_{k}-s_{k}\right)\right]_{>\varepsilon},
+\label{eq:index}
+\end{equation}
+
+\begin{equation}
+I_A^{up} = \sum_{k}\left[\left(s_{k}-c_{k}\right)\right]_{>\varepsilon}
+\label{eq:indexup}
+\end{equation}
+
+\noindent where \(s_{k}\) and \(c_{k}\) are the relative counts of
+observations in bin \(b_{k}\) inside and outside the section. The first
+definition \(I_A^{low}\) takes large values if there is a hollow region
+of low density inside the slice, while the second definition
+\(I_A^{up}\) can be useful when looking for regions of higher density
+(``needles in a haystack''). The \([.]_{>\varepsilon}\) notation
+indicates that we drop all bins where the difference in counts is below
+some threshold \(\varepsilon\), \begin{equation}
+[a - b]_{>\varepsilon} = \begin{cases}
+    a - b, & \text{if $a - b > \varepsilon$}\\
+    0, & \text{if $a-b \leq \varepsilon$.}
+  \end{cases}
+\end{equation} Only bins where the difference is positive are summed.
+The \(\varepsilon\) avoids summing noise and suppresses an artificial
+dependence on the number of bins. The value of \(\varepsilon\) should be
+estimated based on the expected size of sampling fluctuation, which may
+depend on assuming a distribution, the number of samples \(N\), the
+number of bins \(K\), the slice thickness \(h\) and the dimension \(p\).
+An estimate for \(\varepsilon\) assuming a uniform distribution inside a
+hypersphere is given in Section \ref{sec:epsilon}. In general
+\(I_A^{low}=I_A^{up}\) only if \(\varepsilon=0\).
+
+\hypertarget{binning-procedures}{%
+\subsection{Binning procedures}\label{binning-procedures}}
+
+A desirable property for projection pursuit, into \(d\)-dimensions, and
+thus also desirable for section pursuit, is that the index be rotational
+invariant. That is, regardless of the basis in the \(d\)-D plane
+defining the projection, the index value should be identical. With
+sections, this is more complicated, because interior and exterior
+distributions need to be comparable. Thus a restriction is imposed on
+the observed data: that it falls within a \(p\)-dimensional hypersphere.
+Data is typically observed in a hypercube, so this prescription requires
+a departure from the norm which, however,is still practical. In cases of
+simulated data, such as when looking at multivariate models, the
+sampling scheme can be adjusted. Observed data, on the other hand,
+requires shaving off the corners. This procedure is expected to be
+harmless because it is interior structure that is of interest. In
+addition, this approach is designed for reasonably small \(p\) so that
+the vast gap between spheres and cubes in high dimensions is not a
+concern. For very high-dimensional data, some dimension reduction is
+expected in pre-processing.
+
+The hypersphere constraint suggests a preference for binning in polar
+coordinates. Considering 2D slices we therefore bin in radius \(r\) and
+angle \(\theta\). When the observations are uniformly distributed in a
+hypersphere, the angular distribution will be uniform across all values
+of \(\theta\) and thus \(K_{\theta}\) equidistant angular bins are used.
+
+The radial binning is more complicated. The reason is that the radial
+distribution depends on the data dimension, \(p\). As \(p\) increases,
+the projected data piles more in the center. A varying radial bin size
+could be used to offset this effect, where the bounds of the \(K_r\)
+radial bins take into account the expected distribution of points given
+\(p\). However, the expected radial distribution will differ between a
+slice and a projection of the data, so the effect is accounted for
+instead by reweighting bin counts. The calculations are as follows.
+
+Consider the expected distribution to be a uniform distribution within a
+hypersphere in \(p\) dimensions projected onto a 2D plane. The
+cumulative distribution function (CDF) for the radial distribution in
+the projection, derived in the Appendix, is given by:
+
+\begin{equation}
+f(r;p,R) = 1-\left(1-\left(\frac{r}{R}\right)^2\right)^{p/2},
+\label{eq:cdf}
+\end{equation} and depends on the hypersphere radius \(R\) and on \(p\).
+For illustration we show the CDF dependence on \(r/R\) (where
+\(0<r\leq R\)) for different values of \(p\) in Fig. \ref{fig:cdf}. For
+large values of \(p\) the majority of points is found within a small
+relative radius \(r/R\), e.g.~for \(p=10\) we see that 75\% of points
+are within \(r/R<1/2\).
+
+\begin{figure}
+
+{\centering \includegraphics[width=0.5\linewidth]{section_pursuit_files/figure-latex/cdf-1} 
+
+}
+
+\caption{CDF of the 2D projected radial distribution of a p-dimensional hypersphere, for selected values of p. As p increases, a larger fraction of the points will be found at small values of the radius.}\label{fig:cdf}
+\end{figure}
+
+\hypertarget{reweighting-bin-counts}{%
+\subsubsection{Reweighting bin counts}\label{reweighting-bin-counts}}
+
+While the radial distribution of the points projected from a full \(p\)
+dimensional hypersphere follows the CDF in Eq.(\ref{eq:cdf}), the
+distribution in the slice is approximately uniform in the disk (as long
+as \(h \ll R\)). Within the slice, the adjustment only accounts for
+relative areas in radial bins for a 2D uniform distribution. Thus, only
+re-weighting of bins to account for the piling from high dimensions
+needs to be conducted for the observations outside the slice. The
+weights can be calculated from the CDF.
+
+The fraction of points in the radial bin \(i\) between \(r_1\) and
+\(r_2\) is \begin{equation}
+f_{i}(p, R) = f(r_2; p, R) - f(r_1; p, R).
+\label{eq:frac}
+\end{equation} Consider \(K_r\) radial bins, with total bin count
+\(N_i\) in bin \(i\), \(i = 1,...,K_r\), and relative counts are
+\(n_i = N_i / \sum_j N_j\). We define the bin-wise weights as
+\begin{equation}
+w_i(p, R, K_r) = \frac{1}{K_r f_i(p,R)},
+\end{equation} and the reweighed bin count as \begin{equation}
+s_i(p, R, K_r) = n_i w_i(p, R, K_r)
+\label{eq:reweight}
+\end{equation} corresponding to the weighted relative number of points
+in each bin, so that \(s_i(p,R,K_r) = 1/K_r\) for a uniform hypersphere.
+We calculate the outside weights as \(w_i(p, R, K_r)\) and the inside
+weights as \(w_i(2, R, K_r)\). Recall that we are assuming that the
+slice thickness can be neglected, \(h\ll R\).
+
+Figure \ref{fig:data_and_densities} illustrates the effect of the
+adjustment using polar histograms for the simulated example data B, with
+and without re-weighting. The rows show raw and weighted bin counts,
+respectively, and the columns contain plots of the distributions of
+points inside, outside the slice and the difference between the two. The
+re-weighting has the desired effect of focusing the attention more
+effectively on the central structure.
+
+\begin{figure}
+
+{\centering \includegraphics[width=0.9\linewidth]{section_pursuit_files/figure-latex/data_and_densities-1} 
+
+}
+
+\caption{Illustration of the polar binning, effect of re-weighting bin counts in the index function computation, on sample data set B and for the informative slice S1. Rows show raw and weighted bin counts, respectively. Columns show the distributions of inside, outside and the difference. The effect of the re-weighting focuses the attention more effectively on the cavity structure.}\label{fig:data_and_densities}
+\end{figure}
+
+\hypertarget{binning-across-different-planes}{%
+\subsubsection{Binning across different
+planes}\label{binning-across-different-planes}}
+
+The index needs to be optimized over the set of all possible projections
+to find interesting concavities. This requires the binned data to be
+comparable, thus the bins are fixed for all planes. For each slice we
+first center the projected data before binning it.
+
+In the simulated examples in this paper the radius of the hypersphere is
+known, and is used to define the radial boundary. In applied problems
+the radius of a random projection can be used to estimate it, with a
+procedure for handling points that fall outside that boundary.
+
+Note that the fixed angular binning can break rotational invariance of
+the index in a small way, and this can be noticed during optimization.
+One approach to mitigate this effect could be to evaluate the index at
+several small rotations within a single angular bin window and combine
+the values.
+
+\hypertarget{sufficient-sample-size}{%
+\subsection{Sufficient sample size}\label{sufficient-sample-size}}
+
+As dimensionality increases the number of sample points required to
+resolve features in a thin slice of the data increases exponentially.
+Care must be taken that the sample is large enough. We estimate the
+number of required sample points as a function of the chosen parameters,
+starting again from the hyperspherical distribution in \(p\) dimensions.
+Following \citet{laa2019slice}, given a sample of \(N\) points in \(p\)
+dimensions, distributed uniformly in a hypersphere of radius \(R\), the
+number of points inside a slice through the center of the distribution
+\(N_S\) is
+
+\begin{equation}
+N_S = \frac{N}{2} \left(\frac{h}{R}\right)^{p-2} \left(p - (p-2)\left(\frac{h}{R}\right)^{2}\right).
+\label{eq:count}
+\end{equation}
+
+\noindent We denote \(x=h/R\) the resolution. It determines the minimum
+relative size of features that can be seen in a slice. When adding noise
+dimensions, in order to keep the resolution \(x\) fixed, the sample size
+needs to increase approximately as \(x^{\Delta p}\), where \(\Delta p\)
+is the increase in number of dimensions.
+
+\hypertarget{estimating-the-magnitude-of-noise-varepsilon}{%
+\subsection{\texorpdfstring{Estimating the magnitude of noise,
+\(\varepsilon\)
+\label{sec:epsilon}}{Estimating the magnitude of noise, \textbackslash{}varepsilon }}\label{estimating-the-magnitude-of-noise-varepsilon}}
+
+We can estimate the expected sampling variability based on \(N\). The
+dominant uncertainty will be on the bin count inside the slice which
+typically will have much smaller statistics than the outside
+distribution (notice that this may not be true for bins at large radius
+which, depending on the bin size, can have a very low number of
+observations). We estimate the number of points in each bin \(i\) inside
+the slice as \begin{equation}
+N_S^i = \frac{N_S}{K_{\theta}} \cdot f_i(2, R),
+\end{equation} with \(N_S\) given by Eq.(\ref{eq:count}), \(K_{\theta}\)
+the number of angular bins and \(f_i\) defined in Eq.(\ref{eq:frac}).
+The relative Poisson error on this count is \begin{equation}
+\delta_S^i = \frac{\sqrt{N_S^i}}{N_S^i} = 
+\frac{R}{\sqrt{r_2^2 - r_1^2}} \sqrt{\frac{2 K_{\theta}}{N}} x^{(2-p)/2}
+\frac{1}{\sqrt{\left(p - (p-2) x^{2}\right)}}, 
+\end{equation} and the expected relative count after reweighting is
+\(1/K\) in all bins (where \(K=K_r K_{\theta}\)). We therefore expect
+sampling fluctuations of order \begin{equation}
+\delta = \delta_S^i / K. 
+\label{eq:eps}
+\end{equation}
+
+To suppress index fluctuations to below one standard deviation, we set
+\(\varepsilon = \delta\). Figure \ref{fig:path_eps} compares the index
+behavior for two values of \(\varepsilon\), \(0\) and \(\delta\). Three
+4D data sets are used: examples A and B (shown in Figure
+\ref{fig:allSlices}), and a reference set C consisting of observations
+sampled uniformly within a \(p\)-dimensional sphere. Color indicates the
+number of bins used to calculate the index. The difference in index
+value when \(\varepsilon=0\) clearly indicates a dependence on the
+number of bins, which is undesirable. Setting \(\varepsilon = \delta\)
+mostly removes these differences.
+
+\begin{figure}
+
+{\centering \includegraphics[width=0.9\linewidth]{section_pursuit_files/figure-latex/path_eps-1} 
+
+}
+
+\caption{Examining the effect of $\varepsilon$ on the index value for varying number of bins. Three simulated data sets are used:  A, B and C. The horizontal axis traces the index from an uninteresting to interesting sliced projection (defined by slice S2 and S1 respectively), for $\varepsilon=0, \delta$. Colour indicates number of bins. Ideally, the index value should be the same, regardless of choice of bins, which is achieved in practice by $\varepsilon=\delta$.}\label{fig:path_eps}
+\end{figure}
+
+\hypertarget{generalised-index}{%
+\subsection{\texorpdfstring{Generalised index
+\label{sec:generalise}}{Generalised index }}\label{generalised-index}}
+
+The idea of section pursuit is completely general. The index considered
+here is compelling as it allows to use the projected distribution as a
+reference when looking for interesting slices of the data.
+
+The definitions in Eq.(\ref{eq:index},\ref{eq:indexup}) can be
+generalized for example as \begin{equation}
+I_A^{low} = \sum_{k}w_{k}\left(\left[c_{k}^{1/q}-s_{k}^{1/q}\right]_{>\varepsilon}\right)^{q}
+\label{eq:index2}
+\end{equation} \begin{equation}
+I_A^{up} = \sum_{k}w_{k}\left(\left[s_{k}^{1/q}-c_{k}^{1/q}\right]_{>\varepsilon}\right)^{q}
+\label{eq:index2up}
+\end{equation} where \(w_k\) can be used to (de)emphasize certain bins,
+e.g.~to up-weight information in the center of the distribution.
+
+The exponent \(q\) can be used to tune the sensitivity, a small \(q\)
+will enhance sensitivity to small differences (and thus might
+over-emphasize fluctuations), a large \(q\) will suppress fluctuations
+and is mainly sensitive to large differences (and might thus miss
+features that are too similar to the background distribution). Selecting
+\(q=1\) corresponds to an \(L_1\) type norm, and \(q=2\) to an \(L_2\)
+type norm. In addition we will also consider \(q=1/2\). The overall
+range of plausible index values depends on \(q\) and in practice we use
+an estimate of the range to rescale the index value to fall in
+\([0,1]\). Notice that, in this definition the index is no longer
+symmetric under exchanging the distributions inside and outside the
+section, even when \(\varepsilon=0\).
+
+\hypertarget{additional-considerations}{%
+\subsubsection{Additional
+considerations}\label{additional-considerations}}
+
+It may also be reasonable to consider using a kernel, instead of
+discrete bins, to produce some spatial smoothing. The effect would be to
+focus attention on large differences in specific regions rather than
+small differences anywhere.
+
+A completely different approach to producing a section index, would be
+to apply any existing projection pursuit index on a sliced projection
+instead of the full projected data. Only observations inside the slice
+are then used for the index calculation.
+
+\hypertarget{index-behavior}{%
+\subsubsection{\texorpdfstring{Index behavior
+\label{sec:behaviour}}{Index behavior }}\label{index-behavior}}
+
+To examine the behavior of the generalized index for choices of \(q, K\)
+and \(\varepsilon\), a re-parametrization is used. Consider an outside
+distribution that is uniform across all \(K\) bins, \begin{equation}
+c_{k} = \frac{1}{K},
+\end{equation} and a distribution inside the slice to be uniform across
+\(K' < K\) bins, \begin{equation}
+s_{k} = \begin{cases}
+    \frac{1}{K'}, & \text{if $k \leq K'$}\\
+    0, & \text{if $k > K'$}
+  \end{cases}
+\end{equation} i.e.~there are \(K-K'\) empty bins inside the slice. We
+can then parametrize the relation between \(K\) and \(K'\) as
+\(K' = \gamma K\) with \(\gamma \in [0,1]\).
+
+To focus on the dependence on \(q\), drop the bin-dependent weights
+\(w_k\) from the description and set \(\varepsilon=0\). Using the
+parametrization in terms of \(\gamma\), the index can then be written as
+
+\begin{equation}
+I_A^{up}(q, \gamma) = ([1-\gamma^{1/q}]_+)^q,
+\label{eq:p1}
+\end{equation}
+
+\noindent while \begin{equation}
+I_A^{low}(\gamma) = 1-\gamma.
+\end{equation} (In this latter form the dependence on \(q\) drops out
+because only bins where \(s_k=0\) are counted.)
+
+This allows us to estimate the typical range depending on \(q\). The
+range of \(I_A^{up}(q, \gamma)\) will be different for different values
+of \(q\), and this range difference needs to be ignored for comparison
+purposes. For \(q=1\) the index range is \([0,0.9]\). For \(q=2\) the
+index range is approximately \([0, 0.5]\). We rescale the index
+depending on the selected value of \(q\) against
+\(I_A^{up}(q, \gamma=0.1)\), resulting in a common range \([0,1]\).
+
+Fig. \ref{fig:behavior} shows the effect of \(q\) for
+\(\gamma \in [0.1, 1]\), i.e.~between 10\% and 100\% overlap in the
+distributions, and the effect of \(\gamma\) for a range of
+\(q \in [0.1, 1]\). When \(q=1\) the index is linearly dependent on
+\(\gamma\). For \(q=2\) most of the sensitivity lies towards small
+values of \(\gamma\). For \(q=1/2\) most of the sensitivity lies towards
+large values of \(\gamma\). The parameter \(q\) enables the index to be
+made more sensitive to small regions of difference as opposed to large
+areas.
+
+\begin{figure}
+
+{\centering \includegraphics[width=1\linewidth]{section_pursuit_files/figure-latex/behavior-1} 
+
+}
+
+\caption{Examining the sensitivity of the index to the parameter $q$. Rescaled values of $I_A^{up}$ as a function of $\gamma$, for fixed values of $q$ (left), and as a function of $q$ for fixed values of $\gamma$ (right). The parameter $q$ shifts emphasis between small regions and large regions of difference.}\label{fig:behavior}
+\end{figure}
+
+\hypertarget{noise}{%
+\subsubsection{Noise}\label{noise}}
+
+Now, we introduce the use of the noise cutoff, and explore the effect of
+\(q\) on the choice of \(\varepsilon\). This can be done in a simple
+setup: uniformly draw \(N\) samples and bin them in \(K\) bins, such
+that the expected bin count is \(N/K\) in all bins (or \(1/K\) after
+normalization). Using the Poisson approximation, the standard deviation
+for the normalized counts is \(\delta=1/\sqrt{N K}\). By drawing two
+independent samples and calculating the index value 100 times we get an
+estimate of the expected index value and its variance depending on
+\(q\). Note that since we are assuming pure noise distributions for both
+samples, \(I_A^{low}=I_A^{up}=I_A\). This is shown in Figure
+\ref{fig:noise} for \(N=10000\) and \(K=100\). When \(q=1\) and
+approximating the bin counts by a normal distribution, we can also
+evaluate the expected index value analytically as \begin{equation}
+I_A(q=1)_{\mathrm{noise}} = e^{-n^2/4} \sqrt{\frac{K}{\gamma N}},
+\end{equation} where \(\varepsilon=n\delta\).
+
+We see that for values of \(q<1\) the noise becomes inflated, especially
+when we do not use an appropriate \(\varepsilon\) cutoff. For the
+default choices of \(q=1\) and \(\varepsilon=\delta\) we find that the
+expected index value for a noise distribution is about \(0.05\).
+
+\begin{figure}
+
+{\centering \includegraphics[width=0.5\linewidth]{section_pursuit_files/figure-latex/noise-1} 
+
+}
+
+\caption{Examining the  effect of $q$ on the variability of the  index value, when a noise cutoff ($\varepsilon$) is used. Rescaled values of $I_A$ shown as a function of $q$, for fixed values of $\varepsilon$, for $N=10000$ and $K=100$. Smaller values of  $q$ inflate the variability in the index, exaggerating  the noise.}\label{fig:noise}
+\end{figure}
+
+\hypertarget{visualising-the-index}{%
+\section{\texorpdfstring{Visualising the index
+\label{sec:viz}}{Visualising the index }}\label{visualising-the-index}}
+
+A Huber plot \citep{huberpp} (available in the R package, PPtreeViz
+\citep{pptreeviz}) is a useful illustration of a 1D projection pursuit
+index. It shows the index values for a 2D distribution across all
+possible 1D projections. This idea is generalized for a 2D projection
+pursuit index, to illustrate the behavior over a higher dimensional
+dataset, and called a \emph{topotrace plot}. The approach is:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  Select a starting plane, one of particular interest, \(A_0\).
+\item
+  Randomly generate a large number (\(m\)) of directions to move away
+  from the starting plane, \(A_i, i=1, ..., m\).
+\item
+  Generate the geodesic interpolation with a fixed length or angle
+  (\(\alpha\)) in each direction,
+  \(A_{ij}, i=1, ..., m; j=-\alpha, ..., 0, ..., \alpha\).
+\item
+  Calculate the index values along each path, \(I_{A_{ij}}\).
+\item
+  Plot \(I_{A_{ij}}\) against \(j\), with a separate trace for each
+  \(i\).
+\end{enumerate}
+
+The purpose of making these plots is to examine the nature of the
+function, in terms of local maxima and ridges, and also characteristics
+such as smoothness and squint angle \citep{laa2020}. The squint angle
+describes the distance from the optimal projection where a structure can
+be seen -- if it is large then the function should be easier to
+optimize. If the optimal projection is known, then using this as the
+starting plane, provides views analogous to standing on top of the
+mountain and looking down in all directions. If a random starting plane
+is used, most likely this will be a low point from which to view
+mountains.
+
+Fig. \ref{fig:traces_q1} shows these plots for the two example datasets
+A and B, with \(\alpha = \pi/2\), \(m=100\) randomly selected
+directions. The left panels show how the index value changes when moving
+away from the optimal viewing slice S1, the right panel shows paths
+moving away from the uninformative slice S2. We see that for the dataset
+A there is a large variability between the index behavior along the
+different directions. Moving away from S1 we find some flat directions
+along which the index value remains large. This suggests that the
+function has ridges. This is expected for this data, as a result of a
+symmetry in the simulation distribution, the structure remains visible
+so long as the first variable is dominant along one direction in the
+plane. This also makes the structure easier to detect, and we find that
+among the 100 random directions, several traces reach index values close
+to that of the ideal view. On the other hand, the 100 traces shown for
+set B have much less variability, and all result in an approximately
+linear decay of the index value as we move away from the S1 slice.
+Similarly, they all show approximately linear increase in index value
+when moving away from S2. We can also see that the index is noisy,
+sometimes producing jumps in index values under small rotations of the
+slicing projection.
+
+We can also use this visualization to better understand the
+generalizations of the index. In Fig. \ref{fig:traces_q2} we show the
+topotrace plots for the same settings as Fig. \ref{fig:traces_q1}, but
+with \(q=2\). We see that this results in a smaller squint angle, and
+steeper change of the index near the optimal S1 slice, while the index
+is flatter away from this view.
+
+\begin{figure}
+\includegraphics[width=1\linewidth]{section_pursuit_files/figure-latex/traces_q1-1} \caption{Topotrace plots showing index function characteristics for the index with $q=1$, $\alpha=\pi/2$, $m=100$, for example data sets A (top) and B (bottom) from the starting planes, the informative slice S1 (left) and the uninformative slice S2 (right). Example A indicates ridges in the function because for several traces the index remains high when varying $\alpha$. Example B has a more gradual decline from the peak. The dependence of the index on $\alpha$ is not smooth.}\label{fig:traces_q1}
+\end{figure}
+
+\begin{figure}
+\includegraphics[width=1\linewidth]{section_pursuit_files/figure-latex/traces_q2-1} \caption{Topotrace plots for the index with $q=2$, $\alpha = \pi/2$, $m=100$ for set A (top) and set B (bottom) from the informative slice S1 (left) and the uniformative slice S2 (right). The choice of $q=2$ results in a smaller squint angle, and steeper change of the index.}\label{fig:traces_q2}
+\end{figure}
+
+\hypertarget{applications}{%
+\section{\texorpdfstring{Applications
+\label{sec:applications}}{Applications }}\label{applications}}
+
+\hypertarget{using-the-index-in-practice}{%
+\subsection{Using the index in
+practice}\label{using-the-index-in-practice}}
+
+In the applications we use the index defined in Eq. \ref{eq:index}. When
+using the index we follow these steps:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  Check the underlying assumption that the data is inside a hypersphere.
+  This can be ensured by first centering and scaling all variables, and
+  then dropping points that have a radius above the maximum \(r_{max}\).
+\item
+  Choose the number of bins. Setting the bin size for polar binning uses
+  the maximum radius and defines \(n_r\) equidistant radial bins and
+  \(n_{\theta}\) angular bins. In practice we have found that \(n_r=5\)
+  and \(n_{\theta}=8\) or \(10\) tends to work well.
+\item
+  Decide the slice thickness \(h\) to use. We can think of it in terms
+  of a relative resolution \(h/r_{max}\). For our examples, \(0.25\)
+  worked well, but this will likely change depending on the data.
+\item
+  The binning and resolution, together with the number of variables and
+  number of observations are needed to estimate the uncertainties
+  following Eq.\ref{eq:eps}.
+\item
+  We can now define the slice index, which takes the binning and
+  uncertainty estimates as input. We define the index such that for each
+  slice it reweights the counts according to Eq. \ref{eq:reweight}.
+\item
+  For the optimization we use a modified version of the guided tour that
+  passes the projected points, the distance vector and the thickness
+  \(h\) into the index function. This can directly be used together with
+  the optimization routines from the \texttt{tourr} package.
+\end{enumerate}
+
+\hypertarget{classification-boundaries}{%
+\subsection{Classification boundaries}\label{classification-boundaries}}
+
+The slice display can be used to understand non-linear classification
+boundaries \citep{laa2019slice}, visualized following \citet{sam.11271}
+and using the classifly package \citep{classifly}. Classifly samples the
+design space and calculates model predictions. We can use section
+pursuit to identify slices that reveal the decision boundaries in the
+design space, by dropping sample points based on the assigned
+prediction. By selecting a class that is only predicted in a small
+region we generate the hollow features to be found by section pursuit.
+The resulting slice can then be viewed showing all assigned classes to
+resolve the boundary.
+
+\hypertarget{olives-data}{%
+\subsubsection{Olives data}\label{olives-data}}
+
+We first consider the classical olives data \citep{olives}. This data
+set contains measurements of 8 fatty acids for 572 Italian olive oils,
+collected in 9 different areas, and is available in the classifly
+package.
+
+We fit a support vector machine (svm) classification model using the
+implementation in the e1071 R package \citep{e1071}, to predict the area
+from the fatty acid measurements. For this example we consider 4 of the
+variables: palmitoleic, stearic, linoleic and arachidic, and we use a
+radial kernel for the svm model. We use classifly for automated sampling
+of the design space and evaluation of the predictions. For the
+visualization we first center and scale the data to have standard
+deviation one. We then select only those points that are inside a 4D
+hypersphere.
+
+As an example we select as the area of interest West-Liguria and drop
+all samples with this predicted class before performing section pursuit.
+The model predictions are shown in slices and projections in the first
+two columns of Fig. \ref{fig:olives}, the last column shows the
+projected data. The views in the first row are defined by the projection
+onto palmitoleic-stearic and in the second row by the projection onto
+linoleic-arachidic. The color indicates if the predicted area is
+West-Liguria (orange) or not (green). We see that the parameters
+palmitoleic and stearic do not allow us to distinguish the West-Liguria
+region in the projected data. The region where the svm model predicts
+this class is hidden in the projection, and it is not predicted anywhere
+inside the thin slice. On the contrary, linoleic and arachidic can
+separate the West-Liguria area from the others. Looking at the model
+predictions, we find that projections can partly reveal the part of the
+model space resulting in this prediction, while the slice can also
+resolve the non-linear decision boundary.
+
+Next we run section pursuit on the reduced svm sample. We define the
+section pursuit index with polar binning, with 5 equidistant radial bins
+and 10 angular bins. The bin counts are reweighed according to Eq.
+\ref{eq:reweight}. We set \(q=1\) and then optimize the index using the
+geodesic search available in the tourr package, starting form the slice
+defined by the projection onto linoleic-arachidic (see Fig.
+\ref{fig:olives}, second row). The final views obtained in the
+optimization are shown in the bottom row of Fig. \ref{fig:olives}.
+
+Looking at the data projected onto linoleic and arachidic, and the
+corresponding slice view of the classifier, we see a non-linear decision
+boundary that allows to separate the West-Liguria area from the other
+regions. This non-linearity is hidden in the projected view of the
+classifier. The section pursuit has identified a slice that has a higher
+index value and shows a linear decision boundary and with a larger area
+of the section predicting the selected class. The projected model
+predictions in this plane do not allow us to resolve this boundary.
+Interestingly, to maximize the area in the sliced view of the predictor,
+section pursuit has found a plane that leads to a linear decision
+boundary on the projected data.
+
+\begin{figure}
+\includegraphics[width=1\linewidth]{section_pursuit_files/figure-latex/olives-1} \caption{SVM classification of the West-Liguria region (orange) against all other regions (green) in the olives data. The first and second row are projections onto pairs of variables, the last row shows the final result obtained via section pursuit. The first and second column show the svm classification in a thin slice and as a full projection, the third column shows the projected data. The last column shows guides, including the axes for the final view at the bottom.}\label{fig:olives}
+\end{figure}
+
+\hypertarget{pdfsense-data}{%
+\subsubsection{PDFSense data}\label{pdfsense-data}}
+
+As similar example, but with different behavior, is given by the
+decision boundaries of a classification model for the PDFSense dataset.
+This data has 4021 observations in a 56 dimensional parameter space,
+that are grouped into 3 classes \citep{Wang:2018heo}. Following the
+analysis in \citet{Cook:2018mvr} we only consider the first six
+principal components, and train an svm classification model with radial
+kernel. We again use classifly and select the resulting sample points
+inside a 6D hypersphere after individual centering and scaling each of
+the variables.
+
+For this example, the classifier wraps tightly around two of the groups
+(DIS and jets), and most of the space is filled by the third group
+(VBP). We select only the samples predicting the VBP class, generating a
+sample with a small hollow region to be found by section pursuit. We
+again use the index with polar binning, with 5 equidistant radial bins
+and 8 angular bins. The \(\varepsilon\) cutoff is calculated according
+to Eq. \ref{eq:eps} and we reweight the bins according to Eq.
+\ref{eq:reweight}. We set \(q=1\) and use the tourr function
+search\_better to find the view with the maximum index value.
+
+The result is shown in Fig. \ref{fig:pdffit}, comparing the starting
+projection (top row) and the final view (bottom row). In the final slice
+view of the classifier predictions we see the decision boundaries
+between the three classes. The different regions are hidden in the
+projection of the classifier and of the data. In this case the svm model
+uses additional information from the orthogonal directions to separate
+the three classes. By looking at the final slice from section pursuit we
+have obtained a conditional view that allows us to resolve the resulting
+boundary.
+
+\begin{figure}
+\includegraphics[width=1\linewidth]{section_pursuit_files/figure-latex/pdffit-1} \caption{SVM classification of the PDFSense data, with predicted classes mapped to color. The first row shows a random starting projection, the second row is the final projection obtained via section pursuit on the second class shown in orange. The first and second column show the predicted class label from the svm in a thin slice and a projection. The third column shows the projected data in the same plane, and the last column shows the axes of the corresponding projection.}\label{fig:pdffit}
+\end{figure}
+
+\hypertarget{inequality-condition}{%
+\subsection{Inequality condition}\label{inequality-condition}}
+
+Similar to the decision boundaries of classification models, inequality
+conditions can induce non-linear boundaries in the parameter space. The
+inequalities may be complicated functions of multiple parameters, and we
+can use section pursuit to find visualizations that illustrate the
+boundaries. These are of interest in physics models for which we often
+have inequality constraints defining the allowed region of parameter
+space. By understanding the shape of this region we can gain physics
+insights guiding theoretical and experimental work. For example, the
+constraints might result in preferred parameter combinations hinting at
+a simpler underlying model, or we can reparametrise the allowed region
+to design targeted experiments to test the model further.
+
+\hypertarget{thdm}{%
+\subsubsection{THDM}\label{thdm}}
+
+A certain type of particle that occurs in particle physics models is the
+so-called scalar (or Higgs) boson, with properties specified by a
+``potential'' which depends on a set of parameters. These are the basic
+parameters of the model and they allow one to calculate physical
+quantities such as the masses of the scalar particles and their
+interaction strengths. A common problem that arises in this context
+consists of finding the parameter space that leads to acceptable
+predictions, that satisfy known theoretical or experimental constraints.
+
+For example, a two-Higgs-doublet model can be written under certain
+assumptions in terms of the parameter set
+\(\lambda_1,\lambda_2,\lambda_3,\lambda_4,\lambda_5,\alpha,\beta\),
+where the last two are angles. These angles are commonly discussed in
+terms of \(\tan(\beta)\) and \(\cos(\beta-\alpha)\), as these quantities
+are closely related to experimental observations. This model contains
+five scalar particles (types of ``Higgs'' bosons), dubbed
+\(h,H,A,H^\pm\), the first one corresponding to the famous Higgs boson
+found at CERN in 2012. The squared masses of these five particles are
+predicted in terms of the parameters of the model, and we use a form
+from \citet{Gunion:2002zf} (given in the Appendix).
+
+For the model to be viable it needs to satisfy a number of conditions
+that restrict the parameter space that is allowed. The simplest of these
+restrictions is that the masses must be real numbers: only parameters
+for which all squared masses are greater than 0 are viable. We will use
+this as our example, sampling
+\(\lambda_1,\lambda_2,\lambda_3,\lambda_4,\lambda_5,\tan(\beta),\cos(\beta-\alpha)\)
+within a 7D hypersphere. We then evaluate the predicted mass spectrum
+for each sample and flag all points that result in non-physical
+predictions for (some of) the masses. These points are dropped from the
+dataset and we use section pursuit to find regions that lead to a
+non-physical mass spectrum.
+
+For the visualization we first standardize each parameter and then drop
+all sample points for which the condition is not met. We then apply
+section pursuit to the reduced sample to find sections that are
+associated with real masses. We use the index with polar binning, with 5
+equidistant radial bins up to the maximum radius, and 10 angular bins.
+The \(\varepsilon\) cutoff is calculated according to Eq. \ref{eq:eps}
+and we reweight the bins according to Eq. \ref{eq:reweight}. We set
+\(q=1\) and use the search\_better optimization to find the view with
+the maximum index value.
+
+Two of the resulting views are shown in Fig. \ref{fig:thdm}. The samples
+that violate the condition are shown in red, the remaining samples
+(those used for the section pursuit) are shown in black. The top row
+shows a view encountered along the optimization path, i.e.~a section
+with relatively large index value. The slice is shown on the left and
+reveals the non-linear boundary defined by the conditions. The
+corresponding projection is shown in the middle and cannot resolve the
+feature. The bottom row shows the final view obtained via section
+pursuit.
+
+Both slices show interesting aspects of the boundary. In the first slice
+the condition is only violated in a small but well-defined region of the
+plane. Section pursuit has identified a slice where the condition is
+often violated, and the final view shows a complex non-linear boundary
+between the two regions. The boundaries are hidden in the corresponding
+projections. Looking at the axes representation of this projection, we
+find that the optimal slice is defined by a combination of all the input
+parameters, making direct interpretation challenging.
+
+\begin{figure}
+\includegraphics[width=1\linewidth]{section_pursuit_files/figure-latex/thdm-1} \caption{Slice (left) and projection (middle) views found when optimising the section pursuit index for the THDM sample. Black points satisfy the inequality conditions, red points do not and are dropped in the optimisation. The first row shows a view along the optimisation path, and the last row the final slice selected by section pursuit. The corresponding axes are shown on the right. The selected slices show clear separation of points not satifsying the conditions, which is hidden in the corresponding projections.}\label{fig:thdm}
+\end{figure}
+
+\hypertarget{conclusion-and-discussion}{%
+\section{Conclusion and discussion}\label{conclusion-and-discussion}}
+
+This paper introduces a section pursuit index that can be used to detect
+hollow or dense features that are visible in slices but hidden in
+projections. The index uses the distribution outside each current slice
+as a reference, and computes its difference from the slice distribution.
+The comparison of the two distributions is calculated as the positive
+sum of differences of normalized bin counts. To avoid differences
+arising from the overall shape we consider spherical multivariate
+distributions. In addition, we use the expected cumulative distribution
+function to reweight the inside and outside distributions separately,
+such that the expected counts are uniform across all bins.
+
+The section pursuit index can be used together with the slice display in
+the tourr package to define a guided slice tour. This means that we can
+use the available optimization routines, and we can further look at the
+interpolated optimization path. In practice, to conform to the
+assumption of an underlying spherical distribution, we can shave off
+points outside the hypersphere. Since the focus is on detecting hidden
+features in the center of the distribution, we do not expect to lose
+important information doing so. In case of simulated data, augmenting
+the data to be of this form is also an option.
+
+We have shown how to use the section pursuit index to explore non-linear
+decision boundaries of classification models, or similarly, to explore
+complex inequality conditions that depend on multiple parameters. In all
+examples, we have sampled the parameter space and evaluated the
+classification or inequality conditions for all points. We then dropped
+points assigned to one particular class, or in conflict with the
+inequality condition to generate the hollow features in the
+distribution. For all examples considered, the optimization resulted in
+slice views that illustrate interesting aspects of the boundaries.
+Additional potential applications for section pursuit include the
+exploration of non-standard multivariate confidence regions or Bayesian
+credible regions.
+
+Depending on the application, different index definitions would be
+recommended. Several variations on the index would be produced different
+choices of weights, and parameters in the generalized index definition
+(Section \ref{sec:generalise}). This paper hasn't fully explored the
+impact of all the choices, but the same type of diagnostics, in
+particular, the index visualization presented in Section \ref{sec:viz},
+could be used decide.
+
+\hypertarget{acknowledgements}{%
+\section*{Acknowledgements}\label{acknowledgements}}
+\addcontentsline{toc}{section}{Acknowledgements}
+
+The authors gratefully acknowledge the support of the Australian
+Research Council. This article was created with knitr \citep{knitr} and
+R Markdown \citep{rmarkdown} with embedded code, using the tidyverse
+\citep{tidyverse} packages. We thank the Wharton Statistics department
+for their hospitality while part of this work was conducted.
+
+\hypertarget{supplementary-material}{%
+\section*{Supplementary material}\label{supplementary-material}}
+\addcontentsline{toc}{section}{Supplementary material}
+
+\begin{itemize}
+\tightlist
+\item
+  Code and data is available at
+  \url{https://github.com/uschiLaa/paper-section-pursuit}.
+\item
+  The Appendix contains the derivation of the radial CDF of a
+  hypersphere projected onto a 2D plane and the equations used to
+  calculate the masses in the two-Higgs-doublet model.
+\end{itemize}
+
+\bibliographystyle{tfcad}
+\bibliography{interactcadsample.bib}
+
+
+\input{"appendix.tex"}
+
+
+\end{document}

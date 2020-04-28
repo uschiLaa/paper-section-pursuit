@@ -1,0 +1,52 @@
+\appendix
+
+\section{Radial CDF of projected hyperspheres}
+
+The radial CDF defined in Eq.(\ref{eq:cdf}) and used throughout this work can be derived by calculating the fraction of the projected volume within a circle of radius $r$. The volume of a $p$ dimensional hypersphere with radius $R$ is
+\begin{equation}
+V(p, R) = \frac{2 \pi^{p/2} R^p} {p \Gamma(p/2)}
+\end{equation}
+and the projected volume \textit{outside} a circle of radius $r$ is
+\begin{equation}
+V_{outside} (r, p, R) = \int_r^R V(p-2, \sqrt{R^2 - \rho^2}) 2 \pi \rho d\rho =
+\frac{\pi^{p/2}(R^4 - r^2 R^2)^{p/2}}{R^p \Gamma(p/2+1)}.
+\end{equation}
+The projected volume \textit{inside} the circle is given by
+\begin{equation}
+V_{inside}(r, p, R) = V(p, R) - V_{outside}(r, p, R),
+\end{equation}
+and we therefore get the relative volume within the circle (and thus the radial CDF) as
+\begin{equation}
+f (r, p, R) = \frac{V_{inside}(r, p, R)}{V(p, R)} = 1 - \left(1-\left(\frac{r}{R}\right)^2\right)^{p/2}.
+\end{equation}
+
+\section{Squared masses in the two-Higgs-doublet model}
+
+Following \cite{Gunion:2002zf} we compute the squared masses as
+\begin{eqnarray}
+m_h^2 &=& \frac{v^2}{
+     \sin(\beta - \alpha)}~(-\lambda_1\cos^3\beta~
+      \sin\alpha + \lambda_2\sin^3\beta\cos\alpha+ 
+     \frac{\lambda_{345}}{2}~
+      \cos(\beta + \alpha)\sin(2\beta)) \\ \nonumber
+m_H^2 &=& \frac{v^2}{
+    \cos(\beta - \alpha)}~(\lambda_1\cos^3\beta~
+      \cos\alpha + \lambda_2\sin^3\beta\sin\alpha+ 
+     \frac{\lambda_{345}}{2}~
+      \sin(\beta + \alpha)\sin(2\beta)) \\ \nonumber
+m_{H^\pm}^2 &=& \frac{v^2}{ \sin(2(\beta - \alpha))}~(-\sin(
+        2\alpha)~(\lambda_1\cos^2\beta - \lambda_2~
+         \sin^2\beta) + \lambda_{345}~
+      \sin(2\beta)\cos(2\alpha) - \frac{\lambda_{45}}{2}~
+       \sin(2(\beta - \alpha))) \\ \nonumber
+m_A^2 &=& \frac{v^2}{ \sin(2(\beta - \alpha))}~(\sin(
+      2\alpha)~(-\lambda_1\cos^2\beta + \lambda_2~
+        \sin^2\beta) + \lambda_{345}~
+     \sin(2\beta)\cos(2\alpha) - 
+    \lambda_5 \sin(2(\beta - \alpha)))
+    \label{masses}
+\end{eqnarray}
+
+where we have used the shorthand notation $\lambda_{ij\cdots}=\lambda_i+\lambda_j+\cdots$ and the constant $v\approx 246$~GeV sets the scale for the masses.
+
+
