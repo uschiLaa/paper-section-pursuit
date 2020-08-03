@@ -42,7 +42,7 @@ guided_section_tour <- function(index_f, d = 2, alpha = 0.5, cooling = 0.99,
       return(NULL)
     }
     
-    basis <- search_f(current, alpha, index, max.tries, cur_index=cur_index, ...)$target
+    basis <- search_f(current, alpha, index, max.tries, cur_index=cur_index, ...)
     print(basis)
     alpha <<- alpha * cooling
 

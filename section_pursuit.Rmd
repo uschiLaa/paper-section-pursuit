@@ -35,6 +35,7 @@ header-includes: |
   \usepackage[utf8]{inputenc}
   \usepackage{xcolor}
   \def\tightlist{}
+  \usepackage{setspace}\doublespacing
 output: rticles::tf_article
 ---
 
@@ -867,7 +868,7 @@ if(!file.exists("cache/traces_q1.rda")){
   
   set.seed(55)
   
- z20out <- read.csv("../simple-examples/z20out.CSV", header=FALSE)
+ z20out <- read.csv("data/z20out.CSV", header=FALSE)
  z20out <- apply(z20out, 2, function(x) (x-mean(x))/sd(x))
  
  z331out <- read.csv("data/z331out.CSV", header=FALSE)
