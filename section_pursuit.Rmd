@@ -61,12 +61,9 @@ library(ggpubr) # for extracting legend into separage plot
 library(e1071) # has svm function  
 library(ggrepel)
 
-source("source/binning.R")
-source("source/index.R")
+source("source/binning.R") # has parts not available in tourr package
 source("source/sliceTrace.R")
 source("source/neighbourhoodTrace.R")
-source("source/tour-guided-section.R")
-
 
 ```
 
@@ -160,7 +157,11 @@ Tour methods can also be used to understand the behavior of projection pursuit i
 
 ## Notation
 
-Let $Y=XA$, where $X$ is an $n\times p$ data matrix, $A$ is a $p\times d$ (orthonormal) projection matrix. To generate a slice, following @laa2019slice, compute the orthogonal distance between every point and plane (defined by $A$), call this $h_i$. Observations are considered inside a slice (section) if $h_i < h$. 
+Let $Y=X\cdot A$, where $X$ is an $n\times p$ data matrix, $A$ is a $p\times d$ (orthonormal) basis for the $d$ dimensional space onto which the data is being projected. To generate a slice, following @laa2019slice, compute the orthogonal distance between every point and plane (defined by $A = (\mathbf{a}_1, \mathbf{a}_2)$) as the Euclidean norm
+\begin{equation}
+h_i = ||\mathbf{x}_i - (\mathbf{x}_i\cdot \mathbf{a}_1) \mathbf{a}_1 - (\mathbf{x}_i\cdot \mathbf{a}_2)||.
+\end{equation}
+Observations are considered inside a slice (section) if $h_i < h$. 
 
 The index is defined for binned data. The projected data, $Y$, is binned into $K$ bins, $b_k, k=1, ..., K$. The counts of observations inside versus outside the slice for each bin are computed. The total number of counts in bin $k$ is $S_{k}=\sum_{i} I(Y_i \in b_{k})I(h_i < h)$ inside the section and $C_{k}=\sum_{i} I(Y_i \in b_{k})I(h_i \geq h)$ outside the section. The relative counts are thus $s_k = S_k / \sum_i S_i$ and $c_k = C_k / \sum_i C_i$.
 
@@ -1072,8 +1073,6 @@ Looking at the data projected onto linoleic and arachidic, and the corresponding
 ```{r olives, fig.cap="SVM classification of the West-Liguria region (orange) against all other regions (green) in the olives data. The first and second row are projections onto pairs of variables, the last row shows the final result obtained via section pursuit. The first and second column show the svm classification in a thin slice and as a full projection, the third column shows the projected data. The last column shows guides, including the axes for the final view at the bottom.", fig.height=5, fig.width=6, dev="png", dpi=300}
 
 if(!file.exists("cache/olives.rda")){
-
-  verbose <- FALSE
   
   olives_data <- olives[, -c(1,2)] %>%
     apply(2,  function(x) (x-mean(x))/sd(x))
