@@ -157,7 +157,7 @@ Tour methods can also be used to understand the behavior of projection pursuit i
 
 ## Notation
 
-Let $Y=X\cdot A$, where $X$ is an $n\times p$ data matrix, $A$ is a $p\times d$ (orthonormal) basis for the $d$ dimensional space onto which the data is being projected. To generate a slice, following @laa2019slice, compute the orthogonal distance between every point and plane (defined by $A = (\mathbf{a}_1, \mathbf{a}_2)$) as the Euclidean norm
+Let $Y=X\cdot A$, where $X$ is an $n\times p$ data matrix, $A$ is a $p\times d$ (orthonormal) basis for the $d$-dimensional space onto which the data is being projected. To generate a 2-dimensional section, following @laa2019slice, compute the orthogonal distance between every point and plane (defined by $A = (\mathbf{a}_1, \mathbf{a}_2)$) as the Euclidean norm
 \begin{equation}
 h_i = ||\mathbf{x}_i - (\mathbf{x}_i\cdot \mathbf{a}_1) \mathbf{a}_1 - (\mathbf{x}_i\cdot \mathbf{a}_2)||.
 \end{equation}
@@ -200,7 +200,7 @@ The radial binning is more complicated. The reason is that the radial distributi
 Consider the expected distribution to be a uniform distribution within a hypersphere in $p$ dimensions projected onto a 2D plane. The cumulative distribution function (CDF) for the radial distribution in the projection, derived in the Appendix, is given by:
 
 \begin{equation}
-f(r;p,R) = 1-\left(1-\left(\frac{r}{R}\right)^2\right)^{p/2},
+F(r;p,R) = 1-\left(1-\left(\frac{r}{R}\right)^2\right)^{p/2},
 \label{eq:cdf}
 \end{equation}
 and depends on the hypersphere radius $R$ and on $p$. For illustration we show the CDF dependence on $r/R$ (where $0<r\leq R$) for different values of $p$ in Fig. \ref{fig:cdf}. For large values of $p$ the majority of points is found within a small relative radius $r/R$, e.g. for $p=10$ we see that 75\% of points are within $r/R<1/2$.
@@ -240,13 +240,13 @@ Thus, only re-weighting of bins to account for the piling from high dimensions  
 
 The fraction of points in the radial bin $i$ between $r_1$ and $r_2$ is
 \begin{equation}
-f_{i}(p, R) = f(r_2; p, R) - f(r_1; p, R).
+F_{i}(p, R) = F(r_2; p, R) - F(r_1; p, R).
 \label{eq:frac}
 \end{equation}
 Consider $K_r$ radial bins, with total bin count $N_i$ in bin $i$, $i = 1,...,K_r$, and relative counts are $n_i = N_i / \sum_j N_j$.
 We define the bin-wise weights as
 \begin{equation}
-w_i(p, R, K_r) = \frac{1}{K_r f_i(p,R)},
+w_i(p, R, K_r) = \frac{1}{K_r F_i(p,R)},
 \end{equation}
 and the reweighed bin count as
 \begin{equation}
