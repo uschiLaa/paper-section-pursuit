@@ -92,7 +92,7 @@ Recent work in @laa2019slice implemented a display of interpolated slices, which
 XXX should we reproduce Fig 1 of the slice tour paper here?
 
 
-The first two columns of Figure \ref{fig:allSlices} show scatterplots of the points in a 4D data set inside an informative (S1) and an uninformative (S2) slice through the origin, for two simulated data sets (A, B). Note that the data is defined in a 4D sphere, which generates the circular shape. The sampling results in hollow regions inside the sphere by rejecting points within shapes defined by selected hyperspherical harmonics [@doi:10.1063/1.3054274]. The hollowness is hidden in projections of the data, as shown in the final column of Figure \ref{fig:allSlices}. It is much simpler to define sections on high-dimensional spheres than cubes, and this is the approach used for all the data in this paper. Data defined in a cube, most data, is trimmed or supplemented to be contained in a sphere. 
+The first two columns of Figure \ref{fig:allSlices} show scatterplots of the points in a 4D data set inside an informative (S1) and an uninformative (S2) slice, \textcolor{red}{defined by two different projection planes centered at the origin}, for two simulated data sets (A, B). Note that the data is defined in a 4D sphere, which generates the circular shape. The sampling results in hollow regions inside the sphere by rejecting points within shapes defined by selected hyperspherical harmonics [@doi:10.1063/1.3054274]. The hollowness is hidden in projections of the data, as shown in the final column of Figure \ref{fig:allSlices}. It is much simpler to define sections on high-dimensional spheres than cubes, and this is the approach used for all the data in this paper. Data defined in a cube, most data, is trimmed or supplemented to be contained in a sphere. 
 
 
 ```{r allSlices, fig.cap="Slices of two 4D data sets (A, B) shown using scatterplots of points inside 2D sections. The first slice (S1) is informative and reveals the hollow regions in the data, while the second slice (S2) is un-informative. The last column shows projections of the data onto a 2D plane, hiding the hollowness.", fig.height=5, fig.width=9, out.width='80%',fig.align = "center"}
@@ -439,6 +439,8 @@ N_S = \frac{N}{2} \left(\frac{h}{R}\right)^{p-2} \left(p - (p-2)\left(\frac{h}{R
 
 \noindent We denote $x=h/R$ the resolution. It determines the minimum relative size of features that can be seen in a slice.
 When adding noise dimensions, in order to keep the resolution $x$ fixed, the sample size needs to increase approximately as $x^{\Delta p}$, where $\Delta p$ is the increase in number of dimensions.
+
+\textcolor{red}{As an explicit example consider the expected fraction of points $N_S/N$ inside a slice of resolution $x=\frac{h}{R}=0.1$. This fraction is about $0.15$ or $15\%$ when $p=3$, and quickly drops to $0.02$ when $p=4$ and $0.002$ when $p=5$. Thus, even for moderate dimensionality $p$ the original sample size needs to be large to have enough points to resolve features in a slice.}
 
 ## Estimating the magnitude of noise, $\varepsilon$ \label{sec:epsilon}
 
