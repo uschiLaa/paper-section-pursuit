@@ -60,6 +60,7 @@ library(classifly)
 library(ggpubr) # for extracting legend into separage plot
 library(e1071) # has svm function  
 library(ggrepel)
+library(ggforce)
 
 source("source/binning.R") # has parts not available in tourr package
 source("source/sliceTrace.R")
@@ -192,15 +193,54 @@ The $[.]_{>\varepsilon}$ notation indicates that we drop all bins where the diff
     0, & \text{if $a-b \leq \varepsilon$.}
   \end{cases}
 \end{equation}
-Only bins where the difference is positive are summed. The $\varepsilon$ avoids summing noise and suppresses an artificial dependence on the number of bins. The value of $\varepsilon$ should be estimated based on the expected size of sampling fluctuation, which may depend on assuming a distribution, the number of samples $N$, the number of bins $K$, the slice thickness $h$ and the dimension $p$. An estimate for $\varepsilon$ assuming a uniform distribution inside a hypersphere is given in Section \ref{sec:epsilon}. \textcolor{red}{If $\varepsilon=0$ we get a symmetry in the definitions,  $I_A^{low}=I_A^{up}$. In general, the choice of index should match the intention, searching for regions of high or low density in the slice.}
+Only bins where the difference is positive are summed. The $\varepsilon$ avoids summing noise and suppresses an artificial dependence on the number of bins. The value of $\varepsilon$ should be estimated based on the expected size of sampling fluctuation, which may depend on assuming a distribution, the number of samples $N$, the number of bins $K$, the slice radius $h$ and the dimension $p$. An estimate for $\varepsilon$ assuming a uniform distribution inside a hypersphere is given in Section \ref{sec:epsilon}. \textcolor{red}{If $\varepsilon=0$ we get a symmetry in the definitions,  $I_A^{low}=I_A^{up}$. In general, the choice of index should match the intention, searching for regions of high or low density in the slice.}
 
 ## Binning procedures
 
+\textcolor{red}{XXX maybe this first paragraph should not be in the binning section}
+
 A  desirable property for projection pursuit, into $d$-dimensions, and thus also desirable for section pursuit, is that the index be rotational invariant. That  is, regardless of the basis in the $d$-D plane defining the projection, the index value should be identical. With sections, this is more complicated, because interior and exterior distributions need to be comparable. Thus a restriction is imposed on the observed data: that it falls within a $p$-dimensional hypersphere. Data is typically observed in a hypercube, so this prescription requires a departure from the norm which, however,is still practical. In cases of simulated data, such as when looking at multivariate models, the sampling scheme can be adjusted. Observed data, on the other hand, requires shaving off the corners. This procedure is expected to be harmless  because it is interior structure that is of interest. In addition, this  approach is designed for reasonably small $p$ so that the vast gap between spheres and cubes in high dimensions is not a concern. For very high-dimensional data, some dimension reduction is expected in pre-processing.
 
-The hypersphere constraint suggests a preference for binning in polar coordinates. Considering 2D slices we therefore bin in radius $r$ and angle $\theta$. When the observations are uniformly distributed in a hypersphere, the angular distribution will be uniform across all values of $\theta$ and thus $K_{\theta}$ equidistant angular bins are used.
+The hypersphere constraint suggests a preference for binning in polar coordinates.
+\textcolor{red}{In general we can decompose an expected underlying distribution in a radial and a directional component, the latter being parametrized by $d-1$ angles $\theta_i$, $i=1,...,d-1$. The expected reference distribution can then guide the concrete choices in how to bin in these parameters. In our case we are interested in binning the projected data points and will use the radius $r$ and a single angle $\theta$ in the projection plane to parametrize the binning. As a reference distribution we consider points that are uniformly distributed in a hypersphere, thus the angular distribution will be uniform across all values of $\theta$, suggesting the use of $K_{\theta}$ equidistant angular bins. This would also hold in the case of a spherical normal reference distribution.}
 
-The radial binning is more complicated. The reason is that the radial distribution depends on the data dimension, $p$. As $p$ increases, the projected data piles more in the center. A varying radial bin size could be used to offset this effect, where the bounds of the $K_r$ radial bins take into account the expected distribution of points given $p$. However, the expected radial distribution will differ between a slice and a projection of the data, so the effect is accounted for instead by reweighting bin counts. The calculations are as follows. 
+```{r sketch, out.width="50%", fig.cap="Trying to sketch out binning, is this useful? What annotation should be added?", fig.align = "center"}
+
+xy <- 1/sqrt(2)
+
+ggplot() +
+  geom_circle(aes(x0= 0, y0=0, r = 1)) +
+  geom_circle(aes(x0= 0, y0=0, r = 0.75)) +
+  geom_circle(aes(x0= 0, y0=0, r = 0.5)) +
+  geom_circle(aes(x0= 0, y0=0, r = 0.25)) +
+  geom_segment(aes(x = 0, y = 0, xend = 1, yend = 0)) +
+  geom_segment(aes(x = 0, y = 0, xend = 0, yend = 1)) +
+  geom_segment(aes(x = 0, y = 0, xend = -1, yend = 0)) +
+  geom_segment(aes(x = 0, y = 0, xend = 0, yend = -1)) +
+  geom_segment(aes(x = 0, y = 0, xend = xy, yend = xy)) +
+  geom_segment(aes(x = 0, y = 0, xend = xy, yend = -xy)) +
+  geom_segment(aes(x = 0, y = 0, xend = -xy, yend = xy)) +
+  geom_segment(aes(x = 0, y = 0, xend = -xy, yend = -xy)) +
+  annotate("text", x = 0.15, y = 0.05, label=TeX("$r_1, \\theta_4$"), size=9) +
+  annotate("text", x = 0.35, y = 0.05, label=TeX("$r_2$"), size=9) +
+  annotate("text", x = 0.6, y = 0.05, label=TeX("$r_3$"), size=9) +
+  annotate("text", x = 0.85, y = 0.05, label=TeX("$r_4$"), size=9) +
+  annotate("text", x = -0.15, y = 0.05, label=TeX("$\\theta_1$"), size=9) +
+  annotate("text", x = -0.05, y = 0.12, label=TeX("$\\theta_2$"), size=9) +
+  annotate("text", x = 0.05, y = 0.12, label=TeX("$\\theta_3$"), size=9) +
+  annotate("text", x = 0.15, y = -0.07, label=TeX("$\\theta_5$"), size=9) +
+    annotate("text", x = 0.05, y = -0.13, label=TeX("$\\theta_6$"), size=9) +
+  annotate("text", x = -0.05, y = -0.13, label=TeX("$\\theta_7$"), size=9) +
+  annotate("text", x = -0.15, y = -0.07, label=TeX("$\\theta_8$"), size=9) +
+  theme_void() +
+  coord_fixed()
+```
+
+
+The radial binning is more complicated.
+\textcolor{red}{This is because the marginal radial distribution of the projected data depends on the assumed reference distribution as well as the data dimenson $p$.}
+As $p$ increases, the projected data piles more in the center. A varying radial bin size could be used to offset this effect, where the bounds of the $K_r$ radial bins take into account the expected distribution of points given $p$. 
+\textcolor{red}{However, the expected radial distribution will also differ between the projected data in a slice and a projection of the full data}, so the effect is accounted for instead by reweighting bin counts. The calculations are as follows. 
 
 Consider the expected distribution to be a uniform distribution within a hypersphere in $p$ dimensions projected onto a 2D plane. The cumulative distribution function (CDF) for the radial distribution in the projection, derived in the Appendix, is given by:
 
@@ -224,17 +264,21 @@ cdf <- function(p){
 ggplot(data = data.frame(r = c(0,1)), mapping = aes(x = r)) +
   stat_function(
         fun = cdf(2),
-        mapping = aes(color = "ca")) +
+        mapping = aes(color = "ca", linetype = "la"), size = 1.2) +
   stat_function(
         fun = cdf(4),
-        mapping = aes(color = "cb")) +
+        mapping = aes(color = "cb", linetype = "lb"), size = 1.2) +
     stat_function(
         fun = cdf(10),
-        mapping = aes(color = "cc")) +
+        mapping = aes(color = "cc", linetype = "lc"), size = 1.2) +
   scale_color_manual(name = "p",
                      values = RColorBrewer::brewer.pal(3, "Dark2"),
                      labels = c("2", "4", "10")) +
-  xlab("r/R") + ylab("CDF") + theme_bw() + theme(legend.position="top", legend.margin = margin(0,1,-1,1))
+  scale_linetype_manual(name = "p",
+                        values = c("solid", "dashed", "dotdash"),
+                        labels = c("2", "4", "10")) +
+  xlab("r/R") + ylab("CDF") + theme_bw() +
+  theme(legend.position="top", legend.margin = margin(0,1,-1,1), legend.key.width = unit(1.3, 'cm'))
 
 ```
 
@@ -553,7 +597,7 @@ ymax <- 0.6
 p1 <- as_tibble(tr1) %>%
   gather(binning, index, -t) %>%
   ggplot(aes(t, index, color=binning)) +
-  geom_line() +
+  geom_line(size=1.1) +
   theme_bw() +
   theme(legend.position = "none") +
   ylim(0, ymax) +
@@ -564,7 +608,7 @@ p1 <- as_tibble(tr1) %>%
 p2 <- as_tibble(tr2) %>%
   gather(binning, index, -t) %>%
   ggplot(aes(t, index, color=binning)) +
-  geom_line() +
+  geom_line(size=1.1) +
   theme_bw() +
   theme(legend.position = "none") +
   ylim(0, ymax) +
@@ -576,7 +620,7 @@ p2 <- as_tibble(tr2) %>%
 p3 <- as_tibble(tr3) %>%
   gather(binning, index, -t) %>%
   ggplot(aes(t, index, color=binning)) +
-  geom_line() +
+  geom_line(size=1.1) +
   theme_bw() +
   theme(legend.position = "none") +
   ylim(0, ymax) +
@@ -587,7 +631,7 @@ p3 <- as_tibble(tr3) %>%
 p4 <- as_tibble(tr4) %>%
   gather(binning, index, -t) %>%
   ggplot(aes(t, index, color=binning)) +
-  geom_line() +
+  geom_line(size=1.1) +
   theme_bw() +
   theme(legend.position = "none") +
   ylim(0, ymax) +
@@ -599,7 +643,7 @@ p4 <- as_tibble(tr4) %>%
 p5 <- as_tibble(tr5) %>%
   gather(binning, index, -t) %>%
   ggplot(aes(t, index, color=binning)) +
-  geom_line() +
+  geom_line(size=1.1) +
   theme_bw() +
   theme(legend.position = "none") +
   ylim(0, ymax) +
@@ -610,7 +654,7 @@ p5 <- as_tibble(tr5) %>%
 p6 <- as_tibble(tr6) %>%
   gather(binning, index, -t) %>%
   ggplot(aes(t, index, color=binning)) +
-  geom_line() +
+  geom_line(size=1.1) +
   theme_bw() +
   scale_colour_manual(values = cols, breaks = col_breaks) +
   theme(legend.justification=c(0,1), 
@@ -711,35 +755,41 @@ idx_q <- function(c){
 p1 <- ggplot(data = data.frame(x = c(0.1,1)), mapping = aes(x = x)) +
   stat_function(
         fun = idx_c(1),
-        mapping = aes(color = "ca")) +
+        mapping = aes(color = "ca", linetype = "la"), size=1.1) +
   stat_function(
         fun = idx_c(2),
-        mapping = aes(color = "cb")) +
+        mapping = aes(color = "cb", linetype = "lb"), size=1.1) +
     stat_function(
         fun = idx_c(1/2),
-        mapping = aes(color = "cc")) +
+        mapping = aes(color = "cc", linetype = "lc"), size=1.1) +
   scale_color_manual(name = "q",
                      values = RColorBrewer::brewer.pal(3, "Dark2"),
                      labels = c("1", "2", "1/2")) +
+    scale_linetype_manual(name = "q",
+                        values = c("solid", "dashed", "dotdash"),
+                        labels = c("1", "2", "1/2")) +
   xlab(TeX("$\\gamma$")) + ylab(TeX("$I_A^{up}$")) + theme_bw() + theme(legend.position="top", legend.margin = margin(0,1,-1,1))
 
 
 p2 <- ggplot(data = data.frame(x = c(0.1,2)), mapping = aes(x = x)) +
   stat_function(
         fun = idx_q(0.25),
-        mapping = aes(color = "ca")) +
+        mapping = aes(color = "ca", linetype = "la"), size=1.1) +
   stat_function(
         fun = idx_q(0.5),
-        mapping = aes(color = "cb")) +
+        mapping = aes(color = "cb", linetype = "lb"), size=1.1) +
     stat_function(
         fun = idx_q(0.75),
-        mapping = aes(color = "cc")) +
+        mapping = aes(color = "cc", linetype = "lc"), size=1.1) +
     stat_function(
         fun = idx_q(0.95),
-        mapping = aes(color = "cd")) +
-  scale_color_manual(name = TeX("$\\gamma$"),
+        mapping = aes(color = "cd", linetype = "ld"), size=1.1) +
+  scale_color_manual(name =  TeX("$\\gamma$"),
                      values = RColorBrewer::brewer.pal(4, "Set2"),
                      labels = c("0.25", "0.5", "0.75", "0.95")) +
+      scale_linetype_manual(name = TeX("$\\gamma$"),
+                        values = c("solid", "dashed", "dotdash", "dotted"),
+                        labels = c("0.25", "0.5", "0.75", "0.95")) +
   xlab("q") + ylab(TeX("$I_A^{up}$")) + theme_bw() + theme(legend.position="top", legend.margin = margin(0,1,0,1), legend.text  = element_text(size = 7))
 
 grid.arrange(p1, p2, ncol=2)
@@ -1039,10 +1089,10 @@ In the applications we use the index defined in Eq. \ref{eq:index}. When using t
 
 1. Check the underlying assumption that the data is inside a hypersphere. This can be ensured by first centering and scaling all variables, and then dropping points that have a radius above the maximum $r_{max}$.
 2. Choose the number of bins. Setting the bin size for polar binning uses the maximum radius and defines $n_r$ equidistant radial bins and $n_{\theta}$ angular bins. In practice we have found that $n_r=5$ and $n_{\theta}=8$ or $10$ tends to work well.
-3. Decide the slice thickness $h$ to use. We can think of it in terms of a relative resolution $h/r_{max}$. For our examples, $0.25$ worked well, but this will likely change depending on the data.
+3. Decide the slice radius $h$ to use. We can think of it in terms of a relative resolution $h/r_{max}$. For our examples, $0.25$ worked well, but this will likely change depending on the data.
 4. The binning and resolution, together with the number of variables and number of observations are needed to estimate the uncertainties following Eq.\ref{eq:eps}.
 5. We can now define the slice index, which takes the binning and uncertainty estimates as input. We define the index such that for each slice it reweights the counts according to Eq. \ref{eq:reweight}.
-6. For the optimization we use a modified version of the guided tour that passes the projected points, the distance vector and the thickness $h$ into the index function. This can directly be used together with the optimization routines from the \texttt{tourr} package.
+6. For the optimization we use a modified version of the guided tour that passes the projected points, the distance vector and the radius $h$ into the index function. This can directly be used together with the optimization routines from the \texttt{tourr} package.
 
 ```{r application-setupt}
 getCircle <- function(cntrx, cntry, sclx, scly){
