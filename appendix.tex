@@ -1,5 +1,24 @@
 \appendix
 
+\section{Simulated data}
+
+The  four-dimensional hyperspherical harmonics \cite{Domokos:1967fgx} can be written as
+\begin{eqnarray}
+Z^m_{n\ell}(\beta,\theta,\phi)=2^{\ell+1/2}\sqrt{\frac{(n+1)\Gamma(n-\ell+1)}{\pi\Gamma(n+\ell+2)}}
+\Gamma(\ell+1)\sin^\ell\beta C^{\ell+1}_{n-\ell}(\cos\beta)Y^m_\ell(\theta,\phi),
+\end{eqnarray}
+where $C^{\ell+1}_{n-\ell}$ are the Gegenbauer polynomials and $Y^m_\ell(\theta,\phi)$ are the 3D spherical harmonics. The polynomials exist on the 4D unit hypersphere $S^3$ in $\mathbb{R}^4$ defined by three angles: the azimuthal angles $\phi$, the 3D zenith (or polar) angle $\theta$ and the 4D zenith angle $\beta$.
+
+The data sets (A, B) represent two of these polynomials, $Z^2_{00}$ and $Z^3_{31}$ respectively. Explicitly they are given by,
+\begin{eqnarray}
+Z^2_{00} &=& \frac{3-4\sin^2\beta}{\sqrt{2}\pi} \nonumber \\
+Z^3_{31} &=& -\sqrt{\frac{3}{10}}\frac{1}{2\pi} e^{i\phi}\sin^3\beta\left(40\cos^2\beta-4\right)\sin\theta\left(5\cos^2\theta-1\right)
+\end{eqnarray}
+
+To generate the data sets we start from a random sample of points in $S^3$ in hyper-spherical coordinates $(r,\beta,\theta,\phi)$ which we then classify into inside or outside points depending on whether $r$ is less than or greater than $|Z^m_{n\ell}(\beta,\theta,\phi)|$. This procedure generates a much larger number of outside than inside points so we collect them separately to obtain reasonably sized samples.
+
+
+
 \section{Radial CDF of projected hyperspheres}
 
 The radial CDF defined in Eq.(\ref{eq:cdf}) and used throughout this work can be derived by calculating the fraction of the projected volume within a circle of radius $r$. The volume of a $p$ dimensional hypersphere with radius $R$ is
