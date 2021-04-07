@@ -172,22 +172,30 @@ In practice we need to make assumptions about the underlying distribution to get
 
 ## Notation
 
-Let $Y=X\cdot A$, where $X$ is an $n\times p$ data matrix, $A$ is a $p\times d$ (orthonormal) basis for the $d$-dimensional space onto which the data is being projected. To generate a 2-dimensional section, following @laa2019slice, compute the orthogonal distance between every point and plane (defined by $A = (\mathbf{a}_1, \mathbf{a}_2)$) as the Euclidean norm
+Let $Y=X\cdot A$, where $X$ is an $n\times p$ data matrix, $A$ is a $p\times d$ (orthonormal) basis for the $d$-dimensional space onto which the data is being projected. To generate a 2-dimensional section, following @laa2019slice, compute the orthogonal distance between every point and the plane (defined by $A = (\mathbf{a}_1, \mathbf{a}_2)$) as the Euclidean norm
 \begin{equation}
 h_i = ||\mathbf{x}_i - (\mathbf{x}_i\cdot \mathbf{a}_1) \mathbf{a}_1 - (\mathbf{x}_i\cdot \mathbf{a}_2)||.
 \end{equation}
-Observations are considered inside a slice (section) if $h_i < h$. 
+Observations are considered inside a slice if $h_i < h$. 
 
-The index is defined for binned data. The projected data, $Y$, is binned into $K$ bins, $b_k, k=1, ..., K$. The counts of observations inside versus outside the slice for each bin are computed. The total number of counts in bin $k$ is $S_{k}=\sum_{i} I(Y_i \in b_{k})I(h_i < h)$ inside the section and $C_{k}=\sum_{i} I(Y_i \in b_{k})I(h_i \geq h)$ outside the section. The relative counts are thus $s_k = S_k / \sum_i S_i$ and $c_k = C_k / \sum_i C_i$.
+\textcolor{red}{We denote the set of points inside the slice $S$, and the set of points outside the slice $C$. For the definition of the index we will further bin the} projected data $Y$ into $K$ bins, $b_k, k=1, ..., K$.
+The counts of observations \textcolor{red}{for each bin are computed separately for $S$ and $C$. We can thus write the counts in bin $k$ via two indicator functions,} $S_{k}=\sum_{i} I(Y_i \in b_{k})I(h_i < h)$ inside the section and $C_{k}=\sum_{i} I(Y_i \in b_{k})I(h_i \geq h)$ outside the section. The relative counts are thus $s_k = S_k / \sum_i S_i$ and $c_k = C_k / \sum_i C_i$.
+
+## Rotation invariance
+
+A  desirable property for projection pursuit, into $d$-dimensions, and thus also desirable for section pursuit, is that the index be rotational invariant. That  is, regardless of the basis in the $d$-D plane defining the projection, the index value should be identical. With sections, this is more complicated, because interior and exterior distributions need to be comparable \textcolor{red}{in the absence of structure. Accounting for expected differences is only feasible when assuming a spherically symmetric distribution}. 
+
+\textcolor{red}{XXX maybe replace the paragraph below to say that simulation is often done in hypercube, which is optimized for bivariate plotting, but simulation in a hypersphere would be more appropriate when working with a tour or projection pursuit, since then the range is rotation invariant. Real data would often be approximately normal and thus also approximataly spherically symmetric.}
+
+
+Thus a restriction is imposed on the observed data: that it falls within a $p$-dimensional hypersphere. Data is typically observed in a hypercube, so this prescription requires a departure from the norm which, however,is still practical. In cases of simulated data, such as when looking at multivariate models, the sampling scheme can be adjusted. Observed data, on the other hand, requires shaving off the corners. This procedure is expected to be harmless  because it is interior structure that is of interest. In addition, this  approach is designed for reasonably small $p$ so that the vast gap between spheres and cubes in high dimensions is not a concern. For very high-dimensional data, some dimension reduction is expected in pre-processing.
+
 
 ## Binning procedures
 
-\textcolor{red}{XXX maybe this first paragraph should not be in the binning section}
+\textcolor{red}{XXX is it possible to disentangle binning from reweighting? Maybe have the formal part in notation section, everything regarding reweighting in the next section?}
 
-A  desirable property for projection pursuit, into $d$-dimensions, and thus also desirable for section pursuit, is that the index be rotational invariant. That  is, regardless of the basis in the $d$-D plane defining the projection, the index value should be identical. With sections, this is more complicated, because interior and exterior distributions need to be comparable \textcolor{red}{in the absence of structure. Accounting for expected differences is only feasible when assuming a spherically symmetric distribution}. Thus a restriction is imposed on the observed data: that it falls within a $p$-dimensional hypersphere. Data is typically observed in a hypercube, so this prescription requires a departure from the norm which, however,is still practical. In cases of simulated data, such as when looking at multivariate models, the sampling scheme can be adjusted. Observed data, on the other hand, requires shaving off the corners. This procedure is expected to be harmless  because it is interior structure that is of interest. In addition, this  approach is designed for reasonably small $p$ so that the vast gap between spheres and cubes in high dimensions is not a concern. For very high-dimensional data, some dimension reduction is expected in pre-processing.
-
-The hypersphere constraint suggests a preference for binning in polar coordinates.
-\textcolor{red}{In general we can decompose an expected underlying distribution in a radial and a directional component, the latter being parametrized by $d-1$ angles $\theta_i$, $i=1,...,d-1$. The expected reference distribution can then guide the concrete choices in how to bin in these parameters. In our case we are interested in binning the projected data points and will use the radius $r$ and a single angle $\theta$ in the projection plane to parametrize the binning. As a reference distribution we consider points that are uniformly distributed in a hypersphere, thus the angular distribution will be uniform across all values of $\theta$, suggesting the use of $K_{\theta}$ equidistant angular bins. This would also hold in the case of a spherical normal reference distribution.}
+\textcolor{red}{Requiring a rotation invariant range suggests a preference for binning in polar coordinates. In general we can decompose an expected underlying distribution in a radial and a directional component, the latter being parametrized by $d-1$ angles $\theta_i$, $i=1,...,d-1$. The expected reference distribution can then guide the concrete choices in how to bin in these parameters. In our case we are interested in binning the projected data points and will use the radius $r$ and a single angle $\theta$ in the projection plane to parametrize the binning. As a reference distribution we consider points that are uniformly distributed in a hypersphere, thus the angular distribution will be uniform across all values of $\theta$, suggesting the use of $K_{\theta}$ equidistant angular bins. This would also hold in the case of a spherical normal reference distribution.}
 
 ```{r sketch, out.width="50%", fig.cap="Trying to sketch out binning, is this useful? What annotation should be added?", fig.align = "center"}
 
