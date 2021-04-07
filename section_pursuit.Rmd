@@ -167,6 +167,9 @@ Tour methods can also be used to understand the behavior of projection pursuit i
 
 # A new index for finding interesting sections \label{sec:index}
 
+In this section we define a new index function, including the introduction of the relevant notation (3.1), a binning procedure used in the definition (3.2), and a first definition of the index (3.3). Subsections 3.4 and 3.5 discuss generalizations of the index.
+In practice we need to make assumptions about the underlying distribution to get useful results when comparing the slice to a projection. All practical aspects are discussed in the next section.
+
 ## Notation
 
 Let $Y=X\cdot A$, where $X$ is an $n\times p$ data matrix, $A$ is a $p\times d$ (orthonormal) basis for the $d$-dimensional space onto which the data is being projected. To generate a 2-dimensional section, following @laa2019slice, compute the orthogonal distance between every point and plane (defined by $A = (\mathbf{a}_1, \mathbf{a}_2)$) as the Euclidean norm
@@ -176,30 +179,6 @@ h_i = ||\mathbf{x}_i - (\mathbf{x}_i\cdot \mathbf{a}_1) \mathbf{a}_1 - (\mathbf{
 Observations are considered inside a slice (section) if $h_i < h$. 
 
 The index is defined for binned data. The projected data, $Y$, is binned into $K$ bins, $b_k, k=1, ..., K$. The counts of observations inside versus outside the slice for each bin are computed. The total number of counts in bin $k$ is $S_{k}=\sum_{i} I(Y_i \in b_{k})I(h_i < h)$ inside the section and $C_{k}=\sum_{i} I(Y_i \in b_{k})I(h_i \geq h)$ outside the section. The relative counts are thus $s_k = S_k / \sum_i S_i$ and $c_k = C_k / \sum_i C_i$.
-
-## Index definition
-
-Indexes for comparing the distribution of observations in the section versus outside can be defined (building on @doi:10.1198/1061860043119) as:
-
-\begin{equation}
-I_A^{low} = \sum_{k}\left[\left(c_{k}-s_{k}\right)\right]_{>\varepsilon},
-\label{eq:index}
-\end{equation}
-
-\begin{equation}
-I_A^{up} = \sum_{k}\left[\left(s_{k}-c_{k}\right)\right]_{>\varepsilon}
-\label{eq:indexup}
-\end{equation}
-
-\noindent where $s_{k}$ and $c_{k}$ are the relative counts of observations in bin $b_{k}$ inside and outside the section. The first definition $I_A^{low}$ takes large values if there is a hollow region of low density inside the slice, while the second definition $I_A^{up}$ can be useful when looking for regions of higher density ("needles in a haystack").
-The $[.]_{>\varepsilon}$ notation indicates that we drop all bins where the difference in counts is below some threshold $\varepsilon$,
-\begin{equation}
-[a - b]_{>\varepsilon} = \begin{cases}
-    a - b, & \text{if $a - b > \varepsilon$}\\
-    0, & \text{if $a-b \leq \varepsilon$.}
-  \end{cases}
-\end{equation}
-Only bins where the difference is positive are summed. The $\varepsilon$ avoids summing noise and suppresses an artificial dependence on the number of bins. The value of $\varepsilon$ should be estimated based on the expected size of sampling fluctuation, which may depend on assuming a distribution, the number of samples $N$, the number of bins $K$, the slice radius $h$ and the dimension $p$. An estimate for $\varepsilon$ assuming a uniform distribution inside a hypersphere is given in Section \ref{sec:epsilon}. \textcolor{red}{If $\varepsilon=0$ we get a symmetry in the definitions,  $I_A^{low}=I_A^{up}$. In general, the choice of index should match the intention, searching for regions of high or low density in the slice.}
 
 ## Binning procedures
 
@@ -241,7 +220,6 @@ ggplot() +
   theme_void() +
   coord_fixed()
 ```
-
 
 The radial binning is more complicated.
 \textcolor{red}{This is because the marginal radial distribution of the projected data depends on the assumed reference distribution as well as the data dimenson $p$.}
@@ -288,7 +266,69 @@ ggplot(data = data.frame(r = c(0,1)), mapping = aes(x = r)) +
 
 ```
 
-### Reweighting bin counts
+
+## Index definition
+
+Indexes for comparing the distribution of observations in the section versus outside can be defined (building on @doi:10.1198/1061860043119) as:
+
+\begin{equation}
+I_A^{low} = \sum_{k}\left[\left(c_{k}-s_{k}\right)\right]_{>\varepsilon},
+\label{eq:index}
+\end{equation}
+
+\begin{equation}
+I_A^{up} = \sum_{k}\left[\left(s_{k}-c_{k}\right)\right]_{>\varepsilon}
+\label{eq:indexup}
+\end{equation}
+
+\noindent where $s_{k}$ and $c_{k}$ are the relative counts of observations in bin $b_{k}$ inside and outside the section. The first definition $I_A^{low}$ takes large values if there is a hollow region of low density inside the slice, while the second definition $I_A^{up}$ can be useful when looking for regions of higher density ("needles in a haystack").
+The $[.]_{>\varepsilon}$ notation indicates that we drop all bins where the difference in counts is below some threshold $\varepsilon$,
+\begin{equation}
+[a - b]_{>\varepsilon} = \begin{cases}
+    a - b, & \text{if $a - b > \varepsilon$}\\
+    0, & \text{if $a-b \leq \varepsilon$.}
+  \end{cases}
+\end{equation}
+Only bins where the difference is positive are summed. The $\varepsilon$ avoids summing noise and suppresses an artificial dependence on the number of bins. The value of $\varepsilon$ should be estimated based on the expected size of sampling fluctuation, which may depend on assuming a distribution, the number of samples $N$, the number of bins $K$, the slice radius $h$ and the dimension $p$. An estimate for $\varepsilon$ assuming a uniform distribution inside a hypersphere is given in Section \ref{sec:epsilon}. \textcolor{red}{If $\varepsilon=0$ we get a symmetry in the definitions,  $I_A^{low}=I_A^{up}$. In general, the choice of index should match the intention, searching for regions of high or low density in the slice.}
+
+
+
+## Generalised index \label{sec:generalise}
+
+The idea of section pursuit is completely general. The index considered here is compelling as it allows to use the projected distribution as a reference when looking for interesting slices of the data. 
+
+<!--### Generalisation of the index-->
+The definitions in Eq.(\ref{eq:index},\ref{eq:indexup}) can be generalized for example as
+\begin{equation}
+I_A^{low} = \sum_{k}w_{k}\left(\left[c_{k}^{1/q}-s_{k}^{1/q}\right]_{>\varepsilon}\right)^{q}
+\label{eq:index2}
+\end{equation}
+\begin{equation}
+I_A^{up} = \sum_{k}w_{k}\left(\left[s_{k}^{1/q}-c_{k}^{1/q}\right]_{>\varepsilon}\right)^{q}
+\label{eq:index2up}
+\end{equation}
+where $w_k$ can be used to (de)emphasize certain bins, e.g. to up-weight information in the center of the distribution. 
+
+The exponent $q$ can be used to tune the sensitivity, a small $q$ will enhance sensitivity to small differences (and thus might over-emphasize fluctuations), a large $q$ will suppress fluctuations and is mainly sensitive to large differences (and might thus miss features that are too similar to the background distribution). Selecting $q=1$ corresponds to an $L_1$ type norm, and $q=2$ to an $L_2$ type norm. In addition we will also consider $q=1/2$.
+The overall range of plausible index values depends on $q$ and in practice we use an estimate of the range to rescale the index value to fall in $[0,1]$.
+Notice that, in this definition the index is no longer symmetric under exchanging the distributions inside and outside the section, even when $\varepsilon=0$.
+
+### Additional considerations
+
+<!-- ### Correlation between bin counts-->
+It may also be reasonable to consider using a kernel, instead of discrete bins, to produce some spatial smoothing. The effect would be to focus attention on large differences in specific regions rather than small differences anywhere. 
+
+<!--### Slice only index-->
+
+A completely different approach  to producing a section index, would be to apply any existing projection pursuit index on a sliced projection instead of the full projected data. Only observations inside the slice are then used for the index calculation. 
+
+
+# The index in practice
+
+The application of the new index function should be informed by an expected underlying distribution. This assumption can guide practical choices that need to be made: reweighting bin counts to account for expected differences between the projected distribution and the distribution in a slice (4.1), estimates of sufficient sample size, expected noise and corresponding threshold $\epsilon$ (4.2).
+In addition this section includes visualizations to better understand the index behavior and how it depends on its parameters (4.3) and guidance on using the index in practice (4.4, XXX TBC).
+
+## Reweighting bin counts
 
 While the radial distribution of the points projected from a full $p$ dimensional hypersphere follows the CDF in Eq.(\ref{eq:cdf}), the distribution in the slice is approximately uniform in the disk (as long as $h \ll R$). Within the slice, the adjustment only accounts for relative areas in radial bins for a 2D uniform distribution.
 Thus, only re-weighting of bins to account for the piling from high dimensions  needs to be conducted for the observations outside the slice. The weights can be calculated from the CDF.  
@@ -674,35 +714,6 @@ p6 <- as_tibble(tr6) %>%
 grid.arrange(p3, p1, p5, p4, p2, p6, ncol=3)
 ```
 
-## Generalised index \label{sec:generalise}
-
-The idea of section pursuit is completely general. The index considered here is compelling as it allows to use the projected distribution as a reference when looking for interesting slices of the data. 
-
-<!--### Generalisation of the index-->
-The definitions in Eq.(\ref{eq:index},\ref{eq:indexup}) can be generalized for example as
-\begin{equation}
-I_A^{low} = \sum_{k}w_{k}\left(\left[c_{k}^{1/q}-s_{k}^{1/q}\right]_{>\varepsilon}\right)^{q}
-\label{eq:index2}
-\end{equation}
-\begin{equation}
-I_A^{up} = \sum_{k}w_{k}\left(\left[s_{k}^{1/q}-c_{k}^{1/q}\right]_{>\varepsilon}\right)^{q}
-\label{eq:index2up}
-\end{equation}
-where $w_k$ can be used to (de)emphasize certain bins, e.g. to up-weight information in the center of the distribution. 
-
-The exponent $q$ can be used to tune the sensitivity, a small $q$ will enhance sensitivity to small differences (and thus might over-emphasize fluctuations), a large $q$ will suppress fluctuations and is mainly sensitive to large differences (and might thus miss features that are too similar to the background distribution). Selecting $q=1$ corresponds to an $L_1$ type norm, and $q=2$ to an $L_2$ type norm. In addition we will also consider $q=1/2$.
-The overall range of plausible index values depends on $q$ and in practice we use an estimate of the range to rescale the index value to fall in $[0,1]$.
-Notice that, in this definition the index is no longer symmetric under exchanging the distributions inside and outside the section, even when $\varepsilon=0$.
-
-### Additional considerations
-
-<!-- ### Correlation between bin counts-->
-It may also be reasonable to consider using a kernel, instead of discrete bins, to produce some spatial smoothing. The effect would be to focus attention on large differences in specific regions rather than small differences anywhere. 
-
-<!--### Slice only index-->
-
-A completely different approach  to producing a section index, would be to apply any existing projection pursuit index on a sliced projection instead of the full projected data. Only observations inside the slice are then used for the index calculation. 
-
 ### Index behavior \label{sec:behaviour}
 
 To examine the behavior of the generalized index for choices of $q, K$ and $\varepsilon$, a re-parametrization is used. Consider an outside distribution that is uniform across all $K$ bins,
@@ -908,7 +919,7 @@ ggplot(data = data.frame(x = c(0.5,2)), mapping = aes(x = x)) +
 ```
 
 
-# Visualising the index \label{sec:viz}
+## Visualising the index \label{sec:viz}
 
 A Huber plot [@huberpp] (available in the R package, PPtreeViz [@pptreeviz]) is a useful illustration of a 1D projection pursuit index. It shows the index values for a 2D distribution across all possible 1D projections. This idea is generalized for a 2D projection pursuit index, to illustrate the behavior over a higher dimensional dataset, and  called a *topotrace plot*. The approach is:
 
@@ -1086,6 +1097,9 @@ grid.arrange(p1, p2, p3, ncol=3)
 
 ```
 
+## Index in practice
+
+XXX should this go here or remain in the applications section?
 
 # Applications \label{sec:applications}
 
