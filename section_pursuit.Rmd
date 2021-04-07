@@ -39,6 +39,12 @@ header-includes: |
 output: rticles::tf_article
 ---
 
+
+\hypersetup{linkcolor=black}
+  \tableofcontents
+
+\newpage
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
   echo = FALSE, 
