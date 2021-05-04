@@ -1,0 +1,343 @@
+---
+title: "Appendix"
+output:
+  pdf_document:
+    keep_tex: true
+bibliography: interactcadsample.bib
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE, 
+  message = FALSE, 
+  warning = FALSE,
+  error = FALSE,
+  out.width = "100%",
+  fig.width = 10,
+  fig.height = 8)
+
+library(latex2exp)
+library(tidyverse)
+library(gridExtra)
+library(geozoo)
+library(tourr)
+library(viridis)
+library(classifly)
+library(ggpubr) # for extracting legend into separage plot
+library(e1071) # has svm function  
+library(ggrepel)
+library(ggforce)
+
+source("source/binning.R") # has parts not available in tourr package
+source("source/sliceTrace.R")
+source("source/neighbourhoodTrace.R")
+
+basisVector <- function(i, n){
+  v <- rep(0,n)
+  v[i] <- 1
+  v
+}
+basisMatrix <- function(i, j, n){
+  matrix(c(basisVector(i,n), basisVector(j,n)), ncol=2)
+}
+```
+
+# Slice volume derivation
+
+XXX this is from the slice tour paper, but I think we might want to repeat it here??
+
+We calculate the relative volume of a slice through a $p$ dimensional hypersphere of radius $R$. In general the volume of a full hypersphere with radius $r$ in $q$ dimensions is given as
+\begin{equation}
+V(r, q) = \frac{\pi^{q/2} r^q}{\frac{q}{2} \Gamma(q/2)},
+\end{equation}
+and its variation with the radius is
+\begin{equation}
+\frac{dV(r, q)}{dr} = 2 \frac{\pi^{q/2} r^{q-1}}{\Gamma(q/2)}.
+\end{equation}
+
+To calculate the slice volume we note that it is spherical in the $p-2$ dimensional orthogonal space on the projection plane, while capturing the full volume (i.e. area) inside the plane. To calculate the slice volume we therefore integrate the product of $\frac{dV(r, p-2)}{dr}$ and the area in the plane parametrised by $r$, from the origin to the full slice thickness $h$. The area in the plane is a circle with radius $\sqrt{R^2 - r^2}$. The slice volume is thus calculated as
+\begin{equation}
+V_{slice}(R, h, p) =
+\int_0^h \frac{dV(r, p-2)}{dr} V(\sqrt{R^2 - r^2}, 2) dr =
+\frac{\pi^{p/2}}{\Gamma(p/2)} \frac{h^{p-2}}{p} [pR^2 - (p-2)h^2].
+\end{equation}
+The relative volume of the slice is then simply given as
+\begin{equation}
+V_{rel}(R, h, p) = \frac{V_{slice}(R, h, p)}{V(R, p)} = \frac{h^{p-2}}{2R^p} [pR^2 - (p-2)h^2].
+\end{equation}
+
+# Simulated data
+
+The  four-dimensional hyperspherical harmonics \cite{Domokos:1967fgx} can be written as
+\begin{eqnarray}
+Z^m_{n\ell}(\beta,\theta,\phi)=2^{\ell+1/2}\sqrt{\frac{(n+1)\Gamma(n-\ell+1)}{\pi\Gamma(n+\ell+2)}}
+\Gamma(\ell+1)\sin^\ell\beta C^{(\ell+1)}_{n-\ell}(\cos\beta)Y^m_\ell(\theta,\phi),
+\end{eqnarray}
+where $C^{(\ell+1)}_{n-\ell}$ are the Gegenbauer polynomials and $Y^m_\ell(\theta,\phi)$ are the 3D spherical harmonics. The polynomials are defined over the 4D unit hypersphere $S^3$ in $\mathbb{R}^4$ and parameterized by three angles: the azimuthal angles $\phi$, the 3D zenith (or polar) angle $\theta$ and the 4D zenith angle $\beta$. 
+
+The data sets (A, B) are generated from two of these polynomials. Explicitly they are obtained from,
+\begin{eqnarray}
+{\rm Set~A:}~Z^0_{20} &=& \frac{3-4\sin^2\beta}{\sqrt{2}\pi} \nonumber \\
+{\rm Set~B:}~\sqrt{\frac{3}{2}}Z^1_{53} &=& \sqrt{\frac{3}{10}}\frac{1}{2\pi} e^{i\phi}\sin^3\beta\left(40\cos^2\beta-4\right)\sin\theta\left(1-5\cos^2\theta\right)
+\end{eqnarray}
+
+To generate the data sets we start from a uniform sample of points inside a 4-ball of radius one (the inside of the hypersphere $S^3$)  which we then classify into inside or outside points depending on whether $r$ is less than or greater than $|Z^m_{n\ell}(\beta,\theta,\phi)|$. This procedure generates a much larger number of outside than inside points so we collect them separately to obtain reasonably sized samples. The uniform sampling is done in Cartesian coordinates $(x,y,z,t)$ which are then transformed to hyper-spherical coordinates  $(r\cos\beta,r\sin\beta\cos\theta,r\sin\beta\sin\theta\cos\phi,r\sin\beta\sin\theta\sin\phi)$.
+
+
+
+# Radial CDF of projected hyperspheres
+
+The radial CDF defined in Eq.(\ref{eq:cdf}) and used throughout this work can be derived by calculating the fraction of the projected volume within a circle of radius $r$. The volume of a $p$ dimensional hypersphere with radius $R$ is
+\begin{equation}
+V(p, R) = \frac{2 \pi^{p/2} R^p} {p \Gamma(p/2)}
+\end{equation}
+and the projected volume \textit{outside} a circle of radius $r$ is
+\begin{equation}
+V_{outside} (r, p, R) = \int_r^R V(p-2, \sqrt{R^2 - \rho^2}) 2 \pi \rho d\rho =
+\frac{\pi^{p/2}(R^4 - r^2 R^2)^{p/2}}{R^p \Gamma(p/2+1)}.
+\end{equation}
+The projected volume \textit{inside} the circle is given by
+\begin{equation}
+V_{inside}(r, p, R) = V(p, R) - V_{outside}(r, p, R),
+\end{equation}
+and we therefore get the relative volume within the circle (and thus the radial CDF) as
+\begin{equation}
+F (r, p, R) = \frac{V_{inside}(r, p, R)}{V(p, R)} = 1 - \left(1-\left(\frac{r}{R}\right)^2\right)^{p/2}.
+\end{equation}
+
+# Squared masses in the two-Higgs-doublet model
+
+Following \cite{Gunion:2002zf} we compute the squared masses as
+\begin{eqnarray}
+m_h^2 &=& \frac{v^2}{
+     \sin(\beta - \alpha)}~(-\lambda_1\cos^3\beta~
+      \sin\alpha + \lambda_2\sin^3\beta\cos\alpha+ 
+     \frac{\lambda_{345}}{2}~
+      \cos(\beta + \alpha)\sin(2\beta)) \\ \nonumber
+m_H^2 &=& \frac{v^2}{
+    \cos(\beta - \alpha)}~(\lambda_1\cos^3\beta~
+      \cos\alpha + \lambda_2\sin^3\beta\sin\alpha+ 
+     \frac{\lambda_{345}}{2}~
+      \sin(\beta + \alpha)\sin(2\beta)) \\ \nonumber
+m_{H^\pm}^2 &=& \frac{v^2}{ \sin(2(\beta - \alpha))}~(-\sin(
+        2\alpha)~(\lambda_1\cos^2\beta - \lambda_2~
+         \sin^2\beta) + \lambda_{345}~
+      \sin(2\beta)\cos(2\alpha) - \frac{\lambda_{45}}{2}~
+       \sin(2(\beta - \alpha))) \\ \nonumber
+m_A^2 &=& \frac{v^2}{ \sin(2(\beta - \alpha))}~(\sin(
+      2\alpha)~(-\lambda_1\cos^2\beta + \lambda_2~
+        \sin^2\beta) + \lambda_{345}~
+     \sin(2\beta)\cos(2\alpha) - 
+    \lambda_5 \sin(2(\beta - \alpha)))
+    \label{masses}
+\end{eqnarray}
+
+where we have used the shorthand notation $\lambda_{ij\cdots}=\lambda_i+\lambda_j+\cdots$ and the constant $v\approx 246$~GeV sets the scale for the masses.
+
+# Additional application: PDFSense data
+
+As similar example, but with different behavior, is given by the decision boundaries of a classification model for the PDFSense dataset. This data has 4021 observations in a 56 dimensional parameter space, that are grouped into 3 classes [@Wang:2018heo]. Following the analysis in @Cook:2018mvr we only consider the first six principal components, and train an svm classification model with radial kernel. We again use classifly and select the resulting sample points inside a 6D hypersphere after individual centering and scaling each of the variables.
+
+
+For this example, the classifier wraps tightly around two of the groups (DIS and jets), and most of the space is filled by the third group (VBP). We select only the samples predicting the VBP class, generating a sample with a small hollow region to be found by section pursuit. We again use the index with polar binning, with 5 equidistant radial bins and 8 angular bins. The  $\varepsilon$ cutoff is calculated according to Eq. \ref{eq:eps} and we reweight the bins according to Eq. \ref{eq:reweight}. We set $q=1$ and use the tourr function search\_better to find the view with the maximum index value.
+
+The result is shown in Fig. \ref{fig:pdffit}, comparing the starting projection (top row) and the final view (bottom row). In the final slice view of the classifier predictions we see the decision boundaries between the three classes. The different regions are hidden in the projection of the classifier and of the data. In this case the svm model uses additional information from the orthogonal directions to separate the three classes. By looking at the final slice from section pursuit we have obtained a conditional view that allows us to resolve the resulting boundary.
+
+```{r pdffit, fig.cap="SVM classification of the PDFSense data, with predicted classes mapped to color. The first row shows a random starting projection, the second row is the final projection obtained via section pursuit on the second class shown in orange. The first and second column show the predicted class label from the svm in a thin slice and a projection. The third column shows the projected data in the same plane, and the last column shows the axes of the corresponding projection.", fig.height=4, fig.width=7, dev="png", dpi=300}
+
+
+
+if(!file.exists("cache/pdffit_plot.rda")){
+  
+  # the full data used for projection pursuit is quite large and not shared
+  # the code to re-generate it is included below (but slow to run)
+  # the pdffit_plot.rda has enough information to make the result plots
+  # the large datafile is required to make changes to the data before plotting it
+  
+  if(!file.exists("cache/pdffit.rda")){
+
+    # setup: load data, type needs to be factor
+    pdffit <- read_csv("data/pca_center.csv") %>%
+      mutate(type = ifelse(type==1, "a", ifelse(type==2, "b", "c"))) %>%
+      mutate(type = as.factor(type))
+    # we want to predict type depending on the 6 PC
+    f <- type ~ .
+    # call classifly with large number of points sampled
+    o <- classifly(pdffit, f , svm, probability = TRUE, kernel = "radial", n=1e7)
+
+    # some preparation of the resulting dataset
+    # drop the training points from the dataset
+    o <- o %>%
+      filter(.TYPE == "simulated")
+
+    # first we just look for the maximum value
+    omax <- o %>%
+      select(-.ADVANTAGE, -type, -a, -b, -c, -.TYPE, -.BOUNDARY) %>%
+      apply(2, function(x) (x-mean(x))/sd(x))
+    r_max <- max(abs(omax))
+  
+    # now generat the data we will use
+    o_sphere <- as_tibble(omax) %>%
+      #calculate radius for shaving
+      dplyr::mutate(r = sqrt(PC1^2+PC2^2+PC3^2+
+                            PC4^2+PC5^2+PC6^2)) %>%
+      # add type back into the dataset
+      add_column(type = factor(o$type)) %>%
+      # shave and drop radius column
+      filter(r < r_max) %>%
+      select(-r)
+  
+    o_tour <- o_sphere %>%
+      # drop class 1 and 3 (i.e. a and c) and drop type column
+      filter(type == "b") %>%
+      select(-type)
+  
+    # now we can set up the guided tour
+    q <- 1
+    r_breaks_5 <- linear_breaks(5, 0, r_max*1.05)
+    a_breaks_8 <- angular_breaks(8)
+    e1q1 <- estimate_eps(nrow(o_tour), 8, 0.5/r_max, 5*8, 8, r_breaks_5)
+    idx <- slice_index(r_breaks_5, a_breaks_8, e1q1, bintype="polar", power=q, reweight=T, p = 6)
+  
+    set.seed(33121)
+    thist <- save_history(o_tour, guided_section_tour(idx, eps=0.01, anchor = rep(0,6),
+                                                      search_f = tourr:::search_better), rescale = F)
+
+    save(thist, o_sphere, idx, file = "cache/pdffit.rda")
+  
+  } else {
+    load("cache/pdffit.rda")
+  }
+  
+  # prepare data for plotting
+  
+  thist <- as.list(thist)
+  prj1 <- thist[[1]]
+  prj2 <- thist[[length(thist)]]
+  
+  h = 0.3
+
+  d1 <- o_sphere %>%
+    filter(type == "b") %>%
+    select(-type)
+  
+  d2 <- o_sphere %>%
+    select(-type)
+
+
+  clrs <- RColorBrewer::brewer.pal(3, "Dark2")
+  col1 <- clrs[as.numeric(as.factor(o_sphere$type))]
+
+  # calculate distances
+  dists11 <- tourr:::anchored_orthogonal_distance(prj1, d1, anchor=c(0,0,0,0,0,0))
+  dists12 <- tourr:::anchored_orthogonal_distance(prj2, d1, anchor=c(0,0,0,0,0,0))
+  dists21 <- tourr:::anchored_orthogonal_distance(prj1, d2, anchor=c(0,0,0,0,0,0))
+  dists22 <- tourr:::anchored_orthogonal_distance(prj2, d2, anchor=c(0,0,0,0,0,0))
+
+  idx_11 <- idx(as.matrix(d1) %*% prj1, dists11, h)
+  idx_12 <- idx(as.matrix(d1) %*% prj2, dists12, h)
+
+
+  dpr11 <- as.matrix(d1) %*% prj1 %>%
+    as_tibble()
+
+  dpr12 <- as.matrix(d1) %*% prj2 %>%
+    as_tibble()
+
+  dpr21 <- as.matrix(d2) %*% prj1 %>%
+    as_tibble()
+
+  dpr22 <- as.matrix(d2) %*% prj2 %>%
+    as_tibble()
+
+  pdffit <- read_csv("data/pca_center.csv") %>%
+    mutate(type = ifelse(type==1, "a", ifelse(type==2, "b", "c"))) %>%
+    mutate(type = as.factor(type))
+  data_pr1 <- as.matrix(select(pdffit,-type)) %*% prj1
+  data_pr2 <- as.matrix(select(pdffit,-type)) %*% prj2
+  col2 <- clrs[as.numeric(as.factor(pdffit$type))]
+
+  
+  pdffit_w_1 <- mutate(pdffit, P1=data_pr1[,1], P2=data_pr1[,2])
+  pdffit_w_2 <- mutate(pdffit, P1=data_pr2[,1], P2=data_pr2[,2])
+  
+  col21 <- col1[dists21 < h]
+  col22 <- col1[dists22 < h]
+  
+  colnames(dpr11) <- c("P1", "P2")
+  colnames(dpr12) <- c("P1", "P2")
+  colnames(dpr21) <- c("P1", "P2")
+  colnames(dpr22) <- c("P1", "P2")
+  
+  colnames(prj1) <- c("P1", "P2")
+  prj1 <- as_tibble(prj1) %>%
+    add_column(label=c("PC1", "PC2", "PC3", "PC4", "PC5", "PC6"))
+
+  colnames(prj2) <- c("P1", "P2")
+  prj2 <- as_tibble(prj2) %>%
+    add_column(label=c("PC1", "PC2", "PC3", "PC4", "PC5", "PC6"))
+
+  p1 <- ggplot(as_tibble(dpr11[dists11 < h,]), aes(x=P1, y=P2)) +
+    geom_point(size=0.5) + theme_bw() + 
+    #ggtitle(paste0("Slice, I=",format(idx_11, digits = 2))) +
+    ggtitle(TeX(sprintf("$I_A^{low} = %s$", format(idx_11, digits = 2)))) +
+    theme(aspect.ratio=1, plot.title = element_text(size = 10)) 
+  
+  p2 <- ggplot(as_tibble(dpr12[dists12 < h,]), aes(x=P1, y=P2)) +
+    geom_point(size=0.5) + theme_bw() + 
+    ggtitle(TeX(sprintf("$I_A^{low} = %s$", format(idx_12, digits = 2)))) +
+    theme(aspect.ratio=1, plot.title = element_text(size = 10)) 
+  
+  p3 <- ggplot(as_tibble(dpr21[dists21 < h,]), aes(x=P1, y=P2)) +
+    geom_point(color=col21, size=0.5) + theme_bw() + 
+    ggtitle(TeX(sprintf("$I_A^{low} = %s$", format(idx_11, digits = 2)))) +
+    theme(aspect.ratio=1, plot.title = element_text(size = 10)) 
+  
+  p4 <- ggplot(as_tibble(dpr22[dists22 < h,]), aes(x=P1, y=P2)) +
+    geom_point(color=col22, size=0.5) + theme_bw() +
+    ggtitle(TeX(sprintf("$I_A^{low} = %s$", format(idx_12, digits = 2)))) +
+    theme(aspect.ratio=1, plot.title = element_text(size = 10)) 
+  
+  p3p <- ggplot(as_tibble(dpr21), aes(x=P1, y=P2)) +
+    geom_point(color=col1, size=0.05) + theme_bw() +
+    ggtitle("Projection") +
+    theme(aspect.ratio=1, plot.title = element_text(size = 10)) 
+  
+  p4p <- ggplot(as_tibble(dpr22), aes(x=P1, y=P2)) +
+    geom_point(color=col1, size=0.05) + theme_bw() + 
+    ggtitle("Projection") +
+    theme(aspect.ratio=1, plot.title = element_text(size = 10)) 
+  
+  p3d <- ggplot(as_tibble(pdffit_w_1), aes(x=P1, y=P2)) +
+    geom_point(color=col2, size=1) + theme_bw() + 
+    ggtitle("Projected data") +
+    theme(aspect.ratio=1, plot.title = element_text(size = 10)) 
+  
+  p4d <- ggplot(as_tibble(pdffit_w_2), aes(x=P1, y=P2)) +
+    geom_point(color=col2, size=1) + theme_bw() +
+    ggtitle("Projected data") +
+    theme(aspect.ratio=1, plot.title = element_text(size = 10)) 
+  
+  p5 <- ggplot() +
+    geom_path(data=getCircle(0,0,1.2,1.2), aes(x=x, y=y), color="grey") +
+    geom_segment(data=getAxes(prj1, 0,0,1,1), aes(x=x1, xend=x2, y=y1, yend=y2)) +
+    geom_text(data=getAxes(prj1, 0,0,1,1), aes(x=x2, y=y2, label=label), size=2.5) +
+    theme_void() +
+    theme(aspect.ratio = 1, plot.margin=unit(c(0.1,0.5,0.8,0.5),"cm")) +
+    theme(aspect.ratio=1, plot.title = element_text(size = 10)) 
+  
+  p6 <- ggplot() +
+    geom_path(data=getCircle(0,0,1.2,1.2), aes(x=x, y=y), color="grey") +
+    geom_segment(data=getAxes(prj2, 0,0,1,1), aes(x=x1, xend=x2, y=y1, yend=y2)) +
+    geom_text(data=getAxes(prj2, 0,0,1,1), aes(x=x2, y=y2, label=label), size=2.5) +
+    theme_void() +
+    theme(aspect.ratio = 1, plot.margin=unit(c(0.1,0.5,0.8,0.5),"cm")) +
+    theme(aspect.ratio=1, plot.title = element_text(size = 10)) 
+
+  save(p1, p2, p3, p4, p3p, p4p, p3d, p4d, p5, p6, prj1, prj2, file = "cache/pdffit_plot.rda")
+} else{
+  load("cache/pdffit_plot.rda")
+}
+
+grid.arrange(p3, p3p, p3d, p5, p4, p4p, p4d, p6, ncol=4, widths=c(2, 2, 2, 1.5))
+```
