@@ -1,0 +1,151 @@
+We thank the AE and referees for the thorough review of our paper...
+
+Reviewer 1:
+
+Required revisons:
+
+- make the manuscript less dependent on the Laa, Cook, Valencia 2019, include
+  sketch:
+  + we have extended the introduction of slicing and added a diagram
+    (XXX here I am thinking of reproducing Fig 1 from the slice tour paper)
+- binning is not fully clear, sketch would help:
+  + we have extended the discussion of the radial binning and added a sketch
+    (also suggested by reviewer 2) (XXX how extensively and where do we want
+    to describe binning? Maybe add diagram or point to Fig 3 or similar for description.)
+- indices vs indexes: XXX we had this discussion before and I remember Di saying
+  it should indeed be indexes, do we want to argue here?
+- line section 3.2 on indices: index equality is a non-sequitur. Please motivate why this is of interest.
+  + We have rephrased the statement to point out why this is important. (If the equality is not given, we should pick the appropriate index definition.)
+- The thickness of the slice h in the parameter gets dropped from the indices.
+  + XXX this needs to be considered as we restructure sections!
+- Alternative index definitions, e.g. log-ratio
+  + XXX Because of the normalisation the bin-counts are compositional data, maybe
+    there is some common ways of comparing compositions, such as log-ratios?
+- Structure: general index from the start instead of generalizing?
+  + XXX we keep the structure but changed the argument, how to reply here? 
+- Figure 3: add legend
+  + XXX added this for now, but not convinced we want this
+- Equation 8: add example with numbers
+  + Note that this is now Equation 9 (N_S). We have added some explicit values
+    at the end of the subsection.
+- Generalised index section needs to be reworked
+  + We have changed the structure and reworked the discussion to avoid repetition.
+    The text from the 'additional considerations' subsection has been reworked and
+    was moved to the discussion.
+- Fig 4, 5, 6: add text in axis labels
+  + XXX maybe best to adapt the caption here?
+- index in practice: How many observations were excluded from the olive-oil data? Show that in the scatterplots of the projected data
+  + We do not remove any observations from the olive-oil data itself, but points are dropped
+    from the large set of points that fill up the full parameter space to evaluate the model
+    predictions. First, we only want to sample points inside the hypercube, and second we
+    filter points based on the predicted group to generate holes in this data that are then
+    identified via the section pursuit algorithm.
+- more on data generation
+  + We have added an appendix that details how the data of Set A and B were simulated.
+
+Reviewer 2:
+
+- Structure: XXX
+
+- Re notation:
+  + we have corrected the description of A as a basis for the 
+    projected space rather than a projection matrix
+  + we now use capital F to denote a CDF
+  + We prefer keeping R instead of using rho because it is easier to read, given
+    that p also appears in the same equation.
+  + XXX how to argue against hats for sample estimates?
+  + we have clarifide the notation of slices vs sections and added diagrams to
+    help with intuition, see Section "Grand tour and slice tour"
+    (XXX didn't add diagram yet)
+  + XXX what about symbol for inside vs outside the slice? I think we already have this with S, C
+  
+- Rotation invariance and trimming
+  + the reason that rotation invariance is
+    important here is that we need to make assumptions about how the section
+    is expected to differ from the slice, which is used in defining their
+    separate weights (Eq. 7). XXX need to make clear what type of rotation
+    invariance we talk about here, this goes beyond convenience in my opinion,
+    specific argument will depend on the restructuring (because reweighting
+    will probably be discussed after this argument).
+  
+- Spherical trimming costs and benefits
+  + we appreciate that the trimming can
+    appear radical. Note however that realistic data is rarely filling a
+    hypercube and the effect of trimming would be less dramatic than illustrated
+    by the comparison presented by the refereee.
+    In the case of simulated data (all examples in the paper)
+    we could explicitly design our simulation setup to sample only within a
+    hypersphere which should cover all areas of interest. With sections we are
+    typically most interested in the region near the center and the trimming will
+    not impact the result.
+  + Instead of comparing to a hypercube might be better to compare to multivariate
+    normal, but how would we even define the radius? Maybe change our writing away
+    from hypercube. If we sample, it is a choice to go with points in a cube or in
+    a sphere. If working with collected data a cube does not seem a reasonable
+    expectation for the distribution.
+  + XXX maybe also argue that looking for hollowness in corners doesn't really
+    make sense, especially when comparing to the "outside" distribution which
+    would basically not exist in such a region. Might extend the discussion of these
+    things in the paper, improve justification of trimming. "our method is not
+    appropriate to look for structure in corners where we lack a comparison distribution."
+  + While we agree that methods like interactive brushing are a valuable
+    alternative ... XXX limited in practice, could introduce bias (we tend to
+    check regions where we expect something to happen), 
+    
+- Radial binning
+  + I think we can extend the description of the binning a bit further (also to
+    clear up confusion from Ref 1), but not go into full detail. Maybe say
+    something like: we agree that the radial binning is interesting in general,
+    but a fully general discussion, as sketched by the referee, is beyond the
+    scope of this paper.
+    
+- Equation 8 needs to be derived (p11 of the review)
+  + This was derived in the slice tour paper and is and exact result, not using
+    any of the approximations considered by the referee. XXX include the derivation
+    as an appendix?
+  
+- NS for olive oil data (p12 of review)
+  + Indeed the number of data points within a thin slice is neglibible, and the
+    slice display is not useful for the visualisation of the data itself. Instead,
+    the slice display and section pursuit are used to understand the decision
+    boundaries of a classification model. Since this is visualised as the classification
+    of samples across the parameter space, the original number of points can be
+    controlled by the user and was adjusted to obtain a feasible number of points
+    inside the slice. XXX maybe need to comment on selecting only 4 variables here?
+  
+- Description of reweighting is not clear
+  + XXX rework this after the restructuring, use p12-14 for guidance
+  
+- Epsilon threshold (p15)
+  + maybe just issue of adding index?
+  
+- Generalised index as separate section (p16)
+  + Within the new structure of Sections 3 and 4 it makes sense to keep the
+    generalised index as a subsection of Section 3, while discussing the epsilon
+    threshold together with other practical aspects in Section 4.
+    
+- Application section (p17)
+  + We have moved the PDFSense application to the appendix, but decided to
+    keep the 2HDM application in the main text, as supported by Referee 1.
+    
+---Minor details (p18)
+- Definition of S1 and S2 unclear
+  + Indeed theses are defined via two different projection planes, we now state
+    this explicitly in the text and adapted the wording to specify that the
+    planes are *centered* at the origin.
+    
+- Data generation of sets A and B
+  + The details explaining the data generation have been added as an appendix.
+  
+- Critique of "needle" and maybe also grain
+  + Should we drop this and focus only on hollowness? There was a similar complaint
+    from Reviewer 1
+
+- Figure 5, maybe also 2, 4: make it easier to distinguish lines by making them
+  thicker and maybe using different linetypes
+  + We have increased the line thickness in Figures 2, 4 and 5, and also use
+    different linetypes in the case of smooth functions (Figs 2 and 5).
+  
+- Radius vs thickness
+  + We have replaced thickness by radius when referring to h, since indeed
+    2*h would be considered the thickness and h the radius.
