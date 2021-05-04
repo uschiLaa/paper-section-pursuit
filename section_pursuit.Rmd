@@ -3,13 +3,13 @@ title: |
   Hole or grain? A Section Pursuit Index for Finding Hidden Structure in Multiple Dimensions
 author:
   - name: Ursula Laa
-    affil: a, b
-    email: ursula.laa@monash.edu
+    affil: a, b, c
+    email: ursula.laa@boku.ac.at
   - name: Dianne Cook
     affil: a
     email: dicook@monash.edu
   - name: Andreas Buja
-    affil: c
+    affil: d
     email: andreasbuja@gmail.com
   - name: German Valencia
     affil: b
@@ -22,6 +22,9 @@ affiliation:
     address: |
       School of Physics and Astronomy, Monash University
   - num: c
+    address: |
+      Institute of Statistics, University of Natural Resources and Life Sciences
+  - num: d
     address: |
       Statistics Department, The Wharton School, University of Pennsylvania
 bibliography: interactcadsample.bib
@@ -1108,20 +1111,26 @@ grid.arrange(p1, p2, p3, ncol=3)
 
 ## Index in practice
 
-XXX should this go here or remain in the applications section?
-
-# Applications \label{sec:applications}
-
-## Using the index in practice
-
-In the applications we use the index defined in Eq. \ref{eq:index}. When using the index we follow these steps:
+When using the index in practice we follow these steps:
 
 1. Check the underlying assumption that the data is inside a hypersphere. This can be ensured by first centering and scaling all variables, and then dropping points that have a radius above the maximum $r_{max}$.
-2. Choose the number of bins. Setting the bin size for polar binning uses the maximum radius and defines $n_r$ equidistant radial bins and $n_{\theta}$ angular bins. In practice we have found that $n_r=5$ and $n_{\theta}=8$ or $10$ tends to work well.
-3. Decide the slice radius $h$ to use. We can think of it in terms of a relative resolution $h/r_{max}$. For our examples, $0.25$ worked well, but this will likely change depending on the data.
+2. Choose the number of bins. Setting the bin size for polar binning uses the maximum radius and defines $n_r$ equidistant radial bins and $n_{\theta}$ angular bins. The preferred values will depend on the sample size and slice thickness.
+3. Decide the slice radius $h$ to use. We can think of it in terms of a relative resolution $h/r_{max}$.
 4. The binning and resolution, together with the number of variables and number of observations are needed to estimate the uncertainties following Eq.\ref{eq:eps}.
 5. We can now define the slice index, which takes the binning and uncertainty estimates as input. We define the index such that for each slice it reweights the counts according to Eq. \ref{eq:reweight}.
 6. For the optimization we use a modified version of the guided tour that passes the projected points, the distance vector and the radius $h$ into the index function. This can directly be used together with the optimization routines from the \texttt{tourr} package.
+
+# Applications \label{sec:applications}
+
+## Index settings
+
+For the application considered we find that the following parameters work well:
+
+- We use the index as defined in Eq. \ref{eq:index}.
+- When binning we set $n_r=5$ and $n_{\theta}=8$ or $10$.
+- For our examples, a slice radius $h=0.25$ worked well for scaled data (standard deviation = 1).
+
+
 
 ```{r application-setupt}
 getCircle <- function(cntrx, cntry, sclx, scly){
