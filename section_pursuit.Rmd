@@ -61,7 +61,6 @@ library(gridExtra)
 library(geozoo)
 library(tourr)
 library(viridis)
-library(spinebil)
 library(classifly)
 library(ggpubr) # for extracting legend into separage plot
 library(e1071) # has svm function  
@@ -71,6 +70,15 @@ library(ggforce)
 source("source/binning.R") # has parts not available in tourr package
 source("source/sliceTrace.R")
 source("source/neighbourhoodTrace.R")
+
+basisVector <- function(i, n){
+  v <- rep(0,n)
+  v[i] <- 1
+  v
+}
+basisMatrix <- function(i, j, n){
+  matrix(c(basisVector(i,n), basisVector(j,n)), ncol=2)
+}
 
 ```
 
@@ -1174,8 +1182,8 @@ if(!file.exists("cache/olives.rda")){
   # first just look at plots showing slices through the two planes
   # palmitoleic-stearic, linoleic-arachidic
 
-  p_mat_1 <- spinebil::basisMatrix(3, 4, 4) # linoleic and arachidic
-  p_mat_2 <- spinebil::basisMatrix(1, 2, 4) # palmitoleic and stearic
+  p_mat_1 <- basisMatrix(3, 4, 4) # linoleic and arachidic
+  p_mat_2 <- basisMatrix(1, 2, 4) # palmitoleic and stearic
 
   d_s_1 <- tourr:::anchored_orthogonal_distance(p_mat_1, o_samples[,1:4], anchor=rep(0, 4))
   d_s_2 <- tourr:::anchored_orthogonal_distance(p_mat_2, o_samples[,1:4], anchor=rep(0, 4))
