@@ -167,8 +167,9 @@ Tour methods can also be used to understand the behavior of projection pursuit i
 
 # A new index for finding interesting sections \label{sec:index}
 
-In this section we define a new index function, including the introduction of the relevant notation (3.1), a binning procedure used in the definition (3.2), and a first definition of the index (3.3). Subsections 3.4 and 3.5 discuss generalizations of the index.
-In practice we need to make assumptions about the underlying distribution to get useful results when comparing the slice to a projection. All practical aspects are discussed in the next section.
+\textcolor{red}{We define a new index function that is comparing the distribution of points inside a slice to the distribution outside the slice. In practice we compare the binned counts to find differences between the distributions. We first introduce the notation for slicing and binning (3.1) followed by the definition of the index function itself (3.2).
+In practice we need to make assumptions about the underlying distribution to get useful results when comparing the slice to a projection. These aspects are discussed in the next section.
+}
 
 ## Taking a section and binning
 
@@ -231,8 +232,11 @@ Notice that, in this definition the index is no longer symmetric under exchangin
 
 # The index in practice
 
-The application of the new index function should be informed by an expected underlying distribution. This assumption can guide practical choices that need to be made: reweighting bin counts to account for expected differences between the projected distribution and the distribution in a slice (4.1), estimates of sufficient sample size, expected noise and corresponding threshold $\epsilon$ (4.2).
-In addition this section includes visualizations to better understand the index behavior and how it depends on its parameters (4.3) and guidance on using the index in practice (4.4, XXX TBC).
+\textcolor{red}{
+The application of the new index function should be informed by an expected underlying distribution. As explained in 4.1 these should be rotation invariant, and the concrete assumption can guide practical choices that need to be made: reweighting bin counts to account for expected differences between the projected distribution and the distribution in a slice (4.2), estimates of sufficient sample size, expected noise and corresponding threshold $\epsilon$ (4.3).
+We also include visualizations to better understand the index behavior and how it depends on its parameters (4.4) and guidance on using the index in practice (4.5).
+XXX check sections
+}
 
 ## Rotation invariance
 
@@ -244,9 +248,9 @@ A  desirable property for projection pursuit, into $d$-dimensions, and thus also
 Thus a restriction is imposed on the observed data: that it falls within a $p$-dimensional hypersphere. Data is typically observed in a hypercube, so this prescription requires a departure from the norm which, however,is still practical. In cases of simulated data, such as when looking at multivariate models, the sampling scheme can be adjusted. Observed data, on the other hand, requires shaving off the corners. This procedure is expected to be harmless  because it is interior structure that is of interest. In addition, this  approach is designed for reasonably small $p$ so that the vast gap between spheres and cubes in high dimensions is not a concern. For very high-dimensional data, some dimension reduction is expected in pre-processing.
 
 
-## Binning procedures
+\textcolor{red}{Here we will work with the assumption of a uniform distribution inside a hypersphere, an alternative could be a multivariate normal distribution. XXX something short like this here to address discussion by Referee 2.}
 
-\textcolor{red}{XXX is it possible to disentangle binning from reweighting? Maybe have the formal part in notation section, everything regarding reweighting in the next section?}
+## Reweighting bin counts
 
 \textcolor{red}{Requiring a rotation invariant range suggests a preference for binning in polar coordinates. In general we can decompose an expected underlying distribution in a radial and a directional component, the latter being parametrized by $d-1$ angles $\theta_i$, $i=1,...,d-1$. The expected reference distribution can then guide the concrete choices in how to bin in these parameters. In our case we are interested in binning the projected data points and will use the radius $r$ and a single angle $\theta$ in the projection plane to parametrize the binning. As a reference distribution we consider points that are uniformly distributed in a hypersphere, thus the angular distribution will be uniform across all values of $\theta$, suggesting the use of $K_{\theta}$ equidistant angular bins. This would also hold in the case of a spherical normal reference distribution.}
 
@@ -327,8 +331,6 @@ ggplot(data = data.frame(r = c(0,1)), mapping = aes(x = r)) +
 
 ```
 
-
-## Reweighting bin counts
 
 While the radial distribution of the points projected from a full $p$ dimensional hypersphere follows the CDF in Eq.(\ref{eq:cdf}), the distribution in the slice is approximately uniform in the disk (as long as $h \ll R$). Within the slice, the adjustment only accounts for relative areas in radial bins for a 2D uniform distribution.
 Thus, only re-weighting of bins to account for the piling from high dimensions  needs to be conducted for the observations outside the slice. The weights can be calculated from the CDF.  
