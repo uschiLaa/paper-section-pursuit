@@ -102,12 +102,17 @@ This paper is organized as follows. The next section provides background on tour
 
 The grand tour shows a geodesically interpolated sequence of randomly selected projections in an animation. The interpolation allows the viewer to interpret each view in the context of the previously seen projection, thus providing additional insights compared to static projections. By observing how the data distribution changes under a rotation of the low-dimensional projection, the viewer can extrapolate from the low-dimensional shapes to the distribution in high dimensions. The underlying computational methods were described in @BCAH05, and an implementation in R [@rlang] is available in the \texttt{tourr} package [@tourr].
 
-\textcolor{red}{The information available in projections can be complemented using \textit{sectioning}} @prosection \textcolor{red}{, i.e. highlighting or dropping subsets of the data based on conditions that are typically defined via linked brushing. A special type of sectioning is \textit{slicing}, which is defining the sectioning condition based on the orthogonal distance of data points from a projection plane. Points are considered to fall into the slice if this distance is below some cutoff value $h$.}
+\textcolor{red}{The information available in projections can be complemented using \textit{sectioning}} @prosection \textcolor{red}{, i.e. highlighting or dropping subsets of the data based on conditions that are typically defined via linked brushing. A special type of sectioning is \textit{slicing}, which is defining the sectioning condition based on the orthogonal distance of data points from a projection plane. Points are considered to fall into the slice if this distance is below some cutoff value $h$. Figure \ref{fig:diagrams} shows diagrams illustrating slicing through a 3D sphere (left) and the general concept of the orthogonal distance (right) that is used to define slices in more than three dimensions.}
 Recent work in @laa2019slice implemented a display of interpolated slices, which has been added to the \texttt{tourr} package and can be used to show slices for projection planes obtained when running a grand tour.
-\textcolor{red}{The slice is defined using Euclidean distance in the orthogonal space to ensure rotation invariance. This means that in general slices are spherical, and a \textit{flat slice}, matching the common picture of a slice, is only obtained in the case of a single orthogonal direction on the projection plane.}
+\textcolor{red}{The slice is defined using Euclidean distance in the orthogonal space to ensure rotation invariance. This means that in general slices are spherical, and a \textit{flat slice}, matching the common picture of a slice (as shown in the left plot of Fig. \ref{fig:diagrams}), is only obtained in the case of a single orthogonal direction on the projection plane.}
 
-XXX should we reproduce Fig 1 of the slice tour paper here?
-
+\begin{figure*}[ht]
+\centerline{\includegraphics[width=0.4\textwidth]{diagrams/centered-slice.pdf}
+\hspace{5mm}
+\includegraphics[width=0.4\textwidth]{diagrams/orthogonal-distance.pdf}}
+\caption{Illustrations of slicing, through a 3D sphere (left), and demonstrating the calculation of the orthogonal distance (right). A slice can be done centred at the origin (green) or off-centre at $\mathbf{c}$ (blue). In more than three dimensions is best to use orthogonal distance between point and projection plane for computing the slice. Diagrams adapted from \cite{laa2019slice}.}
+\label{fig:diagrams}
+\end{figure*}
 
 The first two columns of Figure \ref{fig:allSlices} show scatterplots of the points in a 4D data set inside an informative (S1) and an uninformative (S2) slice, \textcolor{red}{defined by two different projection planes centered at the origin}, for two simulated data sets (A, B). Note that the data is defined in a 4D sphere, which generates the circular shape. The sampling results in hollow regions inside the sphere by rejecting points within shapes defined by selected hyperspherical harmonics [@doi:10.1063/1.3054274], \textcolor{red}{as described in the appendix}. The hollowness is hidden in projections of the data, as shown in the final column of Figure \ref{fig:allSlices}. It is much simpler to define sections on high-dimensional spheres than cubes, and this is the approach used for all the data in this paper. Data defined in a cube, most data, is trimmed or supplemented to be contained in a sphere. 
 
@@ -191,6 +196,8 @@ Observations are considered inside a slice if $h_i < h$.
 
 \textcolor{red}{We denote the set of points inside the slice $S$, and the set of points outside the slice $C$. For the definition of the index we will further bin the} projected data $Y$ into $K$ bins, $b_k, k=1, ..., K$.
 The counts of observations \textcolor{red}{for each bin are computed separately for $S$ and $C$. We can thus write the counts in bin $k$ via two indicator functions,} $S_{k}=\sum_{i} I(Y_i \in b_{k})I(h_i < h)$ inside the section and $C_{k}=\sum_{i} I(Y_i \in b_{k})I(h_i \geq h)$ outside the section. The relative counts are thus $s_k = S_k / \sum_i S_i$ and $c_k = C_k / \sum_i C_i$.
+
+\textcolor{red}{Data points are thus classified in two ways: information about the projected position onto the viewing plane is captured by the binning, while information about the position in the orthogonal space is captured by slicing information. In practice the first step is projecting and slicing, followed by a separate binning of the projected points $Y$ for the subsets $S$ and $C$.}
 
 ## Index definition
 
@@ -1559,18 +1566,13 @@ The section pursuit index can be used together with the slice display in the tou
 
 We have shown how to use the section pursuit index to explore non-linear decision boundaries of classification models, or similarly, to explore complex inequality conditions that depend on multiple parameters. In all examples, we have sampled the parameter space and evaluated the classification or inequality conditions for all points. We then dropped points assigned to one particular class, or in conflict with the inequality condition to generate the hollow features in the distribution. For all examples considered, the optimization resulted in slice views that illustrate interesting aspects of the boundaries. Additional potential applications for section pursuit include the exploration of non-standard multivariate confidence regions or Bayesian credible regions.
 
+\textcolor{red}{Note that large samples are required to obtain useful insights using the section pursuit method. As discussed in the context of sufficient sample size, the number of data points quickly grows with the number of dimensions. The applications we have studied here are considering simulated data in up to seven dimensions. In the case of larger parameter space we recommend to first reduce dimensionality: in the olives-data example we have selected variables based on prior knowledge, in the PDFSense example in the appendix we have used principal component analysis prior to the application of section pursuit. The method is not appropriate for small sample size data, in those cases interactive methods such as linked brushing will be preferred.}
+
 Depending on the application, different index definitions would be recommended. Several variations on the index would be produced different choices of weights, and parameters in the generalized index definition (Section \ref{sec:generalise}). This paper hasn't fully explored the impact of all the choices, but the same type of diagnostics, in particular, the index visualization presented in Section \ref{sec:viz}, could be used decide.
 
-### Additional considerations
+\textcolor{red}{Given the compositional nature of the normalized bin-count data, considering e.g. log-ratios in the definition, could also define an interesting index. It may also be reasonable to consider using a kernel, instead of discrete bins, to produce some spatial smoothing. The effect would be to focus attention on large differences in specific regions rather than small differences anywhere. A completely different approach  to producing a section index, would be to apply any existing projection pursuit index on a sliced projection instead of the full projected data. Only observations inside the slice are then used for the index calculation.}
 
-Rewrite this as part of the discussion:
 
-<!-- ### Correlation between bin counts-->
-It may also be reasonable to consider using a kernel, instead of discrete bins, to produce some spatial smoothing. The effect would be to focus attention on large differences in specific regions rather than small differences anywhere. 
-
-<!--### Slice only index-->
-
-A completely different approach  to producing a section index, would be to apply any existing projection pursuit index on a sliced projection instead of the full projected data. Only observations inside the slice are then used for the index calculation. 
 
 
 # Acknowledgements {-}
