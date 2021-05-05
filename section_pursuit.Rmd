@@ -271,34 +271,21 @@ Thus a restriction is imposed on the observed data: that it falls within a $p$-d
 
 \textcolor{red}{Requiring a rotation invariant range suggests a preference for binning in polar coordinates. In general we can decompose an expected underlying distribution in a radial and a directional component, the latter being parametrized by $d-1$ angles $\theta_i$, $i=1,...,d-1$. The expected reference distribution can then guide the concrete choices in how to bin in these parameters. In our case we are interested in binning the projected data points and will use the radius $r$ and a single angle $\theta$ in the projection plane to parametrize the binning. As a reference distribution we consider points that are uniformly distributed in a hypersphere, thus the angular distribution will be uniform across all values of $\theta$, suggesting the use of $K_{\theta}$ equidistant angular bins. This would also hold in the case of a spherical normal reference distribution.}
 
-```{r sketch, out.width="50%", fig.cap="Trying to sketch out binning, is this useful? What annotation should be added?", fig.align = "center"}
+```{r sketch, out.width="30%", fig.cap="Trying to sketch out binning, is this useful? What annotation should be added?", fig.align = "center"}
 
 xy <- 1/sqrt(2)
 
 ggplot() +
   geom_circle(aes(x0= 0, y0=0, r = 1)) +
-  geom_circle(aes(x0= 0, y0=0, r = 0.75)) +
   geom_circle(aes(x0= 0, y0=0, r = 0.5)) +
-  geom_circle(aes(x0= 0, y0=0, r = 0.25)) +
   geom_segment(aes(x = 0, y = 0, xend = 1, yend = 0)) +
   geom_segment(aes(x = 0, y = 0, xend = 0, yend = 1)) +
   geom_segment(aes(x = 0, y = 0, xend = -1, yend = 0)) +
   geom_segment(aes(x = 0, y = 0, xend = 0, yend = -1)) +
-  geom_segment(aes(x = 0, y = 0, xend = xy, yend = xy)) +
-  geom_segment(aes(x = 0, y = 0, xend = xy, yend = -xy)) +
-  geom_segment(aes(x = 0, y = 0, xend = -xy, yend = xy)) +
-  geom_segment(aes(x = 0, y = 0, xend = -xy, yend = -xy)) +
-  annotate("text", x = 0.15, y = 0.05, label=TeX("$r_1, \\theta_4$"), size=9) +
-  annotate("text", x = 0.35, y = 0.05, label=TeX("$r_2$"), size=9) +
-  annotate("text", x = 0.6, y = 0.05, label=TeX("$r_3$"), size=9) +
-  annotate("text", x = 0.85, y = 0.05, label=TeX("$r_4$"), size=9) +
-  annotate("text", x = -0.15, y = 0.05, label=TeX("$\\theta_1$"), size=9) +
-  annotate("text", x = -0.05, y = 0.12, label=TeX("$\\theta_2$"), size=9) +
-  annotate("text", x = 0.05, y = 0.12, label=TeX("$\\theta_3$"), size=9) +
-  annotate("text", x = 0.15, y = -0.07, label=TeX("$\\theta_5$"), size=9) +
-    annotate("text", x = 0.05, y = -0.13, label=TeX("$\\theta_6$"), size=9) +
-  annotate("text", x = -0.05, y = -0.13, label=TeX("$\\theta_7$"), size=9) +
-  annotate("text", x = -0.15, y = -0.07, label=TeX("$\\theta_8$"), size=9) +
+  geom_segment(aes(x = 0, y = 0, xend = 0.5, yend = 0), arrow = arrow()) +
+  geom_arc(aes(x0= 0, y0=0, r = 0.5, start = -3*pi/2, end = 0), arrow = arrow()) +
+  annotate("text", x = 0.3, y = 0.1, label=TeX("$r_i$"), size=15) +
+  annotate("text", x = - 0.1, y = 0.3, label=TeX("$\\theta_i$"), size=15) +
   theme_void() +
   coord_fixed()
 ```
