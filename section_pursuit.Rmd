@@ -273,7 +273,7 @@ Thus a restriction is imposed on the observed data: that it falls within a $p$-d
 
 \textcolor{red}{In our case we are interested in binning the projected data points and will use the radius $r$ and a single angle $\theta$ in the projection plane to parametrize the binning, as illustrated in the diagram in Fig. \ref{fig:sketch}. As a reference distribution we consider points that are uniformly distributed in a hypersphere, thus the angular distribution will be uniform across all values of $\theta$, suggesting the use of $K_{\theta}$ equidistant angular bins. This would also hold in the case of a spherical normal reference distribution.}
 
-```{r sketch, out.width="30%", fig.cap="Diagram illustrating the notation for polar binning in angle $\theta$ and radius $r$. Angular bins $\theta_i, i=1, 2, 3, 4$, split the angular component into four bins, $r_j, j=1, 2$ splits the radial component into two bins, resulting in a total of 8 bins.", fig.align = "center"}
+```{r sketch, out.width="30%", fig.cap="Diagram illustrating the notation for polar binning in angle $\\theta$ and radius $r$. Angular bins $\\theta_i, i=1, 2, 3, 4$, split the angular component into four bins, $r_j, j=1, 2$ splits the radial component into two bins, resulting in a total of 8 bins.", fig.align = "center"}
 
 xy <- 1/sqrt(2)
 
