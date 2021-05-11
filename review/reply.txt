@@ -41,7 +41,8 @@ Required revisons:
     The text from the 'additional considerations' subsection has been reworked and
     was moved to the discussion.
 - Fig 4, 5, 6: add text in axis labels
-  + XXX maybe best to adapt the caption here?
+  + To avoid cluttering the plots we have extended the caption to provide text
+    names for the variables for easier understanding of what are now Figure 6-8.
 - index in practice: How many observations were excluded from the olive-oil data? Show that in the scatterplots of the projected data
   + We do not remove any observations from the olive-oil data itself, but points are dropped
     from the large set of points that fill up the full parameter space to evaluate the model
@@ -53,7 +54,14 @@ Required revisons:
 
 Reviewer 2:
 
-- Structure: XXX
+- Structure:
+  + We have reworked the structure of the paper, such that the theoretic definition
+    of the index is now covered in Section 3, and all practical aspects that rely
+    on an assumed underlying distribution are now discussed in Section 4. We decided
+    that generalising the discussion towards any underlying distribution would
+    be distracting in this work but might be interesting enough to be covered in
+    a dedicated article. XXX something like this, maybe more emphasis on that in
+    the discussion?
 
 - Re notation:
   + we have corrected the description of A as a basis for the 
@@ -109,8 +117,8 @@ Reviewer 2:
     
 - Equation 8 needs to be derived (p11 of the review)
   + This was derived in the slice tour paper and is and exact result, not using
-    any of the approximations considered by the referee. XXX include the derivation
-    as an appendix?
+    any of the approximations considered by the referee. We now reproduce the
+    derivation in the appendix.
   
 - NS for olive oil data (p12 of review)
   + Indeed the number of data points within a thin slice is neglibible, and the
@@ -124,8 +132,12 @@ Reviewer 2:
 - Description of reweighting is not clear
   + XXX rework this after the restructuring, use p12-14 for guidance
   
-- Epsilon threshold (p15)
-  + maybe just issue of adding index?
+- Epsilon threshold radial dependence (p15)
+  + We thank the referee for noticing the issue. Indeed the delta and epsilon
+    depend on the radial boundaries of the bin, but we had dropped the index in
+    the notation. This was already considered in the implementation, and we have
+    added the i index in the equations and updated the description to point out
+    this radial dependence.
   
 - Generalised index as separate section (p16)
   + Within the new structure of Sections 3 and 4 it makes sense to keep the

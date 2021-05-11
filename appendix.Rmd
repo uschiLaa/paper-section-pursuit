@@ -44,31 +44,29 @@ basisMatrix <- function(i, j, n){
 
 # Slice volume derivation
 
-XXX this is from the slice tour paper, but I think we might want to repeat it here??
-
-We calculate the relative volume of a slice through a $p$ dimensional hypersphere of radius $R$. In general the volume of a full hypersphere with radius $r$ in $q$ dimensions is given as
+The relative volume of a slice through a $p$ dimensional hypersphere of radius $R$ was previously derived in @laa2019slice. Below we reproduce the calculation for the convenience of the reader. We start with the volume of the hypersphere with radius $r$ in $q$ dimensions:
 \begin{equation}
-V(r, q) = \frac{\pi^{q/2} r^q}{\frac{q}{2} \Gamma(q/2)},
+V(r, q) = \frac{\pi^{q/2} r^q}{\frac{q}{2} \Gamma(q/2)}.
 \end{equation}
-and its variation with the radius is
+The variation of the volume with the radius is given as
 \begin{equation}
 \frac{dV(r, q)}{dr} = 2 \frac{\pi^{q/2} r^{q-1}}{\Gamma(q/2)}.
 \end{equation}
 
-To calculate the slice volume we note that it is spherical in the $p-2$ dimensional orthogonal space on the projection plane, while capturing the full volume (i.e. area) inside the plane. To calculate the slice volume we therefore integrate the product of $\frac{dV(r, p-2)}{dr}$ and the area in the plane parametrised by $r$, from the origin to the full slice thickness $h$. The area in the plane is a circle with radius $\sqrt{R^2 - r^2}$. The slice volume is thus calculated as
+The volume in a slice is spherical in the orthogonal space ($p-2$ dimensions) and capturing the full area within the plane. We thus compute it by integrating the product of $\frac{dV(r, p-2)}{dr}$ and the area in the plane parametrised by $r$. The area in the plane is a circle with radius $\sqrt{R^2 - r^2}$. The slice volume is thus calculated as
 \begin{equation}
 V_{slice}(R, h, p) =
 \int_0^h \frac{dV(r, p-2)}{dr} V(\sqrt{R^2 - r^2}, 2) dr =
 \frac{\pi^{p/2}}{\Gamma(p/2)} \frac{h^{p-2}}{p} [pR^2 - (p-2)h^2].
 \end{equation}
-The relative volume of the slice is then simply given as
+The relative volume of the slice given by the fraction
 \begin{equation}
 V_{rel}(R, h, p) = \frac{V_{slice}(R, h, p)}{V(R, p)} = \frac{h^{p-2}}{2R^p} [pR^2 - (p-2)h^2].
 \end{equation}
 
 # Simulated data
 
-The  four-dimensional hyperspherical harmonics \cite{Domokos:1967fgx} can be written as
+The  four-dimensional hyperspherical harmonics [@Domokos:1967fgx] can be written as
 \begin{eqnarray}
 Z^m_{n\ell}(\beta,\theta,\phi)=2^{\ell+1/2}\sqrt{\frac{(n+1)\Gamma(n-\ell+1)}{\pi\Gamma(n+\ell+2)}}
 \Gamma(\ell+1)\sin^\ell\beta C^{(\ell+1)}_{n-\ell}(\cos\beta)Y^m_\ell(\theta,\phi),
@@ -87,7 +85,7 @@ To generate the data sets we start from a uniform sample of points inside a 4-ba
 
 # Radial CDF of projected hyperspheres
 
-The radial CDF defined in Eq.(\ref{eq:cdf}) and used throughout this work can be derived by calculating the fraction of the projected volume within a circle of radius $r$. The volume of a $p$ dimensional hypersphere with radius $R$ is
+The radial CDF used throughout this work can be derived by calculating the fraction of the projected volume within a circle of radius $r$. The volume of a $p$ dimensional hypersphere with radius $R$ is
 \begin{equation}
 V(p, R) = \frac{2 \pi^{p/2} R^p} {p \Gamma(p/2)}
 \end{equation}
@@ -107,7 +105,7 @@ F (r, p, R) = \frac{V_{inside}(r, p, R)}{V(p, R)} = 1 - \left(1-\left(\frac{r}{R
 
 # Squared masses in the two-Higgs-doublet model
 
-Following \cite{Gunion:2002zf} we compute the squared masses as
+Following @Gunion:2002zf we compute the squared masses as
 \begin{eqnarray}
 m_h^2 &=& \frac{v^2}{
      \sin(\beta - \alpha)}~(-\lambda_1\cos^3\beta~
@@ -139,7 +137,7 @@ where we have used the shorthand notation $\lambda_{ij\cdots}=\lambda_i+\lambda_
 As similar example, but with different behavior, is given by the decision boundaries of a classification model for the PDFSense dataset. This data has 4021 observations in a 56 dimensional parameter space, that are grouped into 3 classes [@Wang:2018heo]. Following the analysis in @Cook:2018mvr we only consider the first six principal components, and train an svm classification model with radial kernel. We again use classifly and select the resulting sample points inside a 6D hypersphere after individual centering and scaling each of the variables.
 
 
-For this example, the classifier wraps tightly around two of the groups (DIS and jets), and most of the space is filled by the third group (VBP). We select only the samples predicting the VBP class, generating a sample with a small hollow region to be found by section pursuit. We again use the index with polar binning, with 5 equidistant radial bins and 8 angular bins. The  $\varepsilon$ cutoff is calculated according to Eq. \ref{eq:eps} and we reweight the bins according to Eq. \ref{eq:reweight}. We set $q=1$ and use the tourr function search\_better to find the view with the maximum index value.
+For this example, the classifier wraps tightly around two of the groups (DIS and jets), and most of the space is filled by the third group (VBP). We select only the samples predicting the VBP class, generating a sample with a small hollow region to be found by section pursuit. We again use the index with polar binning, with 5 equidistant radial bins and 8 angular bins. We set $q=1$ and use the tourr function search\_better to find the view with the maximum index value.
 
 The result is shown in Fig. \ref{fig:pdffit}, comparing the starting projection (top row) and the final view (bottom row). In the final slice view of the classifier predictions we see the decision boundaries between the three classes. The different regions are hidden in the projection of the classifier and of the data. In this case the svm model uses additional information from the orthogonal directions to separate the three classes. By looking at the final slice from section pursuit we have obtained a conditional view that allows us to resolve the resulting boundary.
 

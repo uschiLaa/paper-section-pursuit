@@ -542,26 +542,27 @@ When adding noise dimensions, in order to keep the resolution $x$ fixed, the sam
 
 ## Estimating the magnitude of noise, $\varepsilon$ \label{sec:epsilon}
 
-We can estimate the expected sampling variability based on $N$. The dominant uncertainty will be on the bin count inside the slice which typically will have much smaller statistics than the outside distribution (notice that this may not be true for bins at large radius which, depending on the bin size,  can have a very low number of observations). We estimate the number of points in each bin $i$ inside the slice as
+We can estimate the expected sampling variability based on $N$. The dominant uncertainty will be on the bin count inside the slice which typically will have much smaller statistics than the outside distribution (notice that this may not be true for bins at large radius which, depending on the bin size,  can have a very low number of observations). We estimate the number of points in a bin $i$ inside the slice as
 \begin{equation}
-N_S^i = \frac{N_S}{K_{\theta}} \cdot f_i(2, R),
+N_S^i = \frac{N_S}{K_{\theta}} \cdot F_i(2, R),
 \end{equation}
-with $N_S$ given by Eq.(\ref{eq:count}), $K_{\theta}$ the number of angular bins and $f_i$ defined in Eq.(\ref{eq:frac}).
+with $N_S$ given by Eq.(\ref{eq:count}), $K_{\theta}$ the number of angular bins and $F_i$ defined in Eq.(\ref{eq:frac}).
 The relative Poisson error on this count is
 \begin{equation}
 \delta_S^i = \frac{\sqrt{N_S^i}}{N_S^i} = 
 \frac{R}{\sqrt{r_2^2 - r_1^2}} \sqrt{\frac{2 K_{\theta}}{N}} x^{(2-p)/2}
 \frac{1}{\sqrt{\left(p - (p-2) x^{2}\right)}}, 
 \end{equation}
-and the expected relative count after reweighting is $1/K$ in all bins (where $K=K_r K_{\theta}$). We therefore expect sampling fluctuations of order 
+\textcolor{red}{where $r_1$ and $r_2$ are the lower and upper radial boundary of bin $i$ and the expected error will be different depending on the radial position of the bin. By its definition, the expected reweighted count is $1/K$ in all bins, where $K=K_r K_{\theta}$.}
+We therefore expect sampling fluctuations of order 
 \begin{equation}
-\delta = \delta_S^i / K. 
+\delta^i = \delta_S^i / K. 
 \label{eq:eps}
 \end{equation}
 
-To suppress index fluctuations to below one standard deviation, we set $\varepsilon = \delta$. Figure \ref{fig:path_eps} compares the index behavior for two values of $\varepsilon$, $0$ and $\delta$. Three 4D data sets are used: examples A and B (shown in Figure \ref{fig:allSlices}), and a reference set C consisting of observations sampled uniformly within a $p$-dimensional sphere. Color indicates the number of bins used to calculate the index. The difference in index value when $\varepsilon=0$ clearly indicates a dependence on the number of bins, which is undesirable. Setting $\varepsilon = \delta$ mostly removes these differences.
+To suppress index fluctuations to below one standard deviation, we set \textcolor{red}{a bin-wise} $\varepsilon^i = \delta^i$. Figure \ref{fig:path_eps} compares the index behavior for two values of $\varepsilon^i$, $0$ and $\delta^i$. Three 4D data sets are used: examples A and B (shown in Figure \ref{fig:allSlices}), and a reference set C consisting of observations sampled uniformly within a $p$-dimensional sphere. Color indicates the number of bins used to calculate the index. The difference in index value when $\varepsilon^i=0$ \textcolor{red}{for all bins} clearly indicates a dependence on the number of bins, which is undesirable. Setting $\varepsilon^i = \delta^i$ mostly removes these differences.
 
-```{r path_eps, fig.cap="Examining the effect of $\\varepsilon$ on the index value for varying number of bins. Three simulated data sets are used:  A, B and C. The horizontal axis traces the index from an uninteresting to interesting sliced projection (defined by slice S2 and S1 respectively), for $\\varepsilon=0, \\delta$. Colour indicates number of bins. Ideally, the index value should be the same, regardless of choice of bins, which is achieved in practice by $\\varepsilon=\\delta$.", fig.height=5, fig.width=7,  out.width='90%',fig.align = "center"}
+```{r path_eps, fig.cap="Examining the effect of \textcolor{red}{the noise cutoff} $\\varepsilon^i$ on the index value for varying number of bins. Three simulated data sets are used:  A, B and C. The horizontal axis traces the index from an uninteresting to interesting sliced projection (defined by slice S2 and S1 respectively), for $\\varepsilon^i=0, \\delta^i$. Colour indicates number of bins. Ideally, the index value should be the same, regardless of choice of bins, which is achieved in practice by $\\varepsilon^i=\\delta^i$.", fig.height=5, fig.width=7,  out.width='90%',fig.align = "center"}
 
 set.seed(500)
 
@@ -722,115 +723,18 @@ p6 <- as_tibble(tr6) %>%
 grid.arrange(p3, p1, p5, p4, p2, p6, ncol=3)
 ```
 
-### Index behavior \label{sec:behaviour}
+### Dependence on $q$
 
-To examine the behavior of the generalized index for choices of $q, K$ and $\varepsilon$, a re-parametrization is used. Consider an outside distribution that is uniform across all $K$ bins,
-\begin{equation}
-c_{k} = \frac{1}{K},
-\end{equation}
-and a distribution inside the slice to be uniform across $K' < K$ bins,
-\begin{equation}
-s_{k} = \begin{cases}
-    \frac{1}{K'}, & \text{if $k \leq K'$}\\
-    0, & \text{if $k > K'$}
-  \end{cases}
-\end{equation}
-i.e.\ there are $K-K'$ empty bins inside the slice.
-We can then parametrize the relation between $K$ and $K'$ as $K' = \gamma K$ with $\gamma \in [0,1]$.
-
-To focus on the dependence on $q$, drop the bin-dependent weights $w_k$ from the description and set $\varepsilon=0$. Using the parametrization in terms of $\gamma$, the index can then be written as
-
-\begin{equation}
-I_A^{up}(q, \gamma) = ([1-\gamma^{1/q}]_+)^q,
-\label{eq:p1}
-\end{equation}
-
-\noindent while 
-\begin{equation}
-I_A^{low}(\gamma) = 1-\gamma.
-\end{equation}
-(In this latter form the dependence on $q$ drops out because only bins where $s_k=0$ are counted.)
-
-This allows us to estimate the typical range depending on $q$. The range of $I_A^{up}(q, \gamma)$ will be different for different values of $q$, and this range difference needs to be ignored for comparison purposes. For $q=1$ the index range is $[0,0.9]$. For $q=2$ the index range is approximately $[0, 0.5]$. We rescale the index depending on the selected value of $q$ against $I_A^{up}(q, \gamma=0.1)$, resulting in a common range $[0,1]$.
-
-Fig. \ref{fig:behavior} shows the effect of $q$ for $\gamma \in [0.1, 1]$, i.e.\ between 10\% and 100\% overlap in the distributions, and the effect of $\gamma$ for a range of  $q \in [0.1, 1]$. When $q=1$ the index is linearly dependent on $\gamma$. For $q=2$ most of the sensitivity lies towards small values of $\gamma$. For $q=1/2$  most of the sensitivity lies towards large values of $\gamma$. The parameter $q$ enables the index to be made more sensitive to small regions of difference as opposed to large areas. 
-
-```{r behavior, fig.cap="Examining the sensitivity of the index to the parameter $q$. Rescaled values of $I_A^{up}$ as a function of $\\gamma$, for fixed values of $q$ (left), and as a function of $q$ for fixed values of $\\gamma$ (right). The parameter $q$ shifts emphasis between small regions and large regions of difference.", fig.height=2.5, fig.width=6, fig.align = "center"}
-
-# define index as function of c
-idx_c <- function(q){
-  resc <- 1/(1-0.1^(1/q))^q
-  function(c){
-    ret <- 1-c^(1/q)
-    ret <- pmax(0, ret)
-    resc * ret^q
-  }
-}
-
-idx_q <- function(c){
-  function(q){
-    resc <- 1/(1-0.1^(1/q))^q
-    ret <- 1-c^(1/q)
-    ret <- pmax(0, ret)
-    resc * ret^q
-  }
-}
-  
-# plot dependence for selected values
-p1 <- ggplot(data = data.frame(x = c(0.1,1)), mapping = aes(x = x)) +
-  stat_function(
-        fun = idx_c(1),
-        mapping = aes(color = "ca", linetype = "la"), size=1.1) +
-  stat_function(
-        fun = idx_c(2),
-        mapping = aes(color = "cb", linetype = "lb"), size=1.1) +
-    stat_function(
-        fun = idx_c(1/2),
-        mapping = aes(color = "cc", linetype = "lc"), size=1.1) +
-  scale_color_manual(name = "q",
-                     values = RColorBrewer::brewer.pal(3, "Dark2"),
-                     labels = c("1", "2", "1/2")) +
-    scale_linetype_manual(name = "q",
-                        values = c("solid", "dashed", "dotdash"),
-                        labels = c("1", "2", "1/2")) +
-  xlab(TeX("$\\gamma$")) + ylab(TeX("$I_A^{up}$")) + theme_bw() + theme(legend.position="top", legend.margin = margin(0,1,-1,1))
-
-
-p2 <- ggplot(data = data.frame(x = c(0.1,2)), mapping = aes(x = x)) +
-  stat_function(
-        fun = idx_q(0.25),
-        mapping = aes(color = "ca", linetype = "la"), size=1.1) +
-  stat_function(
-        fun = idx_q(0.5),
-        mapping = aes(color = "cb", linetype = "lb"), size=1.1) +
-    stat_function(
-        fun = idx_q(0.75),
-        mapping = aes(color = "cc", linetype = "lc"), size=1.1) +
-    stat_function(
-        fun = idx_q(0.95),
-        mapping = aes(color = "cd", linetype = "ld"), size=1.1) +
-  scale_color_manual(name =  TeX("$\\gamma$"),
-                     values = RColorBrewer::brewer.pal(4, "Set2"),
-                     labels = c("0.25", "0.5", "0.75", "0.95")) +
-      scale_linetype_manual(name = TeX("$\\gamma$"),
-                        values = c("solid", "dashed", "dotdash", "dotted"),
-                        labels = c("0.25", "0.5", "0.75", "0.95")) +
-  xlab("q") + ylab(TeX("$I_A^{up}$")) + theme_bw() + theme(legend.position="top", legend.margin = margin(0,1,0,1), legend.text  = element_text(size = 7))
-
-grid.arrange(p1, p2, ncol=2)
-```
-
-### Noise
-
-Now, we introduce the use of the noise cutoff, and explore the effect of $q$ on the choice of $\varepsilon$. This can be done in a simple setup:  uniformly draw $N$ samples and bin them in $K$ bins, such that the expected bin count is $N/K$ in all bins (or $1/K$ after normalization). Using the Poisson approximation, the standard deviation for the normalized counts is $\delta=1/\sqrt{N K}$. By drawing two independent samples and calculating the index value 100 times we get an estimate of the expected index value and its variance depending on $q$. Note that since we are assuming pure noise distributions for both samples, $I_A^{low}=I_A^{up}=I_A$. This is shown in Figure \ref{fig:noise} for $N=10000$ and $K=100$. When $q=1$ and approximating the bin counts by a normal distribution, we can also evaluate the expected index value analytically as
+\textcolor{red}{In the generalized definition of the index, the parameter $q$ can be used to tune the sensitivity to small differences. It will therefore also need to be considered when choosing $\varepsilon^i$. To understand the effect we consider a simple one-dimensional setup:}
+ uniformly draw $N$ samples and bin them in $K$ bins, such that the expected bin count is $N/K$ in all bins (or $1/K$ after normalization). Using the Poisson approximation, the standard deviation for the normalized counts is $\delta=1/\sqrt{N K}$. By drawing two independent samples and calculating the index value 100 times we get an estimate of the expected index value and its variance depending on $q$. Note that since we are assuming pure noise distributions for both samples, $I_A^{low}=I_A^{up}=I_A$. This is shown in Figure \ref{fig:noise} for $N=10000$ and $K=100$. When $q=1$ and approximating the bin counts by a normal distribution, we can also evaluate the expected index value analytically as
 \begin{equation}
 I_A(q=1)_{\mathrm{noise}} = e^{-n^2/4} \sqrt{\frac{K}{\gamma N}},
 \end{equation}
 where $\varepsilon=n\delta$.
 
-We see that for values of $q<1$ the noise becomes inflated, especially when we do not use an appropriate $\varepsilon$ cutoff. For the default choices of $q=1$ and $\varepsilon=\delta$ we find that the expected index value for a noise distribution is about $0.05$.
+We see that for values of $q<1$ the noise becomes inflated, especially when we do not use an appropriate $\varepsilon$ cutoff. For the default choices of $q=1$ and $\varepsilon=\delta$ we find that the expected index value for a noise distribution is about $0.05$. \textcolor{red}{Note here that in this simplified setup there is no bin-dependence of $\varepsilon$ and we have dropped the index $i$.}
 
-```{r noise, fig.cap="Examining the  effect of $q$ on the variability of the  index value, when a noise cutoff ($\\varepsilon$) is used. Rescaled values of $I_A$ shown as a function of $q$, for fixed values of $\\varepsilon$, for $N=10000$ and $K=100$. Smaller values of  $q$ inflate the variability in the index, exaggerating  the noise.", fig.height=2, fig.width=3, out.width='50%', fig.align = "center", eval=T}
+```{r noise, fig.cap="Examining the  effect of \textcolor{red}{the power parameter} $q$ on the variability of the  index value, when a noise cutoff ($\\varepsilon$) is used. Rescaled values of $I_A$ shown as a function of $q$, for fixed values of $\\varepsilon$, for $N=10000$ and $K=100$. Smaller values of  $q$ inflate the variability in the index, exaggerating  the noise.", fig.height=2, fig.width=3, out.width='50%', fig.align = "center", eval=T}
 
 rel_bin_counts <- function(N, K){
   hist(runif(N), linear_breaks(K, 0, 1), plot=F)$counts / N
@@ -925,6 +829,107 @@ ggplot(data = data.frame(x = c(0.5,2)), mapping = aes(x = x)) +
                      labels = unname(TeX(c("$0$", "$\\delta$", "$2\\delta$")))) +
   xlab("q") + ylab(TeX("$I_A$")) + theme_bw() + theme(legend.position=c(0.8,0.6)) 
 ```
+
+
+
+## Index behavior \label{sec:behaviour}
+
+To examine the behavior of the generalized index for choices of $q, K$ and $\varepsilon$, a re-parametrization is used. Consider an outside distribution that is uniform across all $K$ bins,
+\begin{equation}
+c_{k} = \frac{1}{K},
+\end{equation}
+and a distribution inside the slice to be uniform across $K' < K$ bins,
+\begin{equation}
+s_{k} = \begin{cases}
+    \frac{1}{K'}, & \text{if $k \leq K'$}\\
+    0, & \text{if $k > K'$}
+  \end{cases}
+\end{equation}
+i.e.\ there are $K-K'$ empty bins inside the slice.
+We can then parametrize the relation between $K$ and $K'$ as $K' = \gamma K$ with $\gamma \in [0,1]$.
+
+To focus on the dependence on $q$, drop the bin-dependent weights $w_k$ from the description and set $\varepsilon=0$. Using the parametrization in terms of $\gamma$, the index can then be written as
+
+\begin{equation}
+I_A^{up}(q, \gamma) = ([1-\gamma^{1/q}]_+)^q,
+\label{eq:p1}
+\end{equation}
+
+\noindent while 
+\begin{equation}
+I_A^{low}(\gamma) = 1-\gamma.
+\end{equation}
+(In this latter form the dependence on $q$ drops out because only bins where $s_k=0$ are counted.)
+
+This allows us to estimate the typical range depending on $q$. The range of $I_A^{up}(q, \gamma)$ will be different for different values of $q$, and this range difference needs to be ignored for comparison purposes. For $q=1$ the index range is $[0,0.9]$. For $q=2$ the index range is approximately $[0, 0.5]$. We rescale the index depending on the selected value of $q$ against $I_A^{up}(q, \gamma=0.1)$, resulting in a common range $[0,1]$.
+
+Fig. \ref{fig:behavior} shows the effect of $q$ for $\gamma \in [0.1, 1]$, i.e.\ between 10\% and 100\% overlap in the distributions, and the effect of $\gamma$ for a range of  $q \in [0.1, 1]$. When $q=1$ the index is linearly dependent on $\gamma$. For $q=2$ most of the sensitivity lies towards small values of $\gamma$. For $q=1/2$  most of the sensitivity lies towards large values of $\gamma$. The parameter $q$ enables the index to be made more sensitive to small regions of difference as opposed to large areas. 
+
+```{r behavior, fig.cap="Examining the sensitivity of the index to the \textcolor{red}{power} parameter $q$. Rescaled values of $I_A^{up}$ as a function of $\\gamma$, \textcolor{red}{the fraction of non-empty bins,} for fixed values of $q$ (left), and as a function of $q$ for fixed values of $\\gamma$ (right). The parameter $q$ shifts emphasis between small regions and large regions of difference.", fig.height=2.5, fig.width=6, fig.align = "center"}
+
+# define index as function of c
+idx_c <- function(q){
+  resc <- 1/(1-0.1^(1/q))^q
+  function(c){
+    ret <- 1-c^(1/q)
+    ret <- pmax(0, ret)
+    resc * ret^q
+  }
+}
+
+idx_q <- function(c){
+  function(q){
+    resc <- 1/(1-0.1^(1/q))^q
+    ret <- 1-c^(1/q)
+    ret <- pmax(0, ret)
+    resc * ret^q
+  }
+}
+  
+# plot dependence for selected values
+p1 <- ggplot(data = data.frame(x = c(0.1,1)), mapping = aes(x = x)) +
+  stat_function(
+        fun = idx_c(1),
+        mapping = aes(color = "ca", linetype = "la"), size=1.1) +
+  stat_function(
+        fun = idx_c(2),
+        mapping = aes(color = "cb", linetype = "lb"), size=1.1) +
+    stat_function(
+        fun = idx_c(1/2),
+        mapping = aes(color = "cc", linetype = "lc"), size=1.1) +
+  scale_color_manual(name = "q",
+                     values = RColorBrewer::brewer.pal(3, "Dark2"),
+                     labels = c("1", "2", "1/2")) +
+    scale_linetype_manual(name = "q",
+                        values = c("solid", "dashed", "dotdash"),
+                        labels = c("1", "2", "1/2")) +
+  xlab(TeX("$\\gamma$")) + ylab(TeX("$I_A^{up}$")) + theme_bw() + theme(legend.position="top", legend.margin = margin(0,1,-1,1))
+
+
+p2 <- ggplot(data = data.frame(x = c(0.1,2)), mapping = aes(x = x)) +
+  stat_function(
+        fun = idx_q(0.25),
+        mapping = aes(color = "ca", linetype = "la"), size=1.1) +
+  stat_function(
+        fun = idx_q(0.5),
+        mapping = aes(color = "cb", linetype = "lb"), size=1.1) +
+    stat_function(
+        fun = idx_q(0.75),
+        mapping = aes(color = "cc", linetype = "lc"), size=1.1) +
+    stat_function(
+        fun = idx_q(0.95),
+        mapping = aes(color = "cd", linetype = "ld"), size=1.1) +
+  scale_color_manual(name =  TeX("$\\gamma$"),
+                     values = RColorBrewer::brewer.pal(4, "Set2"),
+                     labels = c("0.25", "0.5", "0.75", "0.95")) +
+      scale_linetype_manual(name = TeX("$\\gamma$"),
+                        values = c("solid", "dashed", "dotdash", "dotted"),
+                        labels = c("0.25", "0.5", "0.75", "0.95")) +
+  xlab("q") + ylab(TeX("$I_A^{up}$")) + theme_bw() + theme(legend.position="top", legend.margin = margin(0,1,0,1), legend.text  = element_text(size = 7))
+
+grid.arrange(p1, p2, ncol=2)
+```
+
 
 
 ## Visualising the index \label{sec:viz}
