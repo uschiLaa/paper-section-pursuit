@@ -295,7 +295,7 @@ ggplot() +
 The radial binning is more complicated.
 \textcolor{red}{This is because the marginal radial distribution of the projected data depends on the assumed reference distribution as well as the data dimenson $p$.}
 As $p$ increases, the projected data piles more in the center. A varying radial bin size could be used to offset this effect, where the bounds of the $K_r$ radial bins take into account the expected distribution of points given $p$. 
-\textcolor{red}{However, the expected radial distribution will also differ between the projected data in a slice and a projection of the full data}, so the effect is accounted for instead by reweighting bin counts. The calculations are as follows. 
+\textcolor{red}{However, the expected radial distribution will also differ between the projected data in a slice and a projection of the full data}, so the effect is accounted for instead by reweighting bin counts. \textcolor{red}{The aim is to adjust for the expected difference in distribution: after the reweighting, the expected counts in all radial bins is the same, and this needs to be adjusted separately for the data in the slice and the projected data.} The calculations are as follows. 
 
 Consider the expected distribution to be a uniform distribution within a hypersphere in $p$ dimensions projected onto a 2D plane. The cumulative distribution function (CDF) for the radial distribution in the projection, derived in the Appendix, is given by:
 
@@ -356,7 +356,7 @@ and the reweighed bin count as
 s_i(p, R, K_r) = n_i w_i(p, R, K_r)
 \label{eq:reweight}
 \end{equation}
-corresponding to the weighted relative number of points in each bin, so that  $s_i(p,R,K_r) = 1/K_r$ for a uniform hypersphere. We calculate the outside weights as $w_i(p, R, K_r)$ and the inside weights as $w_i(2, R, K_r)$. Recall that we are assuming that the slice thickness can be neglected, $h\ll R$.
+corresponding to the weighted relative number of points in each bin. \textcolor{red}{After reweighting, the relative expected count in each radial bin is thus} $s_i(p,R,K_r) = 1/K_r$ for a uniform hypersphere. We calculate the outside weights as $w_i(p, R, K_r)$ and the inside weights as $w_i(2, R, K_r)$. Recall that we are assuming that the slice thickness can be neglected, $h\ll R$.
 
 Figure \ref{fig:data_and_densities} illustrates the effect of the adjustment using polar histograms for the simulated example data B, with and without re-weighting. The rows show raw and weighted bin counts, respectively, and the columns contain plots of  the distributions of points inside, outside the slice and the difference between the two. The re-weighting has the desired effect of focusing the attention more effectively on the central structure.
 
