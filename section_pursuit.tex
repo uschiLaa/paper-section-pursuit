@@ -181,7 +181,7 @@ for two simulated data sets (A, B). Note that the data is defined in a
 hollow regions inside the sphere by rejecting points within shapes
 defined by selected hyperspherical harmonics
 \citep{doi:10.1063/1.3054274},
-\textcolor{red}{as described in the appendix}. The hollowness is hidden
+\textcolor{red}{as described in the Appendix}. The hollowness is hidden
 in projections of the data, as shown in the final column of Figure
 \ref{fig:allSlices}. It is much simpler to define sections on
 high-dimensional spheres than cubes, and this is the approach used for
@@ -292,9 +292,7 @@ estimate for \(\varepsilon\) assuming a uniform distribution inside a
 hypersphere is given in Section \ref{sec:epsilon}.
 \textcolor{red}{If $\varepsilon=0$ we get a symmetry in the definitions,  $I_A^{low}=I_A^{up}$. In general, the choice of index should match the intention, searching for regions of high or low density in the slice.}
 
-\hypertarget{generalised-index}{%
-\subsubsection{\texorpdfstring{Generalised index
-\label{sec:generalise}}{Generalised index }}\label{generalised-index}}
+\emph{Generalised index}
 
 The definitions in Eq.(\ref{eq:index},\ref{eq:indexup}) can be
 generalized
@@ -323,8 +321,8 @@ fall in \([0,1]\). Notice that, in this definition the index is no
 longer symmetric under exchanging the distributions inside and outside
 the section, even when \(\varepsilon=0\).
 
-\hypertarget{the-index-in-practice}{%
-\section{The index in practice}\label{the-index-in-practice}}
+\hypertarget{practical-issues}{%
+\section{Practical issues}\label{practical-issues}}
 
 \textcolor{red}{
 The application of the new index function should be informed by an expected underlying distribution. As explained in 4.1 these should be rotation invariant, and the concrete assumption can guide practical choices that need to be made: reweighting bin counts to account for expected differences between the projected distribution and the distribution in a slice (4.2), estimates of sufficient sample size, expected noise and corresponding threshold $\epsilon$ (4.3).
@@ -382,8 +380,9 @@ varying radial bin size could be used to offset this effect, where the
 bounds of the \(K_r\) radial bins take into account the expected
 distribution of points given \(p\).
 \textcolor{red}{However, the expected radial distribution will also differ between the projected data in a slice and a projection of the full data},
-so the effect is accounted for instead by reweighting bin counts. The
-calculations are as follows.
+so the effect is accounted for instead by reweighting bin counts.
+\textcolor{red}{The aim is to adjust for the expected difference in distribution: after the reweighting, the expected counts in all radial bins is the same, and this needs to be adjusted separately for the data in the slice and the projected data.}
+The calculations are as follows.
 
 Consider the expected distribution to be a uniform distribution within a
 hypersphere in \(p\) dimensions projected onto a 2D plane. The
@@ -431,10 +430,12 @@ w_i(p, R, K_r) = \frac{1}{K_r F_i(p,R)},
 s_i(p, R, K_r) = n_i w_i(p, R, K_r)
 \label{eq:reweight}
 \end{equation} corresponding to the weighted relative number of points
-in each bin, so that \(s_i(p,R,K_r) = 1/K_r\) for a uniform hypersphere.
-We calculate the outside weights as \(w_i(p, R, K_r)\) and the inside
-weights as \(w_i(2, R, K_r)\). Recall that we are assuming that the
-slice thickness can be neglected, \(h\ll R\).
+in each bin.
+\textcolor{red}{After reweighting, the relative expected count in each radial bin is thus}
+\(s_i(p,R,K_r) = 1/K_r\) for a uniform hypersphere. We calculate the
+outside weights as \(w_i(p, R, K_r)\) and the inside weights as
+\(w_i(2, R, K_r)\). Recall that we are assuming that the slice thickness
+can be neglected, \(h\ll R\).
 
 Figure \ref{fig:data_and_densities} illustrates the effect of the
 adjustment using polar histograms for the simulated example data B, with
@@ -453,9 +454,7 @@ effectively on the central structure.
 \caption{Illustration of the polar binning, effect of re-weighting bin counts in the index function computation, on sample data set B and for the informative slice S1. Rows show raw and weighted bin counts, respectively. Columns show the distributions of inside, outside and the difference. The effect of the re-weighting focuses the attention more effectively on the cavity structure.}\label{fig:data_and_densities}
 \end{figure}
 
-\hypertarget{binning-across-different-planes}{%
-\subsubsection{Binning across different
-planes}\label{binning-across-different-planes}}
+\emph{Binning across different planes}
 
 The index needs to be optimized over the set of all possible projections
 to find interesting concavities. This requires the binned data to be
@@ -546,9 +545,7 @@ dependence on the number of bins, which is undesirable. Setting
 \caption{Examining the effect of    extcolor{red}{the noise cutoff} $\varepsilon^i$ on the index value for varying number of bins. Three simulated data sets are used:  A, B and C. The horizontal axis traces the index from an uninteresting to interesting sliced projection (defined by slice S2 and S1 respectively), for $\varepsilon^i=0, \delta^i$. Colour indicates number of bins. Ideally, the index value should be the same, regardless of choice of bins, which is achieved in practice by $\varepsilon^i=\delta^i$.}\label{fig:path_eps}
 \end{figure}
 
-\hypertarget{dependence-on-q}{%
-\subsubsection{\texorpdfstring{Dependence on
-\(q\)}{Dependence on q}}\label{dependence-on-q}}
+\emph{Dependence on} \(q\)
 
 \textcolor{red}{In the generalized definition of the index, the parameter $q$ can be used to tune the sensitivity to small differences. It will therefore also need to be considered when choosing $\varepsilon^i$. To understand the effect we consider a simple one-dimensional setup:}
 uniformly draw \(N\) samples and bin them in \(K\) bins, such that the
@@ -786,8 +783,7 @@ region we generate the hollow features to be found by section pursuit.
 The resulting slice can then be viewed showing all assigned classes to
 resolve the boundary.
 
-\hypertarget{olives-data}{%
-\subsubsection{Olives data}\label{olives-data}}
+\emph{Olives data}
 
 We first consider the classical olives data \citep{olives}. This data
 set contains measurements of 8 fatty acids for 572 Italian olive oils,
@@ -861,8 +857,7 @@ constraints might result in preferred parameter combinations hinting at
 a simpler underlying model, or we can reparametrise the allowed region
 to design targeted experiments to test the model further.
 
-\hypertarget{thdm}{%
-\subsubsection{THDM}\label{thdm}}
+\emph{THDM}
 
 A certain type of particle that occurs in particle physics models is the
 so-called scalar (or Higgs) boson, with properties specified by a
@@ -967,15 +962,14 @@ Additional potential applications for section pursuit include the
 exploration of non-standard multivariate confidence regions or Bayesian
 credible regions.
 
-\textcolor{red}{Note that large samples are required to obtain useful insights using the section pursuit method. As discussed in the context of sufficient sample size, the number of data points quickly grows with the number of dimensions. The applications we have studied here are considering simulated data in up to seven dimensions. In the case of larger parameter space we recommend to first reduce dimensionality: in the olives-data example we have selected variables based on prior knowledge, in the PDFSense example in the appendix we have used principal component analysis prior to the application of section pursuit. The method is not appropriate for small sample size data, in those cases interactive methods such as linked brushing will be preferred.}
+\textcolor{red}{Note that large samples are required to obtain useful insights using the section pursuit method. As discussed in the context of sufficient sample size, the number of data points quickly grows with the number of dimensions. The applications we have studied here are considering simulated data in up to seven dimensions. In the case of larger parameter space we recommend to first reduce dimensionality: in the olives-data example we have selected variables based on prior knowledge, in the PDFSense example in the Appendix we have used principal component analysis prior to the application of section pursuit. The method is not appropriate for small sample size data, in those cases interactive methods such as linked brushing will be preferred.}
 
 Depending on the application, different index definitions would be
 recommended. Several variations on the index would be produced different
-choices of weights, and parameters in the generalized index definition
-(Section \ref{sec:generalise}). This paper hasn't fully explored the
-impact of all the choices, but the same type of diagnostics, in
-particular, the index visualization presented in Section \ref{sec:viz},
-could be used decide.
+choices of weights, and parameters in the generalized index definition.
+This paper hasn't fully explored the impact of all the choices, but the
+same type of diagnostics, in particular, the index visualization
+presented in Section \ref{sec:viz}, could be used decide.
 
 \textcolor{red}{Given the compositional nature of the normalized bin-count data, considering e.g. log-ratios in the definition, could also define an interesting index. It may also be reasonable to consider using a kernel, instead of discrete bins, to produce some spatial smoothing. The effect would be to focus attention on large differences in specific regions rather than small differences anywhere. A completely different approach  to producing a section index, would be to apply any existing projection pursuit index on a sliced projection instead of the full projected data. Only observations inside the slice are then used for the index calculation.}
 
@@ -1001,7 +995,8 @@ for their hospitality while part of this work was conducted.
 \item
   The Appendix contains the derivation of the radial CDF of a
   hypersphere projected onto a 2D plane and the equations used to
-  calculate the masses in the two-Higgs-doublet model.
+  calculate the masses in the two-Higgs-doublet model, and an additional
+  example from phsyics.
 \end{itemize}
 
 \bibliographystyle{tfcad}

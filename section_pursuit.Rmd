@@ -115,7 +115,7 @@ Recent work in @laa2019slice implemented a display of interpolated slices, which
 \label{fig:diagrams}
 \end{figure*}
 
-The first two columns of Figure \ref{fig:allSlices} show scatterplots of the points in a 4D data set inside an informative (S1) and an uninformative (S2) slice, \textcolor{red}{defined by two different projection planes centered at the origin}, for two simulated data sets (A, B). Note that the data is defined in a 4D sphere, which generates the circular shape. The sampling results in hollow regions inside the sphere by rejecting points within shapes defined by selected hyperspherical harmonics [@doi:10.1063/1.3054274], \textcolor{red}{as described in the appendix}. The hollowness is hidden in projections of the data, as shown in the final column of Figure \ref{fig:allSlices}. It is much simpler to define sections on high-dimensional spheres than cubes, and this is the approach used for all the data in this paper. Data defined in a cube, most data, is trimmed or supplemented to be contained in a sphere. 
+The first two columns of Figure \ref{fig:allSlices} show scatterplots of the points in a 4D data set inside an informative (S1) and an uninformative (S2) slice, \textcolor{red}{defined by two different projection planes centered at the origin}, for two simulated data sets (A, B). Note that the data is defined in a 4D sphere, which generates the circular shape. The sampling results in hollow regions inside the sphere by rejecting points within shapes defined by selected hyperspherical harmonics [@doi:10.1063/1.3054274], \textcolor{red}{as described in the Appendix}. The hollowness is hidden in projections of the data, as shown in the final column of Figure \ref{fig:allSlices}. It is much simpler to define sections on high-dimensional spheres than cubes, and this is the approach used for all the data in this paper. Data defined in a cube, most data, is trimmed or supplemented to be contained in a sphere. 
 
 
 ```{r allSlices, fig.cap="Slices of two 4D data sets (A, B) shown using scatterplots of points inside 2D sections. The first slice (S1) is informative and reveals the hollow regions in the data, while the second slice (S2) is un-informative. The last column shows projections of the data onto a 2D plane, hiding the hollowness.", fig.height=5, fig.width=9, out.width='80%',fig.align = "center"}
@@ -225,8 +225,7 @@ The $[.]_{>\varepsilon}$ notation indicates that we drop all bins where the diff
 Only bins where the difference is positive are summed. The $\varepsilon$ avoids summing noise and suppresses an artificial dependence on the number of bins. The value of $\varepsilon$ should be estimated based on the expected size of sampling fluctuation, which may depend on assuming a distribution, the number of samples $N$, the number of bins $K$, the slice radius $h$ and the dimension $p$. An estimate for $\varepsilon$ assuming a uniform distribution inside a hypersphere is given in Section \ref{sec:epsilon}. \textcolor{red}{If $\varepsilon=0$ we get a symmetry in the definitions,  $I_A^{low}=I_A^{up}$. In general, the choice of index should match the intention, searching for regions of high or low density in the slice.}
 
 
-
-### Generalised index \label{sec:generalise}
+*Generalised index* <!--\label{sec:generalise}-->
 
 <!--### Generalisation of the index-->
 The definitions in Eq.(\ref{eq:index},\ref{eq:indexup}) can be generalized \textcolor{red}{for example to emphasise selected bins or control the sensitivity.}
@@ -248,7 +247,7 @@ Notice that, in this definition the index is no longer symmetric under exchangin
 
 
 
-# The index in practice
+# Practical issues
 
 \textcolor{red}{
 The application of the new index function should be informed by an expected underlying distribution. As explained in 4.1 these should be rotation invariant, and the concrete assumption can guide practical choices that need to be made: reweighting bin counts to account for expected differences between the projected distribution and the distribution in a slice (4.2), estimates of sufficient sample size, expected noise and corresponding threshold $\epsilon$ (4.3).
@@ -517,7 +516,7 @@ grid.arrange(p5, p6, p10, p5w, p6w, p10w, ncol=3)
 ```
 
 
-### Binning across different planes
+*Binning across different planes*
 
 The index needs to be optimized over the set of all possible projections to find interesting concavities. This requires the binned data to be comparable, thus the bins are fixed for all planes. For each slice we first center the projected data before binning it.
 
@@ -723,7 +722,7 @@ p6 <- as_tibble(tr6) %>%
 grid.arrange(p3, p1, p5, p4, p2, p6, ncol=3)
 ```
 
-### Dependence on $q$
+*Dependence on* $q$
 
 \textcolor{red}{In the generalized definition of the index, the parameter $q$ can be used to tune the sensitivity to small differences. It will therefore also need to be considered when choosing $\varepsilon^i$. To understand the effect we consider a simple one-dimensional setup:}
  uniformly draw $N$ samples and bin them in $K$ bins, such that the expected bin count is $N/K$ in all bins (or $1/K$ after normalization). Using the Poisson approximation, the standard deviation for the normalized counts is $\delta=1/\sqrt{N K}$. By drawing two independent samples and calculating the index value 100 times we get an estimate of the expected index value and its variance depending on $q$. Note that since we are assuming pure noise distributions for both samples, $I_A^{low}=I_A^{up}=I_A$. This is shown in Figure \ref{fig:noise} for $N=10000$ and $K=100$. When $q=1$ and approximating the bin counts by a normal distribution, we can also evaluate the expected index value analytically as
@@ -1154,7 +1153,7 @@ getAxes <- function(fProj, cntrx, cntry, sclx, scly){
 
 The slice display can be used to understand non-linear classification boundaries [@laa2019slice], visualized following @sam.11271 and using the classifly package [@classifly]. Classifly samples the design space and calculates model predictions. We can use section pursuit to identify slices that reveal the decision boundaries in the design space, by dropping sample points based on the assigned prediction. By selecting a class that is only predicted in a small region we generate the hollow features to be found by section pursuit. The resulting slice can then be viewed showing all assigned classes to resolve the boundary.
 
-### Olives data
+*Olives data*
 
 We first consider the classical olives data [@olives]. This data set contains measurements of 8 fatty acids for 572 Italian olive oils, collected in 9 different areas, and is available in the classifly package.
 
@@ -1377,7 +1376,7 @@ grid.arrange(p1, p1p, p1d, blank, p2, p2p, p2d, p_leg, p4, p4p, p4d, p6, ncol=4,
 
 Similar to the decision boundaries of classification models, inequality conditions can induce non-linear boundaries in the parameter space. The inequalities may be complicated functions of multiple parameters, and we can use section pursuit to find visualizations that illustrate the boundaries. These are of interest in physics models for which we often have inequality constraints defining the allowed region of parameter space. By understanding the shape of this region we can gain physics insights guiding theoretical and experimental work. For example, the constraints might result in preferred parameter combinations hinting at a simpler underlying model, or we can reparametrise the allowed region to design targeted experiments to test the model further.
 
-### THDM
+*THDM*
 
 A certain type of particle that occurs in particle physics models is the so-called scalar (or Higgs) boson, with properties specified by a "potential" which depends on a set of parameters. These are the basic parameters of the model and they allow one to calculate physical quantities such as the masses of the scalar particles and their interaction strengths. A common problem that arises in this context consists of finding the parameter space that leads to acceptable predictions, that satisfy known theoretical or experimental constraints.
 
@@ -1560,9 +1559,9 @@ The section pursuit index can be used together with the slice display in the tou
 
 We have shown how to use the section pursuit index to explore non-linear decision boundaries of classification models, or similarly, to explore complex inequality conditions that depend on multiple parameters. In all examples, we have sampled the parameter space and evaluated the classification or inequality conditions for all points. We then dropped points assigned to one particular class, or in conflict with the inequality condition to generate the hollow features in the distribution. For all examples considered, the optimization resulted in slice views that illustrate interesting aspects of the boundaries. Additional potential applications for section pursuit include the exploration of non-standard multivariate confidence regions or Bayesian credible regions.
 
-\textcolor{red}{Note that large samples are required to obtain useful insights using the section pursuit method. As discussed in the context of sufficient sample size, the number of data points quickly grows with the number of dimensions. The applications we have studied here are considering simulated data in up to seven dimensions. In the case of larger parameter space we recommend to first reduce dimensionality: in the olives-data example we have selected variables based on prior knowledge, in the PDFSense example in the appendix we have used principal component analysis prior to the application of section pursuit. The method is not appropriate for small sample size data, in those cases interactive methods such as linked brushing will be preferred.}
+\textcolor{red}{Note that large samples are required to obtain useful insights using the section pursuit method. As discussed in the context of sufficient sample size, the number of data points quickly grows with the number of dimensions. The applications we have studied here are considering simulated data in up to seven dimensions. In the case of larger parameter space we recommend to first reduce dimensionality: in the olives-data example we have selected variables based on prior knowledge, in the PDFSense example in the Appendix we have used principal component analysis prior to the application of section pursuit. The method is not appropriate for small sample size data, in those cases interactive methods such as linked brushing will be preferred.}
 
-Depending on the application, different index definitions would be recommended. Several variations on the index would be produced different choices of weights, and parameters in the generalized index definition (Section \ref{sec:generalise}). This paper hasn't fully explored the impact of all the choices, but the same type of diagnostics, in particular, the index visualization presented in Section \ref{sec:viz}, could be used decide.
+Depending on the application, different index definitions would be recommended. Several variations on the index would be produced different choices of weights, and parameters in the generalized index definition<!-- (Section \ref{sec:generalise})-->. This paper hasn't fully explored the impact of all the choices, but the same type of diagnostics, in particular, the index visualization presented in Section \ref{sec:viz}, could be used decide.
 
 \textcolor{red}{Given the compositional nature of the normalized bin-count data, considering e.g. log-ratios in the definition, could also define an interesting index. It may also be reasonable to consider using a kernel, instead of discrete bins, to produce some spatial smoothing. The effect would be to focus attention on large differences in specific regions rather than small differences anywhere. A completely different approach  to producing a section index, would be to apply any existing projection pursuit index on a sliced projection instead of the full projected data. Only observations inside the slice are then used for the index calculation.}
 
@@ -1577,7 +1576,7 @@ This article was created with knitr [@knitr] and R Markdown [@rmarkdown] with em
 #  Supplementary material {-}
 
 - Code and data is available at \url{https://github.com/uschiLaa/paper-section-pursuit}.
-- The Appendix contains the derivation of the radial CDF of a hypersphere projected onto a 2D plane and the equations used to calculate the masses in the two-Higgs-doublet model.
+- The Appendix contains the derivation of the radial CDF of a hypersphere projected onto a 2D plane and the equations used to calculate the masses in the two-Higgs-doublet model, and an additional example from phsyics.
 
 # References {-}
 

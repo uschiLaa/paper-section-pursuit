@@ -1,5 +1,5 @@
 ---
-title: "Appendix"
+title: "Appendix: Hole or grain? A Section Pursuit Index for Finding Hidden Structure in Multiple Dimensions"
 output:
   pdf_document:
     keep_tex: true
