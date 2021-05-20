@@ -515,14 +515,11 @@ grid.arrange(p5, p6, p10, p5w, p6w, p10w, ncol=3)
 
 ```
 
+The index needs to be optimized over the set of all possible projections to find interesting concavities. This requires the binned data to be comparable, thus *the bins are fixed for all planes*. For each slice we first center the projected data before binning it.
 
-*Binning across different planes*
+In the simulated examples in this paper the radius of the hypersphere, $R$, is known, and is used to define the radial boundary. In practice, the radius of a random projection can be used to estimate $R$. When observed points for any new projection, or slice, fall outside of the sphere, they might be grouped into the outer bin. 
 
-The index needs to be optimized over the set of all possible projections to find interesting concavities. This requires the binned data to be comparable, thus the bins are fixed for all planes. For each slice we first center the projected data before binning it.
-
-In the simulated examples in this paper the radius of the hypersphere is known, and is used to define the radial boundary. In applied problems the radius of a random projection can be used to estimate it, with a procedure for handling points that fall outside that boundary.
-
-Note that the fixed angular binning can break rotational invariance of the index in a small way, and this can be noticed during optimization. One approach to mitigate this effect could be to evaluate the index at several small rotations within a single angular bin window and combine the values.
+Note that, the fixed angular binning can marginally affect rotational invariance of the index. To mitigate this combining index values from several small rotations within a single angular bin window might be done at each step.
 
 ## Sufficient sample size
 

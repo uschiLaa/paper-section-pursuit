@@ -18,13 +18,11 @@ Required revisons:
     added a new diagram. We have also added a summary paragraph that details the
     relationg between slicing, projecting and binning.
 - indices vs indexes
-  + Indexes is the term that is used in projection pursuit literature, compare
-    XXX Di to add best reference for this statement.
+  + Indexes is the common term that is used in projection pursuit literature, actually when Cook, Buja and Cabrera (1993) "Projection Pursuit Indexes Based on Orthonormal Function Expansions" JCGS, tried to use indices the copy editor insisted the correct tem was indexes.
 - line section 3.2 on indices: index equality is a non-sequitur. Please motivate why this is of interest.
   + We have rephrased the statement to point out why this is important. (If the equality is not given, we should pick the appropriate index definition.)
 - The thickness of the slice h in the parameter gets dropped from the indices.
-  + XXX we don't really keep track of any of the parameters, these would include
-    A, h, epsilon, details of binning - how should this be handled?
+  + Yes, the index depends on h, epsilon, but for simplicity of notation its better to leave these as properties of A.
 - Index definition structure, alternative index definitions, e.g. log-ratio
   + We have streamlined the index definition section and moved the discussion of
     alternatives to the conclusions and discussion section of the paper. We have
@@ -32,7 +30,7 @@ Required revisons:
     suggested by the referee. An implementation and comparison of these methods
     is however beyond the scope of this work.
 - Figure 3: add legend
-  + XXX added this for now, but not convinced we want this
+  + XXX The numbers for each bin are not interesting here, and its just a distraction to add a legend. The main point of the figure is read from the relative shade of the various bins. 
 - Equation 8: add example with numbers
   + Note that this is now Equation 9 (N_S). We have added some explicit values
     at the end of the subsection.
@@ -55,34 +53,29 @@ Required revisons:
 Reviewer 2:
 
 - Structure:
-  + We have reworked the structure of the paper, such that the theoretic definition
+  + We have reworked the structure of the paper, such that the definition
     of the index is now covered in Section 3, and all practical aspects that rely
     on an assumed underlying distribution are now discussed in Section 4. We decided
     that generalising the discussion towards any underlying distribution would
     be distracting in this work but might be interesting enough to be covered in
-    a dedicated article. XXX something like this, maybe more emphasis on that in
-    the discussion?
+    a future article. 
 
 - Re notation:
   + we have corrected the description of A as a basis for the 
     projected space rather than a projection matrix
   + we now use capital F to denote a CDF
   + We prefer keeping R instead of using rho because it is easier to read, given
-    that p also appears in the same equation.
-  + XXX how to argue against hats for sample estimates?
-  + we have clarifide the notation of slices vs sections and added diagrams to
+    that p, which looks like rho, also appears in the same equation.
+  + We decided that adding hats would make the notation more difficult to read, and really isn't necessary for a reader to grasp the ideas. 
+  + we have clarified the notation of slices vs sections and added diagrams to
     help with intuition, see Section "Grand tour and slice tour"
-    (XXX didn't add diagram yet)
   + XXX what about symbol for inside vs outside the slice? I think we already have this with S, C
   
 - Rotation invariance and trimming
   + the reason that rotation invariance is
     important here is that we need to make assumptions about how the section
     is expected to differ from the slice, which is used in defining their
-    separate weights (Eq. 7). XXX need to make clear what type of rotation
-    invariance we talk about here, this goes beyond convenience in my opinion,
-    specific argument will depend on the restructuring (because reweighting
-    will probably be discussed after this argument).
+    separate weights (Eq. 7). We have clarified this in the paper. 
   
 - Spherical trimming costs and benefits
   + we appreciate that the trimming can
@@ -130,7 +123,7 @@ Reviewer 2:
     inside the slice. XXX maybe need to comment on selecting only 4 variables here?
   
 - Description of reweighting is not clear
-  + XXX rework this after the restructuring, use p12-14 for guidance
+  + This has been rewritten to be cleaerer.
   
 - Epsilon threshold radial dependence (p15)
   + We thank the referee for noticing the issue. Indeed the delta and epsilon

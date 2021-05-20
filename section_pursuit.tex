@@ -454,23 +454,21 @@ effectively on the central structure.
 \caption{Illustration of the polar binning, effect of re-weighting bin counts in the index function computation, on sample data set B and for the informative slice S1. Rows show raw and weighted bin counts, respectively. Columns show the distributions of inside, outside and the difference. The effect of the re-weighting focuses the attention more effectively on the cavity structure.}\label{fig:data_and_densities}
 \end{figure}
 
-\emph{Binning across different planes}
-
 The index needs to be optimized over the set of all possible projections
 to find interesting concavities. This requires the binned data to be
-comparable, thus the bins are fixed for all planes. For each slice we
-first center the projected data before binning it.
+comparable, thus \emph{the bins are fixed for all planes}. For each
+slice we first center the projected data before binning it.
 
-In the simulated examples in this paper the radius of the hypersphere is
-known, and is used to define the radial boundary. In applied problems
-the radius of a random projection can be used to estimate it, with a
-procedure for handling points that fall outside that boundary.
+In the simulated examples in this paper the radius of the hypersphere,
+\(R\), is known, and is used to define the radial boundary. In practice,
+the radius of a random projection can be used to estimate \(R\). When
+observed points for any new projection, or slice, fall outside of the
+sphere, they might be grouped into the outer bin.
 
-Note that the fixed angular binning can break rotational invariance of
-the index in a small way, and this can be noticed during optimization.
-One approach to mitigate this effect could be to evaluate the index at
-several small rotations within a single angular bin window and combine
-the values.
+Note that, the fixed angular binning can marginally affect rotational
+invariance of the index. To mitigate this combining index values from
+several small rotations within a single angular bin window might be done
+at each step.
 
 \hypertarget{sufficient-sample-size}{%
 \subsection{Sufficient sample size}\label{sufficient-sample-size}}
