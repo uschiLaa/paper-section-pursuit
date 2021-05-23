@@ -135,7 +135,7 @@ Reviewer 2:
   + The details explaining the data generation have been added as an appendix.
   
 - Critique of "needle" and maybe also grain
-  + Should we drop this and focus only on hollowness? There was a similar complaint
+  + XXX Should we drop this and focus only on hollowness? There was a similar complaint
     from Reviewer 1
 
 - Figure 5, maybe also 2, 4: make it easier to distinguish lines by making them
