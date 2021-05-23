@@ -156,7 +156,7 @@ and an implementation in R \citep{rlang} is available in the
 
 \textcolor{red}{The information available in projections can be complemented using \textit{sectioning}}
 \citet{prosection}
-\textcolor{red}{, i.e. highlighting or dropping subsets of the data based on conditions that are typically defined via linked brushing. A special type of sectioning is \textit{slicing}, which is defining the sectioning condition based on the orthogonal distance of data points from a projection plane. Points are considered to fall into the slice if this distance is below some cutoff value $h$. Figure \ref{fig:diagrams} shows diagrams illustrating slicing through a 3D sphere (left) and the general concept of the orthogonal distance (right) that is used to define slices in more than three dimensions.}
+\textcolor{red}{, i.e. highlighting or dropping subsets of the data based on inequality conditions defined for the variables. A special type of sectioning is \textit{slicing}, which is defining the sectioning condition based on the orthogonal distance of data points from a projection plane. Points are considered to fall into the slice if this distance is below some cutoff value $h$. Figure \ref{fig:diagrams} shows diagrams illustrating slicing through a 3D sphere (left) and the general concept of the orthogonal distance (right) that is used to define slices in more than three dimensions.}
 Recent work in \citet{laa2019slice} implemented a display of
 interpolated slices, which has been added to the \texttt{tourr} package
 and can be used to show slices for projection planes obtained when
@@ -348,11 +348,12 @@ hypercube, so this prescription requires a departure from the norm
 which, however,is still practical. In cases of simulated data, such as
 when looking at multivariate models, the sampling scheme can be
 adjusted. Observed data, on the other hand, requires shaving off the
-corners. This procedure is expected to be harmless because it is
-interior structure that is of interest. In addition, this approach is
-designed for reasonably small \(p\) so that the vast gap between spheres
-and cubes in high dimensions is not a concern. For very high-dimensional
-data, some dimension reduction is expected in pre-processing.
+corners.
+\textcolor{red}{Note here that most data has a tendency to be elliptical or spherical, and that we are interested in interior structures for which the corners are not important. By sphering the data during pre-processing, shaving off any remaining corners can be kept to a minimum.}
+In addition, this approach is designed for reasonably small \(p\) so
+that the vast gap between spheres and cubes in high dimensions is not a
+concern. For very high-dimensional data, some dimension reduction is
+expected in pre-processing.
 
 \textcolor{red}{Here we will work with the assumption of a uniform distribution inside a hypersphere because it naturally captures how the relative slice volume changes with dimensionality. Other rotation invariant distributions could also be of interest, for example a multivariate normal distribution.}
 

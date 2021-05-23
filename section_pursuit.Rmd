@@ -102,7 +102,7 @@ This paper is organized as follows. The next section provides background on tour
 
 The grand tour shows a geodesically interpolated sequence of randomly selected projections in an animation. The interpolation allows the viewer to interpret each view in the context of the previously seen projection, thus providing additional insights compared to static projections. By observing how the data distribution changes under a rotation of the low-dimensional projection, the viewer can extrapolate from the low-dimensional shapes to the distribution in high dimensions. The underlying computational methods were described in @BCAH05, and an implementation in R [@rlang] is available in the \texttt{tourr} package [@tourr].
 
-\textcolor{red}{The information available in projections can be complemented using \textit{sectioning}} @prosection \textcolor{red}{, i.e. highlighting or dropping subsets of the data based on conditions that are typically defined via linked brushing. A special type of sectioning is \textit{slicing}, which is defining the sectioning condition based on the orthogonal distance of data points from a projection plane. Points are considered to fall into the slice if this distance is below some cutoff value $h$. Figure \ref{fig:diagrams} shows diagrams illustrating slicing through a 3D sphere (left) and the general concept of the orthogonal distance (right) that is used to define slices in more than three dimensions.}
+\textcolor{red}{The information available in projections can be complemented using \textit{sectioning}} @prosection \textcolor{red}{, i.e. highlighting or dropping subsets of the data based on inequality conditions defined for the variables. A special type of sectioning is \textit{slicing}, which is defining the sectioning condition based on the orthogonal distance of data points from a projection plane. Points are considered to fall into the slice if this distance is below some cutoff value $h$. Figure \ref{fig:diagrams} shows diagrams illustrating slicing through a 3D sphere (left) and the general concept of the orthogonal distance (right) that is used to define slices in more than three dimensions.}
 Recent work in @laa2019slice implemented a display of interpolated slices, which has been added to the \texttt{tourr} package and can be used to show slices for projection planes obtained when running a grand tour.
 
 \textcolor{red}{A slice is defined using Euclidean distance in the orthogonal space to ensure rotation invariance. This means that in general slices are spherical, and a \textit{flat slice}, matching the common picture of a slice (as shown in the left plot of Fig. \ref{fig:diagrams}), is only obtained in the case of a single orthogonal direction on the projection plane.}
@@ -261,7 +261,7 @@ A  desirable property for projection pursuit, into $d$-dimensions, and thus also
 \textcolor{blue}{maybe replace the paragraph below to say that simulation is often done in hypercube, which is optimized for bivariate plotting, but simulation in a hypersphere would be more appropriate when working with a tour or projection pursuit, since then the range is rotation invariant. Real data would often be approximately normal and thus also approximataly spherically symmetric.}
 
 
-Thus a restriction is imposed on the observed data: that it falls within a $p$-dimensional hypersphere. Data is typically observed in a hypercube, so this prescription requires a departure from the norm which, however,is still practical. In cases of simulated data, such as when looking at multivariate models, the sampling scheme can be adjusted. Observed data, on the other hand, requires shaving off the corners. This procedure is expected to be harmless  because it is interior structure that is of interest. In addition, this  approach is designed for reasonably small $p$ so that the vast gap between spheres and cubes in high dimensions is not a concern. For very high-dimensional data, some dimension reduction is expected in pre-processing.
+Thus a restriction is imposed on the observed data: that it falls within a $p$-dimensional hypersphere. Data is typically observed in a hypercube, so this prescription requires a departure from the norm which, however,is still practical. In cases of simulated data, such as when looking at multivariate models, the sampling scheme can be adjusted. Observed data, on the other hand, requires shaving off the corners. \textcolor{red}{Note here that most data has a tendency to be elliptical or spherical, and that we are interested in interior structures for which the corners are not important. By sphering the data during pre-processing, shaving off any remaining corners can be kept to a minimum.} In addition, this  approach is designed for reasonably small $p$ so that the vast gap between spheres and cubes in high dimensions is not a concern. For very high-dimensional data, some dimension reduction is expected in pre-processing.
 
 
 \textcolor{red}{Here we will work with the assumption of a uniform distribution inside a hypersphere because it naturally captures how the relative slice volume changes with dimensionality. Other rotation invariant distributions could also be of interest, for example a multivariate normal distribution.}
@@ -420,14 +420,14 @@ p3 <- ggplot(sq_binned, aes(x=xbin, y=ybin, fill = inside)) +
   geom_tile() +
   scale_fill_distiller("", palette="Blues", direction = 1) +
   xlab("") + ylab("") + theme_bw() + theme(aspect.ratio=1,
-                              #legend.position="none",
+                              legend.position="none",
                               axis.text = element_blank()) +
   ggtitle("b. Square bin")
 p4 <- ggplot(sq_binned, aes(x=xbin, y=ybin, fill = outside)) + 
   geom_tile() +
   scale_fill_distiller("", palette="Blues", direction = 1) +
   xlab("") + ylab("") + theme_bw() + theme(aspect.ratio=1,
-                              #legend.position="none",
+                              legend.position="none",
                               axis.text = element_blank()) +
   ggtitle("e. Square bin")
 
@@ -435,7 +435,7 @@ p5 <- ggplot() +
   geom_polygon(data=pol_plot, aes(x=x, y=y, group=factor(id), fill=inside)) +
   scale_fill_distiller("", palette="Blues", direction = 1) +
   xlab("") + ylab("") + theme_bw() + theme(aspect.ratio=1,
-                              #legend.position="none",
+                              legend.position="none",
                               axis.text = element_blank())  +
   ggtitle("a. Inside")
 
@@ -443,7 +443,7 @@ p6 <- ggplot() +
   geom_polygon(data=pol_plot, aes(x=x, y=y, group=factor(id), fill=outside)) +
   scale_fill_distiller("", palette="Blues", direction = 1) +
   xlab("") + ylab("") + theme_bw() + theme(aspect.ratio=1,
-                              #legend.position="none",
+                              legend.position="none",
                               axis.text = element_blank())  +
   ggtitle("b. Outside")
 
@@ -451,7 +451,7 @@ p5w <- ggplot() +
   geom_polygon(data=pol_plot_weighted, aes(x=x, y=y, group=factor(id), fill=inside)) +
   scale_fill_distiller("", palette="Blues", direction = 1) +
   xlab("") + ylab("") + theme_bw() + theme(aspect.ratio=1,
-                              #legend.position="none",
+                              legend.position="none",
                               axis.text = element_blank())  +
   ggtitle("d. Inside, weighted")
 
@@ -459,7 +459,7 @@ p6w <- ggplot() +
   geom_polygon(data=pol_plot_weighted, aes(x=x, y=y, group=factor(id), fill=outside)) +
   scale_fill_distiller("", palette="Blues", direction = 1) +
   xlab("") + ylab("") + theme_bw() + theme(aspect.ratio=1,
-                              #legend.position="none",
+                              legend.position="none",
                               axis.text = element_blank())  +
   ggtitle("e. Outside, weighted")
 
@@ -467,14 +467,14 @@ p7 <- ggplot(sq_binned, aes(x=xbin, y=ybin, fill = rel_diff_in)) +
   geom_tile() +
   scale_fill_distiller("", palette = "PuRd", direction = 1) +
   xlab("") + ylab("") + theme_bw() + theme(aspect.ratio=1,
-                              #legend.position="none",
+                              legend.position="none",
                               axis.text = element_blank()) +
   ggtitle("a. Inside - outside")
 p9 <- ggplot(sq_binned, aes(x=xbin, y=ybin, fill = rel_diff_out)) + 
   geom_tile() +
   scale_fill_distiller("", palette = "PuRd", direction = 1) +
   xlab("") + ylab("") + theme_bw() + theme(aspect.ratio=1,
-                              #legend.position="none",
+                              legend.position="none",
                               axis.text = element_blank()) +
   ggtitle("c. Outside - inside")
 
@@ -482,14 +482,14 @@ p8 <- ggplot() +
   geom_polygon(data=pol_plot, aes(x=x, y=y, group=factor(id), fill=rel_diff_in)) +
   scale_fill_distiller("", palette = "PuRd", direction = 1) +
   xlab("") + ylab("") + theme_bw() + theme(aspect.ratio=1,
-                              #legend.position="none",
+                              legend.position="none",
                               axis.text = element_blank())  +
   ggtitle("b. Inside - outside")
 p10 <- ggplot() + 
   geom_polygon(data=pol_plot, aes(x=x, y=y, group=id, fill=rel_diff_out)) +
   scale_fill_distiller("", palette = "PuRd", direction = 1) +
   xlab("") + ylab("") + theme_bw() + theme(aspect.ratio=1,
-                              #legend.position="none",
+                              legend.position="none",
                               axis.text = element_blank())  +
   ggtitle("c. Outside - inside")
 
@@ -497,14 +497,14 @@ p8w <- ggplot() +
   geom_polygon(data=pol_plot_weighted, aes(x=x, y=y, group=factor(id), fill=rel_diff_in)) +
   scale_fill_distiller("", palette = "PuRd", direction = 1) +
   xlab("") + ylab("") + theme_bw() + theme(aspect.ratio=1,
-                              #legend.position="none",
+                              legend.position="none",
                               axis.text = element_blank())  +
   ggtitle("b. Inside - outside, weighted")
 p10w <- ggplot() + 
   geom_polygon(data=pol_plot_weighted, aes(x=x, y=y, group=id, fill=rel_diff_out)) +
   scale_fill_distiller("", palette = "PuRd", direction = 1) +
   xlab("") + ylab("") + theme_bw() + theme(aspect.ratio=1,
-                              #legend.position="none",
+                              legend.position="none",
                               axis.text = element_blank())  +
   ggtitle("f. Outside - inside, weighted")
 

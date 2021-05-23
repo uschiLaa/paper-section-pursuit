@@ -30,7 +30,7 @@ Required revisons:
     suggested by the referee. An implementation and comparison of these methods
     is however beyond the scope of this work.
 - Figure 3: add legend
-  + XXX The numbers for each bin are not interesting here, and its just a distraction to add a legend. The main point of the figure is read from the relative shade of the various bins. 
+  + The numbers for each bin are not interesting here, and its just a distraction to add a legend. The main point of the figure is read from the relative shade of the various bins. 
 - Equation 8: add example with numbers
   + Note that this is now Equation 9 (N_S). We have added some explicit values
     at the end of the subsection.
@@ -61,15 +61,15 @@ Reviewer 2:
     a future article. 
 
 - Re notation:
-  + we have corrected the description of A as a basis for the 
+  + We have corrected the description of A as a basis for the 
     projected space rather than a projection matrix
-  + we now use capital F to denote a CDF
+  + We now use capital F to denote a CDF
   + We prefer keeping R instead of using rho because it is easier to read, given
     that p, which looks like rho, also appears in the same equation.
   + We decided that adding hats would make the notation more difficult to read, and really isn't necessary for a reader to grasp the ideas. 
-  + we have clarified the notation of slices vs sections and added diagrams to
+  + We have clarified the notation of slices vs sections and added diagrams to
     help with intuition, see Section "Grand tour and slice tour"
-  + XXX what about symbol for inside vs outside the slice? I think we already have this with S, C
+  + We already use symbols S and C to indicate points inside and outside the slice.
   
 - Rotation invariance and trimming
   + the reason that rotation invariance is
@@ -78,28 +78,12 @@ Reviewer 2:
     separate weights (Eq. 7). We have clarified this in the paper. 
   
 - Spherical trimming costs and benefits
-  + we appreciate that the trimming can
-    appear radical. Note however that realistic data is rarely filling a
-    hypercube and the effect of trimming would be less dramatic than illustrated
-    by the comparison presented by the refereee.
-    In the case of simulated data (all examples in the paper)
-    we could explicitly design our simulation setup to sample only within a
-    hypersphere which should cover all areas of interest. With sections we are
-    typically most interested in the region near the center and the trimming will
-    not impact the result.
-  + Instead of comparing to a hypercube might be better to compare to multivariate
-    normal, but how would we even define the radius? Maybe change our writing away
-    from hypercube. If we sample, it is a choice to go with points in a cube or in
-    a sphere. If working with collected data a cube does not seem a reasonable
-    expectation for the distribution.
-  + XXX maybe also argue that looking for hollowness in corners doesn't really
-    make sense, especially when comparing to the "outside" distribution which
-    would basically not exist in such a region. Might extend the discussion of these
-    things in the paper, improve justification of trimming. "our method is not
-    appropriate to look for structure in corners where we lack a comparison distribution."
-  + While we agree that methods like interactive brushing are a valuable
-    alternative ... XXX limited in practice, could introduce bias (we tend to
-    check regions where we expect something to happen), 
+  + XXX The referee is correct that the effect of shaving is radical, in
+    particular when starting from a full hypercube in high dimensions. Note
+    however that most data has a tendency to be elliptical or spherical, and
+    that our approach is limited to a handful of dimensions. In addition, we can
+    sphere the data in pre-processing, and we are interested in interior
+    structure. We have added these clarifications in the paper.
     
 - Radial binning
   + I think we can extend the description of the binning a bit further (also to
