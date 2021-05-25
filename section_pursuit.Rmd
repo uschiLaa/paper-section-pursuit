@@ -250,27 +250,24 @@ Notice that, in this definition the index is no longer symmetric under exchangin
 # Practical issues \label{sec:practical}
 
 \textcolor{red}{
-The application of the new index function should be informed by an expected underlying distribution. As explained in 4.1 these should be rotation invariant, and the concrete assumption can guide practical choices that need to be made: reweighting bin counts to account for expected differences between the projected distribution and the distribution in a slice (4.2), estimates of sufficient sample size, expected noise and corresponding threshold $\epsilon$ (4.3).
-We also include visualizations to better understand the index behavior and how it depends on its parameters (4.4) and guidance on using the index in practice (4.5).
+The application of the new index function should be informed by an expected underlying distribution. As explained in \ref{sec:rotinv} these should be rotation invariant, and the concrete assumption can guide practical choices that need to be made: reweighting bin counts to account for expected differences between the projected distribution and the distribution in a slice (\ref{sec:binning}), estimates of sufficient sample size (\ref{sec:size}), expected noise and corresponding threshold $\epsilon$ (\ref{sec:epsilon}).
+We also include visualizations to better understand the index behavior and how it depends on its parameters (\ref{sec:behaviour}) and guidance on using the index in practice (\ref{sec:viz}).
 }
 
-## Rotation invariance
+## Rotation invariance \label{sec:rotinv}
 
 A  desirable property for projection pursuit, into $d$-dimensions, and thus also desirable for section pursuit, is that the index be rotational invariant. That  is, regardless of the basis in the $d$-D plane defining the projection, the index value should be identical. With slices, this is more complicated, because interior and exterior distributions need to be comparable \textcolor{red}{in the absence of structure. To account for expected differences we need to choose an assumed (spherically symmetric) distribution of the data.}
-
-\textcolor{blue}{maybe replace the paragraph below to say that simulation is often done in hypercube, which is optimized for bivariate plotting, but simulation in a hypersphere would be more appropriate when working with a tour or projection pursuit, since then the range is rotation invariant. Real data would often be approximately normal and thus also approximataly spherically symmetric.}
-
 
 Thus a restriction is imposed on the observed data: that it falls within a $p$-dimensional hypersphere. Data is typically observed in a hypercube, so this prescription requires a departure from the norm which, however,is still practical. In cases of simulated data, such as when looking at multivariate models, the sampling scheme can be adjusted. Observed data, on the other hand, requires shaving off the corners. \textcolor{red}{Note here that most data has a tendency to be elliptical or spherical, and that we are interested in interior structures for which the corners are not important. By sphering the data during pre-processing, shaving off any remaining corners can be kept to a minimum.} In addition, this  approach is designed for reasonably small $p$ so that the vast gap between spheres and cubes in high dimensions is not a concern. For very high-dimensional data, some dimension reduction is expected in pre-processing.
 
 
 \textcolor{red}{Here we will work with the assumption of a uniform distribution inside a hypersphere because it naturally captures how the relative slice volume changes with dimensionality. Other rotation invariant distributions could also be of interest, for example a multivariate normal distribution.}
 
-## Polar binning and reweighting
+## Polar binning and reweighting \label{sec:binning}
 
-\textcolor{red}{Requiring a rotation invariant range suggests a preference for binning in polar coordinates. In general we can decompose an expected underlying distribution in a radial and a directional component, the latter being parametrized by $d-1$ angles $\theta_i$, $i=1,...,d-1$. The expected reference distribution can then guide the concrete choices in how to bin in these parameters.}
+\textcolor{red}{Requiring a rotation invariant range suggests a preference for binning in polar coordinates. In general we can decompose an expected underlying distribution in a radial and a directional component, the latter being parametrized by $d-1$ angles. The expected reference distribution can then guide the concrete choices in how to bin in these parameters.}
 
-\textcolor{red}{In our case we are interested in binning the projected data points and will use the radius $r$ and a single angle $\theta$ in the projection plane to parametrize the binning, as illustrated in the diagram in Fig. \ref{fig:sketch}. As a reference distribution we consider points that are uniformly distributed in a hypersphere, thus the angular distribution will be uniform across all values of $\theta$, suggesting the use of $K_{\theta}$ equidistant angular bins. This would also hold in the case of a spherical normal reference distribution.}
+\textcolor{red}{In our case we are interested in binning the projected data points in $d=2$ dimensions and will use the radius $r$ and a single angle $\theta$ in the projection plane to parametrize the binning, as illustrated in the diagram in Fig. \ref{fig:sketch}. As a reference distribution we consider points that are uniformly distributed in a hypersphere, thus the angular distribution will be uniform across all values of $\theta$, suggesting the use of $K_{\theta}$ equidistant angular bins. This would also hold in the case of a spherical normal reference distribution.}
 
 ```{r sketch, out.width="30%", fig.cap="Diagram illustrating the notation for polar binning in angle $\\theta$ and radius $r$. Angular bins $\\theta_i, i=1, 2, 3, 4$, split the angular component into four bins, $r_j, j=1, 2$ splits the radial component into two bins, resulting in a total of 8 bins.", fig.align = "center"}
 
@@ -337,12 +334,11 @@ ggplot(data = data.frame(r = c(0,1)), mapping = aes(x = r)) +
 ```
 
 
-While the radial distribution of the points projected from a full $p$ dimensional hypersphere follows the CDF in Eq.(\ref{eq:cdf}), the distribution in the slice is approximately uniform in the disk (as long as $h \ll R$). Within the slice, the adjustment only accounts for relative areas in radial bins for a 2D uniform distribution.
-Thus, only re-weighting of bins to account for the piling from high dimensions  needs to be conducted for the observations outside the slice. The weights can be calculated from the CDF.  
+While the radial distribution of the points projected from a full $p$ dimensional hypersphere follows the CDF in Eq.(\ref{eq:cdf}), the distribution in the slice is approximately uniform in the disk (as long as $h \ll R$). Within the slice, the adjustment only accounts for relative areas in radial bins for a 2D uniform distribution. All weights can be calculated from the CDF.  
 
-The fraction of points in the radial bin $i$ between $r_1$ and $r_2$ is
+The fraction of points in the radial bin $r_i$ \textcolor{red}{with lower boundary $r_i^l$ and upper boundary $r_i^u$} is
 \begin{equation}
-F_{i}(p, R) = F(r_2; p, R) - F(r_1; p, R).
+F_{i}(p, R) = F(r_i^u; p, R) - F(r_i^l; p, R).
 \label{eq:frac}
 \end{equation}
 Consider $K_r$ radial bins, with total bin count $N_i$ in bin $i$, $i = 1,...,K_r$, and relative counts are $n_i = N_i / \sum_j N_j$.
@@ -355,7 +351,7 @@ and the reweighed bin count as
 s_i(p, R, K_r) = n_i w_i(p, R, K_r)
 \label{eq:reweight}
 \end{equation}
-corresponding to the weighted relative number of points in each bin. \textcolor{red}{After reweighting, the relative expected count in each radial bin is thus} $s_i(p,R,K_r) = 1/K_r$ for a uniform hypersphere. We calculate the outside weights as $w_i(p, R, K_r)$ and the inside weights as $w_i(2, R, K_r)$. Recall that we are assuming that the slice thickness can be neglected, $h\ll R$.
+corresponding to the weighted relative number of points in each bin. \textcolor{red}{After reweighting, the relative expected count in each radial bin is thus} $1/K_r$ for a uniform hypersphere. We calculate the outside weights as $w_i(p, R, K_r)$ and the inside weights as $w_i(2, R, K_r)$. Recall that we are assuming that the slice thickness can be neglected, $h\ll R$.
 
 Figure \ref{fig:data_and_densities} illustrates the effect of the adjustment using polar histograms for the simulated example data B, with and without re-weighting. The rows show raw and weighted bin counts, respectively, and the columns contain plots of  the distributions of points inside, outside the slice and the difference between the two. The re-weighting has the desired effect of focusing the attention more effectively on the central structure.
 
@@ -519,19 +515,19 @@ The index needs to be optimized over the set of all possible projections to find
 
 In the simulated examples in this paper the radius of the hypersphere, $R$, is known, and is used to define the radial boundary. In practice, the radius of a random projection can be used to estimate $R$. When observed points for any new projection, or slice, fall outside of the sphere, they might be grouped into the outer bin. 
 
-Note that, the fixed angular binning can marginally affect rotational invariance of the index. To mitigate this combining index values from several small rotations within a single angular bin window might be done at each step.
+Note that, the fixed angular binning can marginally affect rotational invariance of the index. To mitigate this, combining index values from several small rotations within a single angular bin window might be done at each step.
 
-## Sufficient sample size
+## Sufficient sample size \label{sec:size}
 
 As dimensionality increases the number of sample points required to resolve features in a thin slice of the data increases exponentially. Care must be taken that the sample is large enough. We estimate the number of required sample points as a function of the chosen parameters, starting again from the hyperspherical distribution in $p$ dimensions.
-Following @laa2019slice, given a sample of $N$ points in $p$ dimensions, distributed uniformly in a hypersphere of radius $R$, the number of points inside a slice through the center of the distribution $N_S$ is 
+Following @laa2019slice, given a sample of $N$ points in $p$ dimensions, distributed uniformly in a hypersphere of radius $R$, the number of points inside a slice through the center of the distribution is 
 
 \begin{equation}
 N_S = \frac{N}{2} \left(\frac{h}{R}\right)^{p-2} \left(p - (p-2)\left(\frac{h}{R}\right)^{2}\right).
 \label{eq:count}
 \end{equation}
 
-\noindent We denote $x=h/R$ the resolution. It determines the minimum relative size of features that can be seen in a slice.
+\noindent \textcolor{red}{The calculation is based on the relative volume of the slice, derived in the Appendix.} We denote $x=h/R$ the resolution. It determines the minimum relative size of features that can be seen in a slice.
 When adding noise dimensions, in order to keep the resolution $x$ fixed, the sample size needs to increase approximately as $x^{\Delta p}$, where $\Delta p$ is the increase in number of dimensions.
 
 \textcolor{red}{As an explicit example consider the expected fraction of points $N_S/N$ inside a slice of resolution $x=\frac{h}{R}=0.1$. This fraction is about $0.15$ or $15\%$ when $p=3$, and quickly drops to $0.02$ when $p=4$ and $0.002$ when $p=5$. Thus, even for moderate dimensionality $p$ the original sample size needs to be large to have enough points to resolve features in a slice.}
@@ -546,10 +542,10 @@ with $N_S$ given by Eq.(\ref{eq:count}), $K_{\theta}$ the number of angular bins
 The relative Poisson error on this count is
 \begin{equation}
 \delta_S^i = \frac{\sqrt{N_S^i}}{N_S^i} = 
-\frac{R}{\sqrt{r_2^2 - r_1^2}} \sqrt{\frac{2 K_{\theta}}{N}} x^{(2-p)/2}
+\frac{R}{\sqrt{(r_i^u)^2 - (r_i^l)^2}} \sqrt{\frac{2 K_{\theta}}{N}} x^{(2-p)/2}
 \frac{1}{\sqrt{\left(p - (p-2) x^{2}\right)}}, 
 \end{equation}
-\textcolor{red}{where $r_1$ and $r_2$ are the lower and upper radial boundary of bin $i$ and the expected error will be different depending on the radial position of the bin. By its definition, the expected reweighted count is $1/K$ in all bins, where $K=K_r K_{\theta}$.}
+\textcolor{red}{where $r_i^l$ and $r_i^u$ are the lower and upper radial boundary of bin $i$ and the expected error will be different depending on the radial position of the bin. By its definition, the expected reweighted count is $1/K$ in all bins, where $K=K_r K_{\theta}$.}
 We therefore expect sampling fluctuations of order 
 \begin{equation}
 \delta^i = \delta_S^i / K. 
@@ -558,7 +554,7 @@ We therefore expect sampling fluctuations of order
 
 To suppress index fluctuations to below one standard deviation, we set \textcolor{red}{a bin-wise} $\varepsilon^i = \delta^i$. Figure \ref{fig:path_eps} compares the index behavior for two values of $\varepsilon^i$, $0$ and $\delta^i$. Three 4D data sets are used: examples A and B (shown in Figure \ref{fig:allSlices}), and a reference set C consisting of observations sampled uniformly within a $p$-dimensional sphere. Color indicates the number of bins used to calculate the index. The difference in index value when $\varepsilon^i=0$ \textcolor{red}{for all bins} clearly indicates a dependence on the number of bins, which is undesirable. Setting $\varepsilon^i = \delta^i$ mostly removes these differences.
 
-```{r path_eps, fig.cap="Examining the effect of \textcolor{red}{the noise cutoff} $\\varepsilon^i$ on the index value for varying number of bins. Three simulated data sets are used:  A, B and C. The horizontal axis traces the index from an uninteresting to interesting sliced projection (defined by slice S2 and S1 respectively), for $\\varepsilon^i=0, \\delta^i$. Colour indicates number of bins. Ideally, the index value should be the same, regardless of choice of bins, which is achieved in practice by $\\varepsilon^i=\\delta^i$.", fig.height=5, fig.width=7,  out.width='90%',fig.align = "center"}
+```{r path_eps, fig.cap="Examining the effect of the noise cutoff $\\varepsilon^i$ on the index value for varying number of bins. Three simulated data sets are used:  A, B and C. The horizontal axis traces the index from an uninteresting to interesting sliced projection (defined by slice S2 and S1 respectively), for $\\varepsilon^i=0, \\delta^i$. Colour indicates number of bins. Ideally, the index value should be the same, regardless of choice of bins, which is achieved in practice by $\\varepsilon^i=\\delta^i$.", fig.height=5, fig.width=7,  out.width='90%',fig.align = "center"}
 
 set.seed(500)
 
@@ -722,15 +718,9 @@ grid.arrange(p3, p1, p5, p4, p2, p6, ncol=3)
 *Dependence on* $q$
 
 \textcolor{red}{In the generalized definition of the index, the parameter $q$ can be used to tune the sensitivity to small differences. It will therefore also need to be considered when choosing $\varepsilon^i$. To understand the effect we consider a simple one-dimensional setup:}
- uniformly draw $N$ samples and bin them in $K$ bins, such that the expected bin count is $N/K$ in all bins (or $1/K$ after normalization). Using the Poisson approximation, the standard deviation for the normalized counts is $\delta=1/\sqrt{N K}$. By drawing two independent samples and calculating the index value 100 times we get an estimate of the expected index value and its variance depending on $q$. Note that since we are assuming pure noise distributions for both samples, $I_A^{low}=I_A^{up}=I_A$. This is shown in Figure \ref{fig:noise} for $N=10000$ and $K=100$. When $q=1$ and approximating the bin counts by a normal distribution, we can also evaluate the expected index value analytically as
-\begin{equation}
-I_A(q=1)_{\mathrm{noise}} = e^{-n^2/4} \sqrt{\frac{K}{\gamma N}},
-\end{equation}
-where $\varepsilon=n\delta$.
+ uniformly draw $N$ samples and bin them in $K$ bins, such that the expected bin count is $N/K$ in all bins (or $1/K$ after normalization). Using the Poisson approximation, the standard deviation for the normalized counts is $\delta=1/\sqrt{N K}$. By drawing two independent samples and calculating the index value 100 times we get an estimate of the expected index value and its variance depending on $q$. Note that since we are assuming pure noise distributions for both samples, $I_A^{low}=I_A^{up}=I_A$. This is shown in Figure \ref{fig:noise} for $N=10000$ and $K=100$. We see that for values of $q<1$ the noise becomes inflated, especially when we do not use an appropriate $\varepsilon$ cutoff. For the default choices of $q=1$ and $\varepsilon=\delta$ we find that the expected index value for a noise distribution is about $0.05$. \textcolor{red}{Note here that in this simplified setup there is no bin-dependence of $\varepsilon$ and we have dropped the index $i$.}
 
-We see that for values of $q<1$ the noise becomes inflated, especially when we do not use an appropriate $\varepsilon$ cutoff. For the default choices of $q=1$ and $\varepsilon=\delta$ we find that the expected index value for a noise distribution is about $0.05$. \textcolor{red}{Note here that in this simplified setup there is no bin-dependence of $\varepsilon$ and we have dropped the index $i$.}
-
-```{r noise, fig.cap="Examining the  effect of \textcolor{red}{the power parameter} $q$ on the variability of the  index value, when a noise cutoff ($\\varepsilon$) is used. Rescaled values of $I_A$ shown as a function of $q$, for fixed values of $\\varepsilon$, for $N=10000$ and $K=100$. Smaller values of  $q$ inflate the variability in the index, exaggerating  the noise.", fig.height=2, fig.width=3, out.width='50%', fig.align = "center", eval=T}
+```{r noise, fig.cap="Examining the  effect of the power parameter $q$ on the variability of the  index value, when a noise cutoff ($\\varepsilon$) is used. Rescaled values of $I_A$ shown as a function of $q$, for fixed values of $\\varepsilon$, for $N=10000$ and $K=100$. Smaller values of  $q$ inflate the variability in the index, exaggerating  the noise.", fig.height=2, fig.width=3, out.width='50%', fig.align = "center", eval=T}
 
 rel_bin_counts <- function(N, K){
   hist(runif(N), linear_breaks(K, 0, 1), plot=F)$counts / N
@@ -925,8 +915,6 @@ p2 <- ggplot(data = data.frame(x = c(0.1,2)), mapping = aes(x = x)) +
 
 grid.arrange(p1, p2, ncol=2)
 ```
-
-
 
 ## Visualising the index \label{sec:viz}
 
