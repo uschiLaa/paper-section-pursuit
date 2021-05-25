@@ -1561,7 +1561,7 @@ This article was created with knitr [@knitr] and R Markdown [@rmarkdown] with em
 #  Supplementary material {-}
 
 - Code and data is available at \url{https://github.com/uschiLaa/paper-section-pursuit}.
-- The Appendix contains the derivation of the radial CDF of a hypersphere projected onto a 2D plane and the equations used to calculate the masses in the two-Higgs-doublet model, and an additional example from phsyics.
+- The Appendix contains the derivation of the radial CDF of a hypersphere projected onto a 2D plane and the equations used to calculate the masses in the two-Higgs-doublet model, and an additional example from physics.
 
 # References {-}
 
