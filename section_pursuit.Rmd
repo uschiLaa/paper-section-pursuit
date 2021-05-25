@@ -187,22 +187,22 @@ Tour methods can also be used to understand the behavior of projection pursuit i
 In practice we need to make assumptions about the underlying distribution to get useful results when comparing the slice to a projection. These aspects are discussed in the next section.
 }
 
-## Taking a section and binning
+## Taking a slice and binning
 
-Let $Y=X\cdot A$, where $X$ is an $n\times p$ data matrix, $A$ is a $p\times d$ (orthonormal) basis for the $d$-dimensional space onto which the data is being projected. To generate a 2-dimensional section, following @laa2019slice, compute the orthogonal distance between every point and the plane (defined by $A = (\mathbf{a}_1, \mathbf{a}_2)$) as the Euclidean norm
+Let $Y=X\cdot A$, where $X$ is an $n\times p$ data matrix, $A$ is a $p\times d$ (orthonormal) basis for the $d$-dimensional space onto which the data is being projected. To generate a 2-dimensional slice, following @laa2019slice, compute the orthogonal distance between every point and the plane (defined by $A = (\mathbf{a}_1, \mathbf{a}_2)$) as the Euclidean norm
 \begin{equation}
-h_i = ||\mathbf{x}_i - (\mathbf{x}_i\cdot \mathbf{a}_1) \mathbf{a}_1 - (\mathbf{x}_i\cdot \mathbf{a}_2)||.
+h_i = ||\mathbf{x}_i - (\mathbf{x}_i\cdot \mathbf{a}_1) \mathbf{a}_1 - (\mathbf{x}_i\cdot \mathbf{a}_2) \mathbf{a}_2||.
 \end{equation}
-Observations are considered inside a slice if $h_i < h$. 
+Observations are considered inside the slice if $h_i < h$. 
 
 \textcolor{red}{We denote the set of points inside the slice $S$, and the set of points outside the slice $C$. For the definition of the index we will further bin the} projected data $Y$ into $K$ bins, $b_k, k=1, ..., K$.
-The counts of observations \textcolor{red}{for each bin are computed separately for $S$ and $C$. We can thus write the counts in bin $k$ via two indicator functions,} $S_{k}=\sum_{i} I(Y_i \in b_{k})I(h_i < h)$ inside the section and $C_{k}=\sum_{i} I(Y_i \in b_{k})I(h_i \geq h)$ outside the section. The relative counts are thus $s_k = S_k / \sum_i S_i$ and $c_k = C_k / \sum_i C_i$.
+The counts of observations \textcolor{red}{for each bin are computed separately for $S$ and $C$. We can thus write the counts in bin $k$ via two indicator functions,} $S_{k}=\sum_{i} I(Y_i \in b_{k})I(h_i < h)$ inside the slice and $C_{k}=\sum_{i} I(Y_i \in b_{k})I(h_i \geq h)$ outside the slice. The relative counts are thus $s_k = S_k / \sum_i S_i$ and $c_k = C_k / \sum_i C_i$.
 
 \textcolor{red}{Data points are therefore classified in two ways: information about the projected position onto the viewing plane is captured by the binning, while information about the position in the orthogonal space is captured by slicing. In practice the first step is projecting and slicing, followed by a separate binning of the projected points $Y$ for the subsets $S$ and $C$.}
 
 ## Index definition
 
-Indexes for comparing the distribution of observations in the section versus outside can be defined (building on @doi:10.1198/1061860043119) as:
+Indexes for comparing the distribution of observations in the slice versus outside can be defined (building on @doi:10.1198/1061860043119) as:
 
 \begin{equation}
 I_A^{low} = \sum_{k}\left[\left(c_{k}-s_{k}\right)\right]_{>\varepsilon},
@@ -214,7 +214,7 @@ I_A^{up} = \sum_{k}\left[\left(s_{k}-c_{k}\right)\right]_{>\varepsilon}
 \label{eq:indexup}
 \end{equation}
 
-\noindent where $s_{k}$ and $c_{k}$ are the relative counts of observations in bin $b_{k}$ inside and outside the section. The first definition $I_A^{low}$ takes large values if there is a hollow region of low density inside the slice, while the second definition $I_A^{up}$ can be useful when looking for regions of higher density ("needles in a haystack").
+\noindent where $s_{k}$ and $c_{k}$ are the relative counts of observations in bin $b_{k}$ inside and outside the slice. The first definition $I_A^{low}$ takes large values if there is a hollow region of low density inside the slice, while the second definition $I_A^{up}$ can be useful when looking for regions of higher density ("needles in a haystack").
 The $[.]_{>\varepsilon}$ notation indicates that we drop all bins where the difference in counts is below some threshold $\varepsilon$,
 \begin{equation}
 [a - b]_{>\varepsilon} = \begin{cases}
