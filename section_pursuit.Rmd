@@ -1136,7 +1136,7 @@ getAxes <- function(fProj, cntrx, cntry, sclx, scly){
 
 ## Classification boundaries
 
-The slice display can be used to understand non-linear classification boundaries [@laa2019slice], visualized following @sam.11271 and using the classifly package [@classifly]. Classifly samples the design space and calculates model predictions. We can use section pursuit to identify slices that reveal the decision boundaries in the design space, by dropping sample points based on the assigned prediction. By selecting a class that is only predicted in a small region we generate the hollow features to be found by section pursuit. The resulting slice can then be viewed showing all assigned classes to resolve the boundary.
+The slice display can be used to understand non-linear classification boundaries [@laa2019slice], visualized following @sam.11271 and using the classifly package [@classifly]. Classifly samples the design space and calculates model predictions. We can use section pursuit to identify slices that reveal the decision boundaries in the design space, by dropping sample points based on the assigned prediction. By selecting a class that is only predicted in a small region we generate the hollow features to be found by section pursuit. The resulting slice can then be viewed showing all assigned classes to resolve the boundary. \textcolor{red}{An example using the classical olives data is discussed below, a second example studying classification boundaries is available in the Appendix.}
 
 *Olives data*
 
