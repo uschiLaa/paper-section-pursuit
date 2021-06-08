@@ -113,10 +113,10 @@ conditional function or model visualization
 \citep[\citet{sliceplorer}]{JSSv081i05}.
 
 The space of sections of high-dimensional space is larger than the space
-of projections. The slice tour \citep{laa2019slice} introduces a special
-type of section, based on projections and the grand tour, thus
-simplifying the space to be explored.
-\textcolor{red}{This type of section is called a slice, and we can visually compare the projected distributions inside and outside the slice.}
+of projections. The slice tour is based on projections, considering an
+observation to be in the slice if its within a fixed distance of the
+projection plane, which simplifying the space to be explored.
+\textcolor{red}{This definition of a slice, allows for the comparison of  distributions of points inside and outside the slice.}
 This is an unguided process, and providing a method to find interesting
 slices would be beneficial.
 
@@ -154,20 +154,21 @@ and an implementation in R \citep{rlang} is available in the
 \texttt{tourr} package \citep{tourr}.
 
 \textcolor{red}{The information available in projections can be complemented using \textit{sectioning}}
-\citet{prosection}
-\textcolor{red}{, i.e. highlighting or dropping subsets of the data based on inequality conditions defined for the variables. A special type of sectioning is \textit{slicing}, which is defining the sectioning condition based on the orthogonal distance of data points from a projection plane. Points are considered to fall into the slice if this distance is below some cutoff value $h$. Figure \ref{fig:diagrams} shows diagrams illustrating slicing through a 3D sphere (left) and the general concept of the orthogonal distance (right) that is used to define slices in more than three dimensions.}
+\citep{prosection}.
+\textcolor{red}{Sections highlight (or ignore) subsets of the data based on inequality conditions defined for the variables. We use the term \textit{slicing} for a special sectioning condition, that uses the orthogonal distance of data points from a projection plane. Points are considered to fall into the slice if this distance is below some cutoff value $h$. Figure \ref{fig:diagrams} shows diagrams illustrating slicing through a 3D sphere (left) and the general concept of the orthogonal distance (right) that is used to define slices in more than three dimensions.}
 Recent work in \citet{laa2019slice} implemented a display of
 interpolated slices, which has been added to the \texttt{tourr} package
 and can be used to show slices for projection planes obtained when
 running a grand tour.
 
-\textcolor{red}{A slice is defined using Euclidean distance in the orthogonal space to ensure rotation invariance. This means that in general slices are spherical, and a \textit{flat slice}, matching the common picture of a slice (as shown in the left plot of Fig. \ref{fig:diagrams}), is only obtained in the case of a single orthogonal direction on the projection plane.}
+\textcolor{red}{A projection plane does not generally need to have a location associated with it, but it is necessary in order to compute the distance between a point and the plane. By default, the projection plane is considered to pass through the center of the data, or $\boldmath{0}$ if the data has been centered. Using Euclidean distance in the orthogonal space is done to ensure rotation invariance. This raises an interesting geometric result, that the slices are spherical, one might even call them shells. A \textit{flat slice}, matching that shown in Figure \ref{fig:diagrams}), is only obtained in the case of a single orthogonal direction on the projection plane (i.e. 3D). However, the appearance to the viewer watching the slice tour is that of a slice rather than a shell. Hence, the use of the the term slice.}
 
 \begin{figure*}[ht]
-\centerline{\includegraphics[width=0.4\textwidth]{diagrams/centered-slice.pdf}
-\hspace{5mm}
-\includegraphics[width=0.4\textwidth]{diagrams/orthogonal-distance.pdf}}
-\caption{Illustrations of slicing, through a 3D sphere (left), and demonstrating the calculation of the orthogonal distance (right). A slice can be done centered at the origin (green) or off-center at $\mathbf{c}$ (blue). In more than three dimensions it is best to use orthogonal distance between point and projection plane for computing the slice. Diagrams adapted from \cite{laa2019slice}.}
+%\centerline{\includegraphics[width=0.4\textwidth]{diagrams/centered-slice.pdf}
+%\hspace{5mm}
+%\includegraphics[width=0.4\textwidth]{diagrams/orthogonal-distance.pdf}}
+\centerline{\includegraphics[width=0.8\textwidth]{diagrams/slice.pdf}}
+\caption{Illustrations of slicing, through a 3D sphere (left), and demonstrating the calculation of the orthogonal distance (right). A slice can be done centered at the origin or off-center. Orthogonal distance between point and projection plane is used for computing the slice.}
 \label{fig:diagrams}
 \end{figure*}
 
@@ -362,7 +363,7 @@ expected in pre-processing.
 
 \textcolor{red}{Requiring a rotation invariant range suggests a preference for binning in polar coordinates. In general we can decompose an expected underlying distribution in a radial and a directional component, the latter being parametrized by $d-1$ angles. The expected reference distribution can then guide the concrete choices in how to bin in these parameters.}
 
-\textcolor{red}{In our case we are interested in binning the projected data points in $d=2$ dimensions and will use the radius $r$ and a single angle $\theta$ in the projection plane to parametrize the binning, as illustrated in the diagram in Fig. \ref{fig:sketch}. As a reference distribution we consider points that are uniformly distributed in a hypersphere, thus the angular distribution will be uniform across all values of $\theta$, suggesting the use of $K_{\theta}$ equidistant angular bins. This would also hold in the case of a spherical normal reference distribution.}
+\textcolor{red}{In our case we are interested in binning the projected data points in $d=2$ dimensions and will use the radius $r$ and a single angle $\theta$ in the projection plane to parametrize the binning, as illustrated in the diagram in Figure \ref{fig:sketch}. As a reference distribution we consider points that are uniformly distributed in a hypersphere, thus the angular distribution will be uniform across all values of $\theta$, suggesting the use of $K_{\theta}$ equidistant angular bins. This would also hold in the case of a spherical normal reference distribution.}
 
 \begin{figure}
 
@@ -394,8 +395,8 @@ F(r;p,R) = 1-\left(1-\left(\frac{r}{R}\right)^2\right)^{p/2},
 \label{eq:cdf}
 \end{equation} and depends on the hypersphere radius \(R\) and on \(p\).
 For illustration we show the CDF dependence on \(r/R\) (where
-\(0<r\leq R\)) for different values of \(p\) in Fig. \ref{fig:cdf}. For
-large values of \(p\) the majority of points is found within a small
+\(0<r\leq R\)) for different values of \(p\) in Figure \ref{fig:cdf}.
+For large values of \(p\) the majority of points is found within a small
 relative radius \(r/R\), e.g.~for \(p=10\) we see that 75\% of points
 are within \(r/R<1/2\).
 

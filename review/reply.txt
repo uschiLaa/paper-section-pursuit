@@ -96,13 +96,8 @@ Reviewer 2:
     derivation in the appendix.
   
 - NS for olive oil data (p12 of review)
-  + Indeed the number of data points within a thin slice is neglibible, and the
-    slice display is not useful for the visualisation of this data itself. Instead,
-    the slice display and section pursuit are used to understand the decision
-    boundaries of a classification model. Since this is visualised as the classification
-    of samples across the parameter space, the original number of points can be
-    controlled by the user and was adjusted to obtain a feasible number of points
-    inside the slice.
+  + Indeed the number of data points within a thin slice is negligible, and the
+    slice display is not useful for the visualisation of this data itself. Instead, the slice display and section pursuit are used to understand the decision boundaries of a classification model. Since this is visualised as the classification of samples across the parameter space, the original number of points can be controlled by the user and was adjusted to obtain a feasible number of points inside the slice.
   
 - Description of reweighting is not clear
   + This has been rewritten to avoid misunderstandings.

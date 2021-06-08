@@ -90,7 +90,7 @@ basisMatrix <- function(i, j, n){
 
 The visualization of high-dimensional data often utilizes linear projection.  For example, in principal component analysis plotting the principal components is effectively a projection of the data. Projections form the basis for a grand tour [@As85] of high-dimensional data. Projection pursuit [@kr69,@FT74] is used to find interesting low-dimensional views of the data by optimizing an index function over all possible projections. Projections can obscure non-uniform patterns near the data center, or hollowness. These features may be visible in non-linear mappings (such as multidimensional scaling [@mds]), but these methods often lack interpretability. @laa2019slice introduced a slice tour that shows sections through high-dimensions instead of projections, and helps to reveal hidden structure. Showing sections can also be useful in combination with conditional function or model visualization [@JSSv081i05,@sliceplorer].
 
-The space of sections of high-dimensional space is larger than the space of projections. The slice tour [@laa2019slice] introduces a special type of section, based on projections and the grand tour, thus simplifying the space to be explored. \textcolor{red}{This type of section is called a slice, and we can visually compare the projected distributions inside and outside the slice.} This is an unguided process, and providing a method to find interesting slices would be beneficial. 
+The space of sections of high-dimensional space is larger than the space of projections. The slice tour is based on projections, considering an observation to be in the slice if its within a fixed distance of the projection plane, which simplifying the space to be explored. \textcolor{red}{This definition of a slice, allows for the comparison of  distributions of points inside and outside the slice.} This is an unguided process, and providing a method to find interesting slices would be beneficial. 
 
 Here we propose "section pursuit", which searches the space of projections for the most interesting slices of the data. The "interestingness" of each slice is computed as a measure of dissimilarity between the distribution of projected points inside and outside the slice. Finding conditional features in large data sets will provide better understanding of the data, and can help improve modelling. 
 
@@ -102,18 +102,53 @@ This paper is organized as follows. The next section provides background on tour
 
 The grand tour shows a geodesically interpolated sequence of randomly selected projections in an animation. The interpolation allows the viewer to interpret each view in the context of the previously seen projection, thus providing additional insights compared to static projections. By observing how the data distribution changes under a rotation of the low-dimensional projection, the viewer can extrapolate from the low-dimensional shapes to the distribution in high dimensions. The underlying computational methods were described in @BCAH05, and an implementation in R [@rlang] is available in the \texttt{tourr} package [@tourr].
 
-\textcolor{red}{The information available in projections can be complemented using \textit{sectioning}} @prosection \textcolor{red}{, i.e. highlighting or dropping subsets of the data based on inequality conditions defined for the variables. A special type of sectioning is \textit{slicing}, which is defining the sectioning condition based on the orthogonal distance of data points from a projection plane. Points are considered to fall into the slice if this distance is below some cutoff value $h$. Figure \ref{fig:diagrams} shows diagrams illustrating slicing through a 3D sphere (left) and the general concept of the orthogonal distance (right) that is used to define slices in more than three dimensions.}
+\textcolor{red}{The information available in projections can be complemented using \textit{sectioning}} [@prosection]. \textcolor{red}{Sections highlight (or ignore) subsets of the data based on inequality conditions defined for the variables. We use the term \textit{slicing} for a special sectioning condition, that uses the orthogonal distance of data points from a projection plane. Points are considered to fall into the slice if this distance is below some cutoff value $h$. Figure \ref{fig:diagrams} shows diagrams illustrating slicing through a 3D sphere (left) and the general concept of the orthogonal distance (right) that is used to define slices in more than three dimensions.}
 Recent work in @laa2019slice implemented a display of interpolated slices, which has been added to the \texttt{tourr} package and can be used to show slices for projection planes obtained when running a grand tour.
 
-\textcolor{red}{A slice is defined using Euclidean distance in the orthogonal space to ensure rotation invariance. This means that in general slices are spherical, and a \textit{flat slice}, matching the common picture of a slice (as shown in the left plot of Fig. \ref{fig:diagrams}), is only obtained in the case of a single orthogonal direction on the projection plane.}
+\textcolor{red}{A projection plane does not generally need to have a location associated with it, but it is necessary in order to compute the distance between a point and the plane. By default, the projection plane is considered to pass through the center of the data, or $\boldmath{0}$ if the data has been centered. Using Euclidean distance in the orthogonal space is done to ensure rotation invariance. This raises an interesting geometric result, that the slices are spherical, one might even call them shells. A \textit{flat slice}, matching that shown in Figure \ref{fig:diagrams}), is only obtained in the case of a single orthogonal direction on the projection plane (i.e. 3D). However, the appearance to the viewer watching the slice tour is that of a slice rather than a shell. Hence, the use of the the term slice.}
 
 \begin{figure*}[ht]
-\centerline{\includegraphics[width=0.4\textwidth]{diagrams/centered-slice.pdf}
-\hspace{5mm}
-\includegraphics[width=0.4\textwidth]{diagrams/orthogonal-distance.pdf}}
-\caption{Illustrations of slicing, through a 3D sphere (left), and demonstrating the calculation of the orthogonal distance (right). A slice can be done centered at the origin (green) or off-center at $\mathbf{c}$ (blue). In more than three dimensions it is best to use orthogonal distance between point and projection plane for computing the slice. Diagrams adapted from \cite{laa2019slice}.}
+%\centerline{\includegraphics[width=0.4\textwidth]{diagrams/centered-slice.pdf}
+%\hspace{5mm}
+%\includegraphics[width=0.4\textwidth]{diagrams/orthogonal-distance.pdf}}
+\centerline{\includegraphics[width=0.8\textwidth]{diagrams/slice.pdf}}
+\caption{Illustrations of slicing, through a 3D sphere (left), and demonstrating the calculation of the orthogonal distance (right). A slice can be done centered at the origin or off-center. Orthogonal distance between point and projection plane is used for computing the slice.}
 \label{fig:diagrams}
 \end{figure*}
+
+```{r eval=FALSE}
+library(tidyverse)
+library(tourr)
+library(geozoo)
+sphere3 <- geozoo::sphere.hollow(3, 5000)$points
+colnames(sphere3) <- c("x1", "x2", "x3")
+sphere3 <- sphere3 %>% as_tibble() %>%
+  mutate(slice = ifelse(abs(x3) < 0.15, "inside", "outside"))
+ggplot() +
+  geom_point(data=sphere3, aes(x = x1, 
+                    y = x2*cos(pi/4) - x3*sin(pi/4)),
+                    size=0.9, colour = "grey70") +
+  geom_point(data=filter(sphere3, slice == "inside"),
+             aes(x = x1*cos(pi/4) - x3*sin(pi/4), 
+                 y = x2*cos(pi/6) - (x1*sin(pi/4) + x3*cos(pi/4))*sin(pi/6)),
+             size=1.5) +
+  theme_void() +
+  theme(legend.position = "none", aspect.ratio = 1)
+sphere5 <- geozoo::sphere.hollow(5, 10000)$points
+colnames(sphere5) <- c("x1", "x2", "x3", "x4", "x5")
+sphere5 <- sphere5 %>% as_tibble() %>%
+  mutate(slice = ifelse(sqrt(x3^2+x4^2+x5^2) < 0.25, "inside", "outside"))
+ggplot() +
+  geom_point(data=sphere5, aes(x = x1, 
+                    y = x2*cos(pi/4) - x3*sin(pi/4)),
+                    size=0.9, colour = "grey70") +
+  geom_point(data=filter(sphere5, slice == "inside"),
+             aes(x = x1*cos(pi/4) - x3*sin(pi/4), 
+                 y = x2*cos(pi/6) - (x1*sin(pi/4) + x3*cos(pi/4))*sin(pi/6)),
+             size=1.5) +
+  theme_void() +
+  theme(legend.position = "none", aspect.ratio = 1)
+```
 
 The first two columns of Figure \ref{fig:allSlices} show scatterplots of the points in a 4D data set inside an informative (S1) and an uninformative (S2) slice, \textcolor{red}{defined by two different projection planes centered at the origin}, for two simulated data sets (A, B). Note that the data is defined in a 4D sphere, which generates the circular shape. The sampling results in hollow regions inside the sphere by rejecting points within shapes defined by selected hyperspherical harmonics [@doi:10.1063/1.3054274], \textcolor{red}{as described in the Appendix}. The hollowness is hidden in projections of the data, as shown in the final column of Figure \ref{fig:allSlices}. It is much simpler to define slices on high-dimensional spheres than cubes, and this is the approach used for all the data in this paper. Data defined in a cube is trimmed or supplemented to be contained in a sphere. 
 
@@ -267,7 +302,7 @@ Thus a restriction is imposed on the observed data: that it falls within a $p$-d
 
 \textcolor{red}{Requiring a rotation invariant range suggests a preference for binning in polar coordinates. In general we can decompose an expected underlying distribution in a radial and a directional component, the latter being parametrized by $d-1$ angles. The expected reference distribution can then guide the concrete choices in how to bin in these parameters.}
 
-\textcolor{red}{In our case we are interested in binning the projected data points in $d=2$ dimensions and will use the radius $r$ and a single angle $\theta$ in the projection plane to parametrize the binning, as illustrated in the diagram in Fig. \ref{fig:sketch}. As a reference distribution we consider points that are uniformly distributed in a hypersphere, thus the angular distribution will be uniform across all values of $\theta$, suggesting the use of $K_{\theta}$ equidistant angular bins. This would also hold in the case of a spherical normal reference distribution.}
+\textcolor{red}{In our case we are interested in binning the projected data points in $d=2$ dimensions and will use the radius $r$ and a single angle $\theta$ in the projection plane to parametrize the binning, as illustrated in the diagram in Figure \ref{fig:sketch}. As a reference distribution we consider points that are uniformly distributed in a hypersphere, thus the angular distribution will be uniform across all values of $\theta$, suggesting the use of $K_{\theta}$ equidistant angular bins. This would also hold in the case of a spherical normal reference distribution.}
 
 ```{r sketch, out.width="30%", fig.cap="Diagram illustrating the notation for polar binning in angle $\\theta$ and radius $r$. Angular bins $\\theta_i, i=1, 2, 3, 4$, split the angular component into four bins, $r_j, j=1, 2$ splits the radial component into two bins, resulting in a total of 8 bins.", fig.align = "center"}
 
@@ -299,7 +334,7 @@ Consider the expected distribution to be a uniform distribution within a hypersp
 F(r;p,R) = 1-\left(1-\left(\frac{r}{R}\right)^2\right)^{p/2},
 \label{eq:cdf}
 \end{equation}
-and depends on the hypersphere radius $R$ and on $p$. For illustration we show the CDF dependence on $r/R$ (where $0<r\leq R$) for different values of $p$ in Fig. \ref{fig:cdf}. For large values of $p$ the majority of points is found within a small relative radius $r/R$, e.g. for $p=10$ we see that 75\% of points are within $r/R<1/2$.
+and depends on the hypersphere radius $R$ and on $p$. For illustration we show the CDF dependence on $r/R$ (where $0<r\leq R$) for different values of $p$ in Figure \ref{fig:cdf}. For large values of $p$ the majority of points is found within a small relative radius $r/R$, e.g. for $p=10$ we see that 75\% of points are within $r/R<1/2$.
 
 ```{r cdf, fig.cap="CDF of the 2D projected radial distribution of a p-dimensional hypersphere, for selected values of p. As p increases, a larger fraction of the points will be found at small values of the radius.", fig.height=2.5, fig.width=4, out.width='50%', fig.align = "center"}
 
