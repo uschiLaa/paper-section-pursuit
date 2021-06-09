@@ -94,7 +94,7 @@ The space of sections of high-dimensional space is larger than the space of proj
 
 Here we propose "section pursuit", which searches the space of projections for the most interesting slices of the data. The "interestingness" of each slice is computed as a measure of dissimilarity between the distribution of projected points inside and outside the slice. Finding conditional features in large data sets will provide better understanding of the data, and can help improve modelling. 
 
-This paper is organized as follows. The next section provides background on tours, slicing and projection pursuit. \textcolor{red}{Section \ref{sec:index} describes an index designed to detect concavities, and Section \ref{sec:practical} discusses the associated practical considerations and explores the behavior of the index on simulated examples.} The application  of section pursuit to exploring high-dimensional classification  models and constrained high-dimensional spaces is illustrateded in Section \ref{sec:applications}.  
+This paper is organized as follows. The next section provides background on tours, slicing and projection pursuit. \textcolor{red}{Section \ref{sec:index} describes an index designed to detect concavities (holes), and its reverse to detect grains. Section \ref{sec:practical} discusses the associated practical considerations and explores the behavior of the index on simulated examples.} The application  of section pursuit to exploring high-dimensional classification  models and constrained high-dimensional spaces is illustrated in Section \ref{sec:applications}.  
 
 # Background \label{sec:background}
 
@@ -120,18 +120,19 @@ Recent work in @laa2019slice implemented a display of interpolated slices, which
 library(tidyverse)
 library(tourr)
 library(geozoo)
-sphere3 <- geozoo::sphere.hollow(3, 5000)$points
+sphere3 <- geozoo::sphere.solid.random(3, 50000)$points
 colnames(sphere3) <- c("x1", "x2", "x3")
 sphere3 <- sphere3 %>% as_tibble() %>%
-  mutate(slice = ifelse(abs(x3) < 0.15, "inside", "outside"))
+  mutate(slice = ifelse(abs(x3) < 0.1, "inside", "outside"))
 ggplot() +
   geom_point(data=sphere3, aes(x = x1, 
                     y = x2*cos(pi/4) - x3*sin(pi/4)),
-                    size=0.9, colour = "grey70") +
+                    size=0.9, colour = "grey70", alpha=0.5) +
   geom_point(data=filter(sphere3, slice == "inside"),
              aes(x = x1*cos(pi/4) - x3*sin(pi/4), 
-                 y = x2*cos(pi/6) - (x1*sin(pi/4) + x3*cos(pi/4))*sin(pi/6)),
-             size=1.5) +
+                 y = x2*cos(pi/6) - (x1*sin(pi/4) +
+                     x3*cos(pi/4))*sin(pi/6)), 
+             alpha=0.5, size=1.5) +
   theme_void() +
   theme(legend.position = "none", aspect.ratio = 1)
 sphere5 <- geozoo::sphere.hollow(5, 10000)$points
@@ -218,8 +219,7 @@ Tour methods can also be used to understand the behavior of projection pursuit i
 
 # A new index for finding interesting sections \label{sec:index}
 
-\textcolor{red}{We define a new index function that is comparing the distribution of points inside a slice to the distribution outside the slice. This is achieved by comparing normalized counts in bins across the projection plane to find differences between the distributions. We first introduce the notation for slicing and binning (3.1), followed by the definition of the index function itself (3.2).
-In practice we need to make assumptions about the underlying distribution to get useful results when comparing the slice to a projection. These aspects are discussed in the next section.
+\textcolor{red}{We define a new index function based on comparing the distribution of points inside a slice to the distribution outside the slice. This is achieved by comparing normalized counts in bins across the projection plane to find differences between the distributions. We first introduce the notation for slicing and binning (3.1), followed by the definition of the index function itself (3.2), and assumptions to be made are discussed in the next section.
 }
 
 ## Taking a slice and binning
@@ -230,10 +230,10 @@ h_i = ||\mathbf{x}_i - (\mathbf{x}_i\cdot \mathbf{a}_1) \mathbf{a}_1 - (\mathbf{
 \end{equation}
 Observations are considered inside the slice if $h_i < h$. 
 
-\textcolor{red}{We denote the set of points inside the slice $S$, and the set of points outside the slice $C$. For the definition of the index we will further bin the} projected data $Y$ into $K$ bins, $b_k, k=1, ..., K$.
+\textcolor{red}{We denote the set of points inside the slice $S$, and the set of points outside the slice $C$. (You can think about $C$ being short-hand for $S^C$, the complement of $S$.) For the definition of the index we will further bin the} projected data $Y$ into $K$ bins, $b_k, k=1, ..., K$.
 The counts of observations \textcolor{red}{for each bin are computed separately for $S$ and $C$. We can thus write the counts in bin $k$ via two indicator functions,} $S_{k}=\sum_{i} I(Y_i \in b_{k})I(h_i < h)$ inside the slice and $C_{k}=\sum_{i} I(Y_i \in b_{k})I(h_i \geq h)$ outside the slice. The relative counts are thus $s_k = S_k / \sum_i S_i$ and $c_k = C_k / \sum_i C_i$.
 
-\textcolor{red}{Data points are therefore classified in two ways: information about the projected position onto the viewing plane is captured by the binning, while information about the position in the orthogonal space is captured by slicing. In practice the first step is projecting and slicing, followed by a separate binning of the projected points $Y$ for the subsets $S$ and $C$.}
+\textcolor{red}{Data points are therefore classified in two ways: information about the projected position onto the viewing plane is captured by the binning, while information about the position in the orthogonal space is captured by slicing. Thus the first step is projecting and slicing, followed by a separate binning of the projected points $Y$ for the subsets $S$ and $C$.}
 
 ## Index definition
 
@@ -249,7 +249,7 @@ I_A^{up} = \sum_{k}\left[\left(s_{k}-c_{k}\right)\right]_{>\varepsilon}
 \label{eq:indexup}
 \end{equation}
 
-\noindent where $s_{k}$ and $c_{k}$ are the relative counts of observations in bin $b_{k}$ inside and outside the slice. The first definition $I_A^{low}$ takes large values if there is a hollow region of low density inside the slice, while the second definition $I_A^{up}$ can be useful when looking for regions of higher density ("needles in a haystack").
+\noindent where $s_{k}$ and $c_{k}$ are the relative counts of observations in bin $b_{k}$ inside and outside the slice. The first definition $I_A^{low}$ takes large values if there is a hollow region of low density inside the slice (hole), while the second definition $I_A^{up}$ can be useful when looking for regions of higher density (grain or "needles in a haystack").
 The $[.]_{>\varepsilon}$ notation indicates that we drop all bins where the difference in counts is below some threshold $\varepsilon$,
 \begin{equation}
 [a - b]_{>\varepsilon} = \begin{cases}
@@ -257,10 +257,10 @@ The $[.]_{>\varepsilon}$ notation indicates that we drop all bins where the diff
     0, & \text{if $a-b \leq \varepsilon$.}
   \end{cases}
 \end{equation}
-Only bins where the difference is positive are summed. The $\varepsilon$ avoids summing noise and suppresses an artificial dependence on the number of bins. The value of $\varepsilon$ should be estimated based on the expected size of sampling fluctuation, which may depend on assuming a distribution, the number of samples $N$, the number of bins $K$, the slice radius $h$ and the dimension $p$. An estimate for $\varepsilon$ assuming a uniform distribution inside a hypersphere is given in Section \ref{sec:epsilon}. \textcolor{red}{If $\varepsilon=0$ we get a symmetry in the definitions,  $I_A^{low}=I_A^{up}$. In general, the choice of index should match the intention, searching for regions of high or low density in the slice.}
+Only bins where the difference is positive are summed. The $\varepsilon$ avoids summing noise and suppresses an artificial dependence on the number of bins. The value of $\varepsilon$ should be estimated based on the expected size of sampling fluctuation, which may depend on assuming a distribution, the number of samples $N$, the number of bins $K$, the slice radius $h$ and the dimension $p$. An estimate for $\varepsilon$ assuming a uniform distribution inside a hypersphere is given in Section \ref{sec:epsilon}. \textcolor{red}{If $\varepsilon=0$ we get a symmetry in the definitions,  $I_A^{low}=I_A^{up}$. In general, the choice of index should match the intention, searching for regions of high (grain) or low (hole) density in the slice.}
 
 
-*Generalised index* <!--\label{sec:generalise}-->
+### Generalised index {-#sec:generalise}
 
 <!--### Generalisation of the index-->
 The definitions in Eq.(\ref{eq:index},\ref{eq:indexup}) can be generalized \textcolor{red}{for example to emphasise selected bins or control the sensitivity.}
@@ -293,16 +293,16 @@ We also include visualizations to better understand the index behavior and how i
 
 A  desirable property for projection pursuit, into $d$-dimensions, and thus also desirable for section pursuit, is that the index be rotational invariant. That  is, regardless of the basis in the $d$-D plane defining the projection, the index value should be identical. With slices, this is more complicated, because interior and exterior distributions need to be comparable \textcolor{red}{in the absence of structure. To account for expected differences we need to choose an assumed (spherically symmetric) distribution of the data.}
 
-Thus a restriction is imposed on the observed data: that it falls within a $p$-dimensional hypersphere. Data is typically observed in a hypercube, so this prescription requires a departure from the norm which, however,is still practical. In cases of simulated data, such as when looking at multivariate models, the sampling scheme can be adjusted. Observed data, on the other hand, requires shaving off the corners. \textcolor{red}{Note here that most data has a tendency to be elliptical or spherical, and that we are interested in interior structures for which the corners are not important. By sphering the data during pre-processing, shaving off any remaining corners can be kept to a minimum.} In addition, this  approach is designed for reasonably small $p$ so that the vast gap between spheres and cubes in high dimensions is not a concern. For very high-dimensional data, some dimension reduction is expected in pre-processing.
+Thus a restriction is imposed on the observed data: that it falls within a $p$-dimensional hypersphere. Data is typically observed in a hypercube, so this prescription requires a departure from the convention. However, it is still practical, and reasonable. For example, when using simulated data to examine multivariate models, like classification boundaries, the sampling scheme can be produce points in a hypersphere upon which to make model predictions. On the other hand, observed data may require shaving off the corners. \textcolor{red}{Note that, projections of several variables has a tendency produce elliptical or spherical shapes, and because we are interested in interior structures the corners are not important. This can also be assisted by sphering the data during pre-processing.} In addition, this approach is designed for reasonably small $p$ so that the vast gap between spheres and cubes in high dimensions is not a concern. For very high-dimensional data, some dimension reduction is a necessary part of pre-processing.
 
 
-\textcolor{red}{Here we will work with the assumption of a uniform distribution inside a hypersphere because it naturally captures how the relative slice volume changes with dimensionality. Other rotation invariant distributions could also be of interest, for example a multivariate normal distribution.}
+\textcolor{red}{Here we will work with the assumption of a uniform distribution inside a hypersphere because it naturally captures how the relative slice volume changes with dimensionality, that is, it reflects that we are operating in Euclidean space. Other rotation invariant data distributions, for example, multivariate normal, could also be of interest as a reference.}
 
 ## Polar binning and reweighting \label{sec:binning}
 
-\textcolor{red}{Requiring a rotation invariant range suggests a preference for binning in polar coordinates. In general we can decompose an expected underlying distribution in a radial and a directional component, the latter being parametrized by $d-1$ angles. The expected reference distribution can then guide the concrete choices in how to bin in these parameters.}
+\textcolor{red}{Rotation invariance is a desirable feature for a section (or projection) pursuit index and this suggests a preference for binning in polar coordinates. We can decompose an expected underlying distribution into a radial and a directional component, the latter being parametrized by $d-1$ angles. The expected reference distribution can then guide the good choices about binning on these parameters.}
 
-\textcolor{red}{In our case we are interested in binning the projected data points in $d=2$ dimensions and will use the radius $r$ and a single angle $\theta$ in the projection plane to parametrize the binning, as illustrated in the diagram in Figure \ref{fig:sketch}. As a reference distribution we consider points that are uniformly distributed in a hypersphere, thus the angular distribution will be uniform across all values of $\theta$, suggesting the use of $K_{\theta}$ equidistant angular bins. This would also hold in the case of a spherical normal reference distribution.}
+\textcolor{red}{In our case we are interested in binning the projected data points in $d=2$ dimensions and will use the radius $r$ and a single angle $\theta$ in the projection plane to parametrize the binning, as illustrated in the diagram in Figure \ref{fig:sketch}. As a reference distribution we consider points that are uniformly distributed in a hypersphere, thus the angular distribution will be uniform across all values of $\theta$, suggesting the use of $K_{\theta}$ equidistant angular bins. This would also hold if the reference distribution was assumed to be multivariate normal.}
 
 ```{r sketch, out.width="30%", fig.cap="Diagram illustrating the notation for polar binning in angle $\\theta$ and radius $r$. Angular bins $\\theta_i, i=1, 2, 3, 4$, split the angular component into four bins, $r_j, j=1, 2$ splits the radial component into two bins, resulting in a total of 8 bins.", fig.align = "center"}
 
@@ -325,7 +325,7 @@ ggplot() +
 
 The radial binning is more complicated.
 \textcolor{red}{This is because the marginal radial distribution of the projected data depends on the assumed reference distribution as well as the data dimenson $p$.}
-As $p$ increases, the projected data piles more in the center. A varying radial bin size could be used to offset this effect, where the bounds of the $K_r$ radial bins take into account the expected distribution of points given $p$. 
+As $p$ increases, the projected data piles more in the center, for an assumed uniform, or a normal reference distribution. A varying radial bin size can be used to offset this effect, where the bounds of the $K_r$ radial bins take into account the expected distribution of points given $p$. 
 \textcolor{red}{However, the expected radial distribution will also differ between the projected data in a slice and a projection of the full data}, so the effect is accounted for instead by reweighting bin counts. \textcolor{red}{The aim is to adjust for the expected difference in distribution: after the reweighting, the expected counts in all radial bins is the same, and this needs to be adjusted separately for the data in the slice and the projected data.} The calculations are as follows. 
 
 Consider the expected distribution to be a uniform distribution within a hypersphere in $p$ dimensions projected onto a 2D plane. The cumulative distribution function (CDF) for the radial distribution in the projection, derived in the Appendix, is given by:
@@ -750,10 +750,10 @@ p6 <- as_tibble(tr6) %>%
 grid.arrange(p3, p1, p5, p4, p2, p6, ncol=3)
 ```
 
-*Dependence on* $q$
+### Dependence on $q$ {-#dependenceq}
 
 \textcolor{red}{In the generalized definition of the index, the parameter $q$ can be used to tune the sensitivity to small differences. It will therefore also need to be considered when choosing $\varepsilon^i$. To understand the effect we consider a simple one-dimensional setup:}
- uniformly draw $N$ samples and bin them in $K$ bins, such that the expected bin count is $N/K$ in all bins (or $1/K$ after normalization). Using the Poisson approximation, the standard deviation for the normalized counts is $\delta=1/\sqrt{N K}$. By drawing two independent samples and calculating the index value 100 times we get an estimate of the expected index value and its variance depending on $q$. Note that since we are assuming pure noise distributions for both samples, $I_A^{low}=I_A^{up}=I_A$. This is shown in Figure \ref{fig:noise} for $N=10000$ and $K=100$. We see that for values of $q<1$ the noise becomes inflated, especially when we do not use an appropriate $\varepsilon$ cutoff. For the default choices of $q=1$ and $\varepsilon=\delta$ we find that the expected index value for a noise distribution is about $0.05$. \textcolor{red}{Note here that in this simplified setup there is no bin-dependence of $\varepsilon$ and we have dropped the index $i$.}
+ uniformly draw $N$ samples and bin them in $K$ bins, such that the expected bin count is $N/K$ in all bins (or $1/K$ after normalization). Using the Poisson approximation, the standard deviation for the normalized counts is $\delta=1/\sqrt{N K}$. By drawing two independent samples and calculating the index value 100 times we get an estimate of the expected index value and its variance depending on $q$. Note that since we are assuming pure noise distributions for both samples, $I_A^{low}=I_A^{up}=I_A$. This is shown in Figure \ref{fig:noise} for $N=10000$ and $K=100$. We see that for values of $q<1$ the noise becomes inflated, especially when we do not use an appropriate $\varepsilon$ cutoff. For the default choices of $q=1$ and $\varepsilon=\delta$ we find that the expected index value for a noise distribution is about $0.05$. \textcolor{red}{Note that in this simplified setup there is no bin-dependence of $\varepsilon$ and we have dropped the index $i$.}
 
 ```{r noise, fig.cap="Examining the  effect of the power parameter $q$ on the variability of the  index value, when a noise cutoff ($\\varepsilon$) is used. Rescaled values of $I_A$ shown as a function of $q$, for fixed values of $\\varepsilon$, for $N=10000$ and $K=100$. Smaller values of  $q$ inflate the variability in the index, exaggerating  the noise.", fig.height=2, fig.width=3, out.width='50%', fig.align = "center", eval=T}
 
@@ -1173,7 +1173,7 @@ getAxes <- function(fProj, cntrx, cntry, sclx, scly){
 
 The slice display can be used to understand non-linear classification boundaries [@laa2019slice], visualized following @sam.11271 and using the classifly package [@classifly]. Classifly samples the design space and calculates model predictions. We can use section pursuit to identify slices that reveal the decision boundaries in the design space, by dropping sample points based on the assigned prediction. By selecting a class that is only predicted in a small region we generate the hollow features to be found by section pursuit. The resulting slice can then be viewed showing all assigned classes to resolve the boundary. \textcolor{red}{An example using the classical olives data is discussed below, a second example studying classification boundaries is available in the Appendix.}
 
-*Olives data*
+### Olives data {-#sec:olives}
 
 We first consider the classical olives data [@olives]. This data set contains measurements of 8 fatty acids for 572 Italian olive oils, collected in 9 different areas, and is available in the classifly package.
 
@@ -1396,7 +1396,7 @@ grid.arrange(p1, p1p, p1d, blank, p2, p2p, p2d, p_leg, p4, p4p, p4d, p6, ncol=4,
 
 Similar to the decision boundaries of classification models, inequality conditions can induce non-linear boundaries in the parameter space. The inequalities may be complicated functions of multiple parameters, and we can use section pursuit to find visualizations that illustrate the boundaries. These are of interest in physics models for which we often have inequality constraints defining the allowed region of parameter space. By understanding the shape of this region we can gain physics insights guiding theoretical and experimental work. For example, the constraints might result in preferred parameter combinations hinting at a simpler underlying model, or we can reparametrise the allowed region to design targeted experiments to test the model further.
 
-*THDM*
+### THDM {-#sec:THDM}
 
 A certain type of particle that occurs in particle physics models is the so-called scalar (or Higgs) boson, with properties specified by a "potential" which depends on a set of parameters. These are the basic parameters of the model and they allow one to calculate physical quantities such as the masses of the scalar particles and their interaction strengths. A common problem that arises in this context consists of finding the parameter space that leads to acceptable predictions, that satisfy known theoretical or experimental constraints.
 
