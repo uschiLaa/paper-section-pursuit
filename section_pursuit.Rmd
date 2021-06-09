@@ -249,7 +249,7 @@ I_A^{up} = \sum_{k}\left[\left(s_{k}-c_{k}\right)\right]_{>\varepsilon}
 \label{eq:indexup}
 \end{equation}
 
-\noindent where $s_{k}$ and $c_{k}$ are the relative counts of observations in bin $b_{k}$ inside and outside the slice. The first definition $I_A^{low}$ takes large values if there is a hollow region of low density inside the slice (hole), while the second definition $I_A^{up}$ can be useful when looking for regions of higher density (grain or "needles in a haystack").
+\noindent where $s_{k}$ and $c_{k}$ are the relative counts of observations in bin $b_{k}$ inside and outside the slice. The first definition $I_A^{low}$ takes large values if there is a hollow region of low density inside the slice (hole), while the second definition $I_A^{up}$ can be useful when looking for regions of higher density (grain or possibly considered to be "needles in a haystack").
 The $[.]_{>\varepsilon}$ notation indicates that we drop all bins where the difference in counts is below some threshold $\varepsilon$,
 \begin{equation}
 [a - b]_{>\varepsilon} = \begin{cases}
