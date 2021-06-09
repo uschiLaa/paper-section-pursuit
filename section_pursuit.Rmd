@@ -1,6 +1,6 @@
 ---
 title: |
-  Hole or grain? A Section Pursuit Index for Finding Hidden Structure in Multiple Dimensions
+  Hole or Grain? A Section Pursuit Index for Finding Hidden Structure in Multiple Dimensions
 author:
   - name: Ursula Laa
     affil: a, b, c
