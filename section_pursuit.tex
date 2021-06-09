@@ -115,8 +115,8 @@ conditional function or model visualization
 The space of sections of high-dimensional space is larger than the space
 of projections. The slice tour is based on projections, considering an
 observation to be in the slice if its within a fixed distance of the
-projection plane, which simplifying the space to be explored.
-\textcolor{red}{This definition of a slice, allows for the comparison of  distributions of points inside and outside the slice.}
+projection plane, thus simplifying the space to be explored.
+\textcolor{red}{This definition of a slice allows for the comparison of  distributions of points inside and outside the slice.}
 This is an unguided process, and providing a method to find interesting
 slices would be beneficial.
 
@@ -349,10 +349,10 @@ a \(p\)-dimensional hypersphere. Data is typically observed in a
 hypercube, so this prescription requires a departure from the
 convention. However, it is still practical, and reasonable. For example,
 when using simulated data to examine multivariate models, like
-classification boundaries, the sampling scheme can be produce points in
-a hypersphere upon which to make model predictions. On the other hand,
+classification boundaries, the sampling scheme can produce points in a
+hypersphere upon which to make model predictions. On the other hand,
 observed data may require shaving off the corners.
-\textcolor{red}{Note that, projections of several variables has a tendency produce elliptical or spherical shapes, and because we are interested in interior structures the corners are not important. This can also be assisted by sphering the data during pre-processing.}
+\textcolor{red}{Note that, projections of several variables has a tendency to produce elliptical or spherical shapes, and because we are interested in interior structures the corners are not important. This can also be assisted by sphering the data during pre-processing.}
 In addition, this approach is designed for reasonably small \(p\) so
 that the vast gap between spheres and cubes in high dimensions is not a
 concern. For very high-dimensional data, some dimension reduction is a
