@@ -122,7 +122,7 @@ detail how each point has been addressed in the revision.
 - **Data generation of sets A and B**
   + The details explaining the data generation have been added as an appendix.
   
-- **Critique of "needles in a haystack"
+- **Critique of "needles in a haystack"**
   + (There was a similar comment from Reviewer 1.) Yes, you are right, and we have re-written the text to de-emphasize use of the term. We have used it once, because it is related to high-density and we think help gets that message across. 
 
 - **Figure 5, maybe also 2, 4: make it easier to distinguish lines by making them thicker and maybe using different linetypes**
