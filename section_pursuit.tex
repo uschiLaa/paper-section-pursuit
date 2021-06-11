@@ -89,9 +89,6 @@ graphics, data visualization, exploratory data analysis, data science
 \end{keywords}
 
 \hypersetup{linkcolor=black}
-  \tableofcontents
-
-\newpage
 
 \hypertarget{introduction}{%
 \section{Introduction}\label{introduction}}
@@ -115,25 +112,29 @@ conditional function or model visualization
 The space of sections of high-dimensional space is larger than the space
 of projections. The slice tour is based on projections, considering an
 observation to be in the slice if its within a fixed distance of the
-projection plane, thus simplifying the space to be explored.
-\textcolor{red}{This definition of a slice allows for the comparison of  distributions of points inside and outside the slice.}
-This is an unguided process, and providing a method to find interesting
-slices would be beneficial.
+projection plane, thus simplifying the space to be explored. This
+definition of a slice allows for the comparison of distributions of
+points inside and outside the slice. This is an unguided process, and
+providing a method to find interesting slices would be beneficial.
 
 Here we propose ``section pursuit'', which searches the space of
-projections for the most interesting slices of the data. The
-``interestingness'' of each slice is computed as a measure of
+projections for the most interesting slices of the data.
+\textcolor{red}{(Technically we are restricting the type of sections considered, defining "slice pursuit" instead, while "section pursuit" covers the general idea and applies to other definitions of sections as well.)}
+The ``interestingness'' of each slice is computed as a measure of
 dissimilarity between the distribution of projected points inside and
 outside the slice. Finding conditional features in large data sets will
 provide better understanding of the data, and can help improve
 modelling.
 
 This paper is organized as follows. The next section provides background
-on tours, slicing and projection pursuit.
-\textcolor{red}{Section \ref{sec:index} describes an index designed to detect concavities (holes), and its reverse to detect grains. Section \ref{sec:practical} discusses the associated practical considerations and explores the behavior of the index on simulated examples.}
-The application of section pursuit to exploring high-dimensional
-classification models and constrained high-dimensional spaces is
-illustrated in Section \ref{sec:applications}.
+on tours, slicing and projection pursuit. Section \ref{sec:index}
+describes an index designed to detect concavities (holes), and its
+reverse to detect grains. Section \ref{sec:practical} discusses the
+associated practical considerations and explores the behavior of the
+index on simulated examples. The application of section pursuit to
+exploring high-dimensional classification models and constrained
+high-dimensional spaces is illustrated in Section
+\ref{sec:applications}.
 
 \hypertarget{background}{%
 \section{\texorpdfstring{Background
@@ -153,15 +154,32 @@ The underlying computational methods were described in \citet{BCAH05},
 and an implementation in R \citep{rlang} is available in the
 \texttt{tourr} package \citep{tourr}.
 
-\textcolor{red}{The information available in projections can be complemented using \textit{sectioning}}
-\citep{prosection}.
-\textcolor{red}{Sections highlight (or ignore) subsets of the data based on inequality conditions defined for the variables. We use the term \textit{slicing} for a special sectioning condition, that uses the orthogonal distance of data points from a projection plane. Points are considered to fall into the slice if this distance is below some cutoff value $h$. Figure \ref{fig:diagrams} shows diagrams illustrating slicing through a 3D sphere (left) and the general concept of the orthogonal distance (right) that is used to define slices in more than three dimensions.}
-Recent work in \citet{laa2019slice} implemented a display of
-interpolated slices, which has been added to the \texttt{tourr} package
-and can be used to show slices for projection planes obtained when
-running a grand tour.
+The information available in projections can be complemented using
+\textit{sectioning} \citep{prosection}. Sections highlight (or ignore)
+subsets of the data based on inequality conditions defined for the
+variables. We use the term \textit{slicing} for a special sectioning
+condition, that uses the orthogonal distance of data points from a
+projection plane. Points are considered to fall into the slice if this
+distance is below some cutoff value \(h\). Figure \ref{fig:diagrams}
+shows diagrams illustrating slicing through a 3D sphere (left) and the
+general concept of the orthogonal distance (right) that is used to
+define slices in more than three dimensions. Recent work in
+\citet{laa2019slice} implemented a display of interpolated slices, which
+has been added to the \texttt{tourr} package and can be used to show
+slices for projection planes obtained when running a grand tour.
 
-\textcolor{red}{A projection plane does not generally need to have a location associated with it, but it is necessary in order to compute the distance between a point and the plane. By default, the projection plane is considered to pass through the center of the data, or $\boldmath{0}$ if the data has been centered. Using Euclidean distance in the orthogonal space is done to ensure rotation invariance. This raises an interesting geometric result, that the slices are spherical, one might even call them shells. A \textit{flat slice}, matching that shown in Figure \ref{fig:diagrams}), is only obtained in the case of a single orthogonal direction on the projection plane (i.e. 3D). However, the appearance to the viewer watching the slice tour is that of a slice rather than a shell. Hence, the use of the the term slice.}
+A projection plane does not generally need to have a location associated
+with it, but it is necessary in order to compute the distance between a
+point and the plane. By default, the projection plane is considered to
+pass through the center of the data, or \(\boldmath{0}\) if the data has
+been centered. Using Euclidean distance in the orthogonal space is done
+to ensure rotation invariance. This raises an interesting geometric
+result, that the slices are spherical, one might even call them shells.
+A \textit{flat slice}, matching that shown in Figure
+\ref{fig:diagrams}), is only obtained in the case of a single orthogonal
+direction on the projection plane (i.e.~3D). However, the appearance to
+the viewer watching the slice tour is that of a slice rather than a
+shell. Hence, the use of the the term slice.
 
 \begin{figure*}[ht]
 %\centerline{\includegraphics[width=0.4\textwidth]{diagrams/centered-slice.pdf}
@@ -174,19 +192,17 @@ running a grand tour.
 
 The first two columns of Figure \ref{fig:allSlices} show scatterplots of
 the points in a 4D data set inside an informative (S1) and an
-uninformative (S2) slice,
-\textcolor{red}{defined by two different projection planes centered at the origin},
-for two simulated data sets (A, B). Note that the data is defined in a
-4D sphere, which generates the circular shape. The sampling results in
-hollow regions inside the sphere by rejecting points within shapes
-defined by selected hyperspherical harmonics
-\citep{doi:10.1063/1.3054274},
-\textcolor{red}{as described in the Appendix}. The hollowness is hidden
-in projections of the data, as shown in the final column of Figure
-\ref{fig:allSlices}. It is much simpler to define slices on
-high-dimensional spheres than cubes, and this is the approach used for
-all the data in this paper. Data defined in a cube is trimmed or
-supplemented to be contained in a sphere.
+uninformative (S2) slice, defined by two different projection planes
+centered at the origin, for two simulated data sets (A, B). Note that
+the data is defined in a 4D sphere, which generates the circular shape.
+The sampling results in hollow regions inside the sphere by rejecting
+points within shapes defined by selected hyperspherical harmonics
+\citep{doi:10.1063/1.3054274}, as described in the Appendix. The
+hollowness is hidden in projections of the data, as shown in the final
+column of Figure \ref{fig:allSlices}. It is much simpler to define
+slices on high-dimensional spheres than cubes, and this is the approach
+used for all the data in this paper. Data defined in a cube is trimmed
+or supplemented to be contained in a sphere.
 
 \begin{figure}
 
@@ -223,8 +239,13 @@ the index value changes along an interpolated sequence of projections.
 \section{\texorpdfstring{A new index for finding interesting sections
 \label{sec:index}}{A new index for finding interesting sections }}\label{a-new-index-for-finding-interesting-sections}}
 
-\textcolor{red}{We define a new index function based on comparing the distribution of points inside a slice to the distribution outside the slice. This is achieved by comparing normalized counts in bins across the projection plane to find differences between the distributions. We first introduce the notation for slicing and binning (3.1), followed by the definition of the index function itself (3.2), and assumptions to be made are discussed in the next section.
-}
+We define a new index function based on comparing the distribution of
+points inside a slice to the distribution outside the slice. This is
+achieved by comparing normalized counts in bins across the projection
+plane to find differences between the distributions. We first introduce
+the notation for slicing and binning (3.1), followed by the definition
+of the index function itself (3.2), and assumptions to be made are
+discussed in the next section.
 
 \hypertarget{taking-a-slice-and-binning}{%
 \subsection{Taking a slice and
@@ -241,16 +262,24 @@ h_i = ||\mathbf{x}_i - (\mathbf{x}_i\cdot \mathbf{a}_1) \mathbf{a}_1 - (\mathbf{
 \end{equation} Observations are considered inside the slice if
 \(h_i < h\).
 
-\textcolor{red}{We denote the set of points inside the slice $S$, and the set of points outside the slice $C$. (You can think about $C$ being short-hand for $S^C$, the complement of $S$.) For the definition of the index we will further bin the}
-projected data \(Y\) into \(K\) bins, \(b_k, k=1, ..., K\). The counts
-of observations
-\textcolor{red}{for each bin are computed separately for $S$ and $C$. We can thus write the counts in bin $k$ via two indicator functions,}
+We denote the set of points inside the slice \(S\), and the set of
+points outside the slice \(C\). (You can think about \(C\) being
+short-hand for \(S^C\), the complement of \(S\).) For the definition of
+the index we will further bin the projected data \(Y\) into \(K\) bins,
+\(b_k, k=1, ..., K\). The counts of observations for each bin are
+computed separately for \(S\) and \(C\). We can thus write the counts in
+bin \(k\) via two indicator functions,
 \(S_{k}=\sum_{i} I(Y_i \in b_{k})I(h_i < h)\) inside the slice and
 \(C_{k}=\sum_{i} I(Y_i \in b_{k})I(h_i \geq h)\) outside the slice. The
 relative counts are thus \(s_k = S_k / \sum_i S_i\) and
 \(c_k = C_k / \sum_i C_i\).
 
-\textcolor{red}{Data points are therefore classified in two ways: information about the projected position onto the viewing plane is captured by the binning, while information about the position in the orthogonal space is captured by slicing. Thus the first step is projecting and slicing, followed by a separate binning of the projected points $Y$ for the subsets $S$ and $C$.}
+Data points are therefore classified in two ways: information about the
+projected position onto the viewing plane is captured by the binning,
+while information about the position in the orthogonal space is captured
+by slicing. Thus the first step is projecting and slicing, followed by a
+separate binning of the projected points \(Y\) for the subsets \(S\) and
+\(C\).
 
 \hypertarget{index-definition}{%
 \subsection{Index definition}\label{index-definition}}
@@ -289,17 +318,18 @@ estimated based on the expected size of sampling fluctuation, which may
 depend on assuming a distribution, the number of samples \(N\), the
 number of bins \(K\), the slice radius \(h\) and the dimension \(p\). An
 estimate for \(\varepsilon\) assuming a uniform distribution inside a
-hypersphere is given in Section \ref{sec:epsilon}.
-\textcolor{red}{If $\varepsilon=0$ we get a symmetry in the definitions,  $I_A^{low}=I_A^{up}$. In general, the choice of index should match the intention, searching for regions of high (grain) or low (hole) density in the slice.}
+hypersphere is given in Section \ref{sec:epsilon}. If \(\varepsilon=0\)
+we get a symmetry in the definitions, \(I_A^{low}=I_A^{up}\). In
+general, the choice of index should match the intention, searching for
+regions of high (grain) or low (hole) density in the slice.
 
 \hypertarget{sec:generalise}{%
 \subsubsection*{Generalised index}\label{sec:generalise}}
 \addcontentsline{toc}{subsubsection}{Generalised index}
 
 The definitions in Eq.(\ref{eq:index},\ref{eq:indexup}) can be
-generalized
-\textcolor{red}{for example to emphasise selected bins or control the sensitivity.}
-\begin{equation}
+generalized for example to emphasise selected bins or control the
+sensitivity. \begin{equation}
 I_A^{low} = \sum_{k}w_{k}\left(\left[c_{k}^{1/q}-s_{k}^{1/q}\right]_{>\varepsilon}\right)^{q}
 \label{eq:index2}
 \end{equation} \begin{equation}
@@ -327,10 +357,17 @@ the section, even when \(\varepsilon=0\).
 \section{\texorpdfstring{Practical issues
 \label{sec:practical}}{Practical issues }}\label{practical-issues}}
 
-\textcolor{red}{
-The application of the new index function should be informed by an expected underlying distribution. As explained in \ref{sec:rotinv} these should be rotation invariant, and the concrete assumption can guide practical choices that need to be made: reweighting bin counts to account for expected differences between the projected distribution and the distribution in a slice (\ref{sec:binning}), estimates of sufficient sample size (\ref{sec:size}), expected noise and corresponding threshold $\epsilon$ (\ref{sec:epsilon}).
-We also include visualizations to better understand the index behavior and how it depends on its parameters (\ref{sec:behaviour}) and guidance on using the index in practice (\ref{sec:viz}).
-}
+The application of the new index function should be informed by an
+expected underlying distribution. As explained in \ref{sec:rotinv} these
+should be rotation invariant, and the concrete assumption can guide
+practical choices that need to be made: reweighting bin counts to
+account for expected differences between the projected distribution and
+the distribution in a slice (\ref{sec:binning}), estimates of sufficient
+sample size (\ref{sec:size}), expected noise and corresponding threshold
+\(\epsilon\) (\ref{sec:epsilon}). We also include visualizations to
+better understand the index behavior and how it depends on its
+parameters (\ref{sec:behaviour}) and guidance on using the index in
+practice (\ref{sec:viz}).
 
 \hypertarget{rotation-invariance}{%
 \subsection{\texorpdfstring{Rotation invariance
@@ -341,8 +378,9 @@ thus also desirable for section pursuit, is that the index be rotational
 invariant. That is, regardless of the basis in the \(d\)-D plane
 defining the projection, the index value should be identical. With
 slices, this is more complicated, because interior and exterior
-distributions need to be comparable
-\textcolor{red}{in the absence of structure. To account for expected differences we need to choose an assumed (spherically symmetric) distribution of the data.}
+distributions need to be comparable in the absence of structure. To
+account for expected differences we need to choose an assumed
+(spherically symmetric) distribution of the data.
 
 Thus a restriction is imposed on the observed data: that it falls within
 a \(p\)-dimensional hypersphere. Data is typically observed in a
@@ -351,22 +389,41 @@ convention. However, it is still practical, and reasonable. For example,
 when using simulated data to examine multivariate models, like
 classification boundaries, the sampling scheme can produce points in a
 hypersphere upon which to make model predictions. On the other hand,
-observed data may require shaving off the corners.
-\textcolor{red}{Note that, projections of several variables has a tendency to produce elliptical or spherical shapes, and because we are interested in interior structures the corners are not important. This can also be assisted by sphering the data during pre-processing.}
-In addition, this approach is designed for reasonably small \(p\) so
-that the vast gap between spheres and cubes in high dimensions is not a
-concern. For very high-dimensional data, some dimension reduction is a
-necessary part of pre-processing.
+observed data may require shaving off the corners. Note that,
+projections of several variables has a tendency to produce elliptical or
+spherical shapes, and because we are interested in interior structures
+the corners are not important. This can also be assisted by sphering the
+data during pre-processing. In addition, this approach is designed for
+reasonably small \(p\) so that the vast gap between spheres and cubes in
+high dimensions is not a concern. For very high-dimensional data, some
+dimension reduction is a necessary part of pre-processing.
 
-\textcolor{red}{Here we will work with the assumption of a uniform distribution inside a hypersphere because it naturally captures how the relative slice volume changes with dimensionality, that is, it reflects that we are operating in Euclidean space. Other rotation invariant data distributions, for example, multivariate normal, could also be of interest as a reference.}
+Here we will work with the assumption of a uniform distribution inside a
+hypersphere because it naturally captures how the relative slice volume
+changes with dimensionality, that is, it reflects that we are operating
+in Euclidean space. Other rotation invariant data distributions, for
+example, multivariate normal, could also be of interest as a reference.
 
 \hypertarget{polar-binning-and-reweighting}{%
 \subsection{\texorpdfstring{Polar binning and reweighting
 \label{sec:binning}}{Polar binning and reweighting }}\label{polar-binning-and-reweighting}}
 
-\textcolor{red}{Rotation invariance is a desirable feature for a section (or projection) pursuit index and this suggests a preference for binning in polar coordinates. We can decompose an expected underlying distribution into a radial and a directional component, the latter being parametrized by $d-1$ angles. The expected reference distribution can then guide the good choices about binning on these parameters.}
+Rotation invariance is a desirable feature for a section (or projection)
+pursuit index and this suggests a preference for binning in polar
+coordinates. We can decompose an expected underlying distribution into a
+radial and a directional component, the latter being parametrized by
+\(d-1\) angles. The expected reference distribution can then guide the
+good choices about binning on these parameters.
 
-\textcolor{red}{In our case we are interested in binning the projected data points in $d=2$ dimensions and will use the radius $r$ and a single angle $\theta$ in the projection plane to parametrize the binning, as illustrated in the diagram in Figure \ref{fig:sketch}. As a reference distribution we consider points that are uniformly distributed in a hypersphere, thus the angular distribution will be uniform across all values of $\theta$, suggesting the use of $K_{\theta}$ equidistant angular bins. This would also hold if the reference distribution was assumed to be multivariate normal.}
+In our case we are interested in binning the projected data points in
+\(d=2\) dimensions and will use the radius \(r\) and a single angle
+\(\theta\) in the projection plane to parametrize the binning, as
+illustrated in the diagram in Figure \ref{fig:sketch}. As a reference
+distribution we consider points that are uniformly distributed in a
+hypersphere, thus the angular distribution will be uniform across all
+values of \(\theta\), suggesting the use of \(K_{\theta}\) equidistant
+angular bins. This would also hold if the reference distribution was
+assumed to be multivariate normal.
 
 \begin{figure}
 
@@ -377,17 +434,20 @@ necessary part of pre-processing.
 \caption{Diagram illustrating the notation for polar binning in angle $\theta$ and radius $r$. Angular bins $\theta_i, i=1, 2, 3, 4$, split the angular component into four bins, $r_j, j=1, 2$ splits the radial component into two bins, resulting in a total of 8 bins.}\label{fig:sketch}
 \end{figure}
 
-The radial binning is more complicated.
-\textcolor{red}{This is because the marginal radial distribution of the projected data depends on the assumed reference distribution as well as the data dimenson $p$.}
-As \(p\) increases, the projected data piles more in the center, for an
-assumed uniform, or a normal reference distribution. A varying radial
-bin size can be used to offset this effect, where the bounds of the
-\(K_r\) radial bins take into account the expected distribution of
-points given \(p\).
-\textcolor{red}{However, the expected radial distribution will also differ between the projected data in a slice and a projection of the full data},
-so the effect is accounted for instead by reweighting bin counts.
-\textcolor{red}{The aim is to adjust for the expected difference in distribution: after the reweighting, the expected counts in all radial bins is the same, and this needs to be adjusted separately for the data in the slice and the projected data.}
-The calculations are as follows.
+The radial binning is more complicated. This is because the marginal
+radial distribution of the projected data depends on the assumed
+reference distribution as well as the data dimenson \(p\). As \(p\)
+increases, the projected data piles more in the center, for an assumed
+uniform, or a normal reference distribution. A varying radial bin size
+can be used to offset this effect, where the bounds of the \(K_r\)
+radial bins take into account the expected distribution of points given
+\(p\). However, the expected radial distribution will also differ
+between the projected data in a slice and a projection of the full data,
+so the effect is accounted for instead by reweighting bin counts. The
+aim is to adjust for the expected difference in distribution: after the
+reweighting, the expected counts in all radial bins is the same, and
+this needs to be adjusted separately for the data in the slice and the
+projected data. The calculations are as follows.
 
 Consider the expected distribution to be a uniform distribution within a
 hypersphere in \(p\) dimensions projected onto a 2D plane. The
@@ -420,9 +480,8 @@ as \(h \ll R\)). Within the slice, the adjustment only accounts for
 relative areas in radial bins for a 2D uniform distribution. All weights
 can be calculated from the CDF.
 
-The fraction of points in the radial bin \(r_i\)
-\textcolor{red}{with lower boundary $r_i^l$ and upper boundary $r_i^u$}
-is \begin{equation}
+The fraction of points in the radial bin \(r_i\) with lower boundary
+\(r_i^l\) and upper boundary \(r_i^u\) is \begin{equation}
 F_{i}(p, R) = F(r_i^u; p, R) - F(r_i^l; p, R).
 \label{eq:frac}
 \end{equation} Consider \(K_r\) radial bins, with total bin count
@@ -434,12 +493,11 @@ w_i(p, R, K_r) = \frac{1}{K_r F_i(p,R)},
 s_i(p, R, K_r) = n_i w_i(p, R, K_r)
 \label{eq:reweight}
 \end{equation} corresponding to the weighted relative number of points
-in each bin.
-\textcolor{red}{After reweighting, the relative expected count in each radial bin is thus}
-\(1/K_r\) for a uniform hypersphere. We calculate the outside weights as
-\(w_i(p, R, K_r)\) and the inside weights as \(w_i(2, R, K_r)\). Recall
-that we are assuming that the slice thickness can be neglected,
-\(h\ll R\).
+in each bin. After reweighting, the relative expected count in each
+radial bin is thus \(1/K_r\) for a uniform hypersphere. We calculate the
+outside weights as \(w_i(p, R, K_r)\) and the inside weights as
+\(w_i(2, R, K_r)\). Recall that we are assuming that the slice thickness
+can be neglected, \(h\ll R\).
 
 Figure \ref{fig:data_and_densities} illustrates the effect of the
 adjustment using polar histograms for the simulated example data B, with
@@ -493,14 +551,20 @@ N_S = \frac{N}{2} \left(\frac{h}{R}\right)^{p-2} \left(p - (p-2)\left(\frac{h}{R
 \label{eq:count}
 \end{equation}
 
-\noindent \textcolor{red}{The calculation is based on the relative volume of the slice, derived in the Appendix.}
-We denote \(x=h/R\) the resolution. It determines the minimum relative
-size of features that can be seen in a slice. When adding noise
-dimensions, in order to keep the resolution \(x\) fixed, the sample size
-needs to increase approximately as \(x^{\Delta p}\), where \(\Delta p\)
-is the increase in number of dimensions.
+\noindent The calculation is based on the relative volume of the slice,
+derived in the Appendix. We denote \(x=h/R\) the resolution. It
+determines the minimum relative size of features that can be seen in a
+slice. When adding noise dimensions, in order to keep the resolution
+\(x\) fixed, the sample size needs to increase approximately as
+\(x^{\Delta p}\), where \(\Delta p\) is the increase in number of
+dimensions.
 
-\textcolor{red}{As an explicit example consider the expected fraction of points $N_S/N$ inside a slice of resolution $x=\frac{h}{R}=0.1$. This fraction is about $0.15$ or $15\%$ when $p=3$, and quickly drops to $0.02$ when $p=4$ and $0.002$ when $p=5$. Thus, even for moderate dimensionality $p$ the original sample size needs to be large to have enough points to resolve features in a slice.}
+As an explicit example consider the expected fraction of points
+\(N_S/N\) inside a slice of resolution \(x=\frac{h}{R}=0.1\). This
+fraction is about \(0.15\) or \(15\%\) when \(p=3\), and quickly drops
+to \(0.02\) when \(p=4\) and \(0.002\) when \(p=5\). Thus, even for
+moderate dimensionality \(p\) the original sample size needs to be large
+to have enough points to resolve features in a slice.
 
 \hypertarget{estimating-the-magnitude-of-noise-varepsilon}{%
 \subsection{\texorpdfstring{Estimating the magnitude of noise,
@@ -521,22 +585,24 @@ The relative Poisson error on this count is \begin{equation}
 \delta_S^i = \frac{\sqrt{N_S^i}}{N_S^i} = 
 \frac{R}{\sqrt{(r_i^u)^2 - (r_i^l)^2}} \sqrt{\frac{2 K_{\theta}}{N}} x^{(2-p)/2}
 \frac{1}{\sqrt{\left(p - (p-2) x^{2}\right)}}, 
-\end{equation}
-\textcolor{red}{where $r_i^l$ and $r_i^u$ are the lower and upper radial boundary of bin $i$ and the expected error will be different depending on the radial position of the bin. By its definition, the expected reweighted count is $1/K$ in all bins, where $K=K_r K_{\theta}$.}
-We therefore expect sampling fluctuations of order \begin{equation}
+\end{equation} where \(r_i^l\) and \(r_i^u\) are the lower and upper
+radial boundary of bin \(i\) and the expected error will be different
+depending on the radial position of the bin. By its definition, the
+expected reweighted count is \(1/K\) in all bins, where
+\(K=K_r K_{\theta}\). We therefore expect sampling fluctuations of order
+\begin{equation}
 \delta^i = \delta_S^i / K. 
 \label{eq:eps}
 \end{equation}
 
-To suppress index fluctuations to below one standard deviation, we set
-\textcolor{red}{a bin-wise} \(\varepsilon^i = \delta^i\). Figure
-\ref{fig:path_eps} compares the index behavior for two values of
-\(\varepsilon^i\), \(0\) and \(\delta^i\). Three 4D data sets are used:
-examples A and B (shown in Figure \ref{fig:allSlices}), and a reference
-set C consisting of observations sampled uniformly within a
-\(p\)-dimensional sphere. Color indicates the number of bins used to
-calculate the index. The difference in index value when
-\(\varepsilon^i=0\) \textcolor{red}{for all bins} clearly indicates a
+To suppress index fluctuations to below one standard deviation, we set a
+bin-wise \(\varepsilon^i = \delta^i\). Figure \ref{fig:path_eps}
+compares the index behavior for two values of \(\varepsilon^i\), \(0\)
+and \(\delta^i\). Three 4D data sets are used: examples A and B (shown
+in Figure \ref{fig:allSlices}), and a reference set C consisting of
+observations sampled uniformly within a \(p\)-dimensional sphere. Color
+indicates the number of bins used to calculate the index. The difference
+in index value when \(\varepsilon^i=0\) for all bins clearly indicates a
 dependence on the number of bins, which is undesirable. Setting
 \(\varepsilon^i = \delta^i\) mostly removes these differences.
 
@@ -554,7 +620,10 @@ dependence on the number of bins, which is undesirable. Setting
 \(q\)}{Dependence on q}}\label{dependenceq}}
 \addcontentsline{toc}{subsubsection}{Dependence on \(q\)}
 
-\textcolor{red}{In the generalized definition of the index, the parameter $q$ can be used to tune the sensitivity to small differences. It will therefore also need to be considered when choosing $\varepsilon^i$. To understand the effect we consider a simple one-dimensional setup:}
+In the generalized definition of the index, the parameter \(q\) can be
+used to tune the sensitivity to small differences. It will therefore
+also need to be considered when choosing \(\varepsilon^i\). To
+understand the effect we consider a simple one-dimensional setup:
 uniformly draw \(N\) samples and bin them in \(K\) bins, such that the
 expected bin count is \(N/K\) in all bins (or \(1/K\) after
 normalization). Using the Poisson approximation, the standard deviation
@@ -567,8 +636,9 @@ samples, \(I_A^{low}=I_A^{up}=I_A\). This is shown in Figure
 \(q<1\) the noise becomes inflated, especially when we do not use an
 appropriate \(\varepsilon\) cutoff. For the default choices of \(q=1\)
 and \(\varepsilon=\delta\) we find that the expected index value for a
-noise distribution is about \(0.05\).
-\textcolor{red}{Note that in this simplified setup there is no bin-dependence of $\varepsilon$ and we have dropped the index $i$.}
+noise distribution is about \(0.05\). Note that in this simplified setup
+there is no bin-dependence of \(\varepsilon\) and we have dropped the
+index \(i\).
 
 \begin{figure}
 
@@ -635,7 +705,7 @@ areas.
 
 }
 
-\caption{Examining the sensitivity of the index to the  extcolor{red}{power} parameter $q$. Rescaled values of $I_A^{up}$ as a function of $\gamma$,    extcolor{red}{the fraction of non-empty bins,} for fixed values of $q$ (left), and as a function of $q$ for fixed values of $\gamma$ (right). The parameter $q$ shifts emphasis between small regions and large regions of difference.}\label{fig:behavior}
+\caption{Examining the sensitivity of the index to the power parameter $q$. Rescaled values of $I_A^{up}$ as a function of $\gamma$, the fraction of non-empty bins, for fixed values of $q$ (left), and as a function of $q$ for fixed values of $\gamma$ (right). The parameter $q$ shifts emphasis between small regions and large regions of difference.}\label{fig:behavior}
 \end{figure}
 
 \hypertarget{visualising-the-index}{%
@@ -783,8 +853,9 @@ design space, by dropping sample points based on the assigned
 prediction. By selecting a class that is only predicted in a small
 region we generate the hollow features to be found by section pursuit.
 The resulting slice can then be viewed showing all assigned classes to
-resolve the boundary.
-\textcolor{red}{An example using the classical olives data is discussed below, a second example studying classification boundaries is available in the Appendix.}
+resolve the boundary. An example using the classical olives data is
+discussed below, a second example studying classification boundaries is
+available in the Appendix.
 
 \hypertarget{sec:olives}{%
 \subsubsection*{Olives data}\label{sec:olives}}
@@ -969,7 +1040,17 @@ Additional potential applications for section pursuit include the
 exploration of non-standard multivariate confidence regions or Bayesian
 credible regions.
 
-\textcolor{red}{Note that large samples are required to obtain useful insights using the section pursuit method. As discussed in the context of sufficient sample size, the number of data points quickly grows with the number of dimensions. The applications we have studied here are considering simulated data in up to seven dimensions. In the case of larger parameter space we recommend to first reduce dimensionality: in the olives-data example we have selected variables based on prior knowledge, in the PDFSense example in the Appendix we have used principal component analysis prior to the application of section pursuit. The method is not appropriate for small sample size data, in those cases interactive methods such as linked brushing will be preferred.}
+Note that large samples are required to obtain useful insights using the
+section pursuit method. As discussed in the context of sufficient sample
+size, the number of data points quickly grows with the number of
+dimensions. The applications we have studied here are considering
+simulated data in up to seven dimensions. In the case of larger
+parameter space we recommend to first reduce dimensionality: in the
+olives-data example we have selected variables based on prior knowledge,
+in the PDFSense example in the Appendix we have used principal component
+analysis prior to the application of section pursuit. The method is not
+appropriate for small sample size data, in those cases interactive
+methods such as linked brushing will be preferred.
 
 Depending on the application, different index definitions would be
 recommended. Several variations on the index would be produced different
@@ -978,7 +1059,16 @@ This paper hasn't fully explored the impact of all the choices, but the
 same type of diagnostics, in particular, the index visualization
 presented in Section \ref{sec:viz}, could be used decide.
 
-\textcolor{red}{Given the compositional nature of the normalized bin-count data, considering e.g. log-ratios in the definition, could also define an interesting index. It may also be reasonable to consider using a kernel, instead of discrete bins, to produce some spatial smoothing. The effect would be to focus attention on large differences in specific regions rather than small differences anywhere. A completely different approach  to producing a section index, would be to apply any existing projection pursuit index on a sliced projection instead of the full projected data. Only observations inside the slice are then used for the index calculation.}
+Given the compositional nature of the normalized bin-count data,
+considering e.g.~log-ratios in the definition, could also define an
+interesting index. It may also be reasonable to consider using a kernel,
+instead of discrete bins, to produce some spatial smoothing. The effect
+would be to focus attention on large differences in specific regions
+rather than small differences anywhere. A completely different approach
+to producing a section index, would be to apply any existing projection
+pursuit index on a sliced projection instead of the full projected data.
+Only observations inside the slice are then used for the index
+calculation.
 
 \hypertarget{acknowledgements}{%
 \section*{Acknowledgements}\label{acknowledgements}}
