@@ -12,7 +12,7 @@ detail how each point has been addressed in the revision.
 
 - **make the manuscript less dependent on the Laa, Cook, Valencia 2019, include
   sketch:**
-  + we have extended the introduction of slicing and added diagrams adapted from
+  + We have extended the introduction of slicing and added diagrams adapted from
     Laa, Cook, Valencia 2019.
 - **binning is not fully clear, sketch would help:**
   + We have reworked the discussion of the binning (also including suggestions
@@ -69,12 +69,12 @@ detail how each point has been addressed in the revision.
   + We prefer keeping R instead of using rho because it is easier to read, given
     that p, which looks like rho, also appears in the same equation.
   + We decided that adding hats would make the notation more difficult to read, and really isn't necessary for a reader to grasp the ideas. 
-  + We have clarified the usage of the terms slice and section and added diagrams to help with intuition, see Section "Grand tour and slice tour". You're right in the sense that using orthogonal distance makes the slices shell-like. But slice is the better description for the task being tackled, and the appearance of points inside the slice in the slice tour looks like the object has been sliced.
+  + We have clarified the usage of the terms slice and section and added diagrams to help with intuition, see Section "Grand tour and slice tour". You're right in the sense that using orthogonal distance makes the slices shell-like. But slice is the better description for the task being tackled, and the appearance of points in the slice tour looks like the object has been sliced.
   + We already use symbols S and C to indicate points inside and outside the slice.
   
 - **Rotation invariance and trimming**
-  + the reason that rotation invariance is
-    important here is that we need to make assumptions about how the section
+  + The reason that rotation invariance is
+    important here is that we need to make assumptions about how the projection
     is expected to differ from the slice, which is used in defining their
     separate weights (Eq. 9). We have clarified this in the paper. 
   
