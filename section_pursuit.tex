@@ -118,13 +118,14 @@ points inside and outside the slice. This is an unguided process, and
 providing a method to find interesting slices would be beneficial.
 
 Here we propose ``section pursuit'', which searches the space of
-projections for the most interesting slices of the data.
-\textcolor{red}{(Technically we are restricting the type of sections considered, defining "slice pursuit" instead, while "section pursuit" covers the general idea and applies to other definitions of sections as well.)}
-The ``interestingness'' of each slice is computed as a measure of
-dissimilarity between the distribution of projected points inside and
-outside the slice. Finding conditional features in large data sets will
-provide better understanding of the data, and can help improve
-modelling.
+projections for the most interesting slices of the data. (Technically,
+``slice pursuit'' might better match the methods proposed in this paper,
+but ``section pursuit'' is preferred because it is more general and
+applicable to a broader class of problems.) The ``interestingness'' of
+each slice is computed as a measure of dissimilarity between the
+distribution of projected points inside and outside the slice. Finding
+conditional features in large data sets will provide better
+understanding of the data, and can help improve modelling.
 
 This paper is organized as follows. The next section provides background
 on tours, slicing and projection pursuit. Section \ref{sec:index}
