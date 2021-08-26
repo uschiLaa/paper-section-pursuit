@@ -1478,7 +1478,7 @@ if(!file.exists("cache/thdm.rda")){
 
   set.seed(202022)
   thdm_path <- save_history(thdm_tour[thdm$real==1,], 
-                guided_section_tour(idx, eps=0.5, search_f = tourr:::search_better,
+                guided_section_tour(idx, v_rel=0.5, search_f = tourr:::search_better,
                                     anchor=rep(0, 7)),
                 rescale = F)
   thdm_path <- as.list(thdm_path)
