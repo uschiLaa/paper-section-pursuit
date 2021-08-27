@@ -1504,10 +1504,10 @@ if(!file.exists("cache/thdm.rda")){
 real <- read.csv("data/thdm.csv")$real
 colV <- if_else(real==1, "black", "red")
 
-thdm_labs <- list(TeX("$tan(\\beta )$", output = "text"), TeX("$cos( \\beta - \\alpha )$", output = "text"),
-               TeX("$\\lambda_1$", output = "text"), TeX("$\\lambda_2$", output = "text"),
-               TeX("$\\lambda_3$", output = "text"), TeX("$\\lambda_4$", output = "text"),
-               TeX("$\\lambda_5$", output = "text"))
+thdm_labs <- list(TeX("$tan(\\beta )$", output = "character"), TeX("$cos( \\beta - \\alpha )$", output = "character"),
+               TeX("$\\lambda_1$", output = "character"), TeX("$\\lambda_2$", output = "character"),
+               TeX("$\\lambda_3$", output = "character"), TeX("$\\lambda_4$", output = "character"),
+               TeX("$\\lambda_5$", output = "character"))
 
   prj1 <- as_tibble(prj1) %>%
     add_column(label=thdm_labs) %>%
