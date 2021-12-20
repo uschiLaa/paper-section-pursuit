@@ -837,6 +837,7 @@ work well:
   We use the index as defined in Eq. \ref{eq:index}.
 \item
   When binning we set \(n_r=5\) and \(n_{\theta}=8\) or \(10\).
+  \textcolor{red}{Here we have to consider the trade-off between resolution and required sample size. Note that the preferred relative resolution in radius and angle will be different depending on the input data and type of structure. In practice we suggest to try a few different settings to find the combination that works best.}
 \item
   For our examples, a slice radius \(h=0.25\) worked well for scaled
   data (standard deviation = 1).
@@ -898,10 +899,11 @@ Next we run section pursuit on the reduced svm sample. We define the
 section pursuit index with polar binning, with 5 equidistant radial bins
 and 10 angular bins. The bin counts are reweighed according to Eq.
 \ref{eq:reweight}. We set \(q=1\) and then optimize the index using the
-geodesic search available in the tourr package, starting form the slice
-defined by the projection onto linoleic-arachidic (see Fig.
-\ref{fig:olives}, second row). The final views obtained in the
-optimization are shown in the bottom row of Fig. \ref{fig:olives}.
+simulated annealing search (\texttt{search\_better}) available in the
+\texttt{tourr} package, starting form the slice defined by the
+projection onto palmitoleic-stearic (see Fig. \ref{fig:olives}, second
+row). The final views obtained in the optimization are shown in the
+bottom row of Fig. \ref{fig:olives}.
 
 Looking at the data projected onto linoleic and arachidic, and the
 corresponding slice view of the classifier, we see a non-linear decision
@@ -1000,6 +1002,8 @@ projections. Looking at the axes representation of this projection, we
 find that the optimal slice is defined by a combination of all the input
 parameters, making direct interpretation challenging.
 
+\textcolor{red}{The result confirms our initial expectation that the boundaries have a non-trivial dependence on all input parameters, and can give new insights into its shape. However, additional work on the interpretation of a slice view in terms of the original parameters would greatly benefit this type of application.}
+
 \begin{figure}
 \includegraphics[width=1\linewidth]{section_pursuit_files/figure-latex/thdm-1} \caption{Slice (left) and projection (middle) views found when optimising the section pursuit index for the THDM sample. Black points satisfy the inequality conditions, red points do not and are dropped in the optimisation. The first row shows a view along the optimisation path, and the last row the final slice selected by section pursuit. The corresponding axes are shown on the right. The selected slices show clear separation of points not satifsying the conditions, which is hidden in the corresponding projections.}\label{fig:thdm}
 \end{figure}
@@ -1035,11 +1039,13 @@ examples, we have sampled the parameter space and evaluated the
 classification or inequality conditions for all points. We then dropped
 points assigned to one particular class, or in conflict with the
 inequality condition to generate the hollow features in the
-distribution. For all examples considered, the optimization resulted in
-slice views that illustrate interesting aspects of the boundaries.
-Additional potential applications for section pursuit include the
-exploration of non-standard multivariate confidence regions or Bayesian
-credible regions.
+distribution.
+\textcolor{red}{This allowed us to identify interesting slices with section pursuit, and we then showed the full sample (including the previously removed subset) with color coding in that slice to visualize the result.}
+For all examples considered, the optimization resulted in slice views
+that illustrate interesting aspects of the boundaries. Additional
+potential applications for section pursuit include the exploration of
+non-standard multivariate confidence regions or Bayesian credible
+regions.
 
 Note that large samples are required to obtain useful insights using the
 section pursuit method. As discussed in the context of sufficient sample
