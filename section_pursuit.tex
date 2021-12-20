@@ -95,23 +95,22 @@ graphics, data visualization, exploratory data analysis, data science
 
 The visualization of high-dimensional data often utilizes linear
 projection. For example, in principal component analysis plotting the
-principal components is effectively a projection of the data.
-Projections form the basis for a grand tour \citep{As85} of
-high-dimensional data. Projection pursuit \citep[\citet{FT74}]{kr69} is
-used to find interesting low-dimensional views of the data by optimizing
-an index function over all possible projections. Projections can obscure
-non-uniform patterns near the data center, or hollowness. These features
-may be visible in non-linear mappings (such as multidimensional scaling
-\citep{mds}), but these methods often lack interpretability.
-\citet{laa2019slice} introduced a slice tour that shows sections through
-high-dimensions instead of projections, and helps to reveal hidden
-structure. Showing sections can also be useful in combination with
-conditional function or model visualization
-\citep[\citet{sliceplorer}]{JSSv081i05}.
+principal components is a projection of the data. Projections form the
+basis for a grand tour \citep{As85} of high-dimensional data. Projection
+pursuit \citep[\citet{FT74}]{kr69} is used to find interesting
+low-dimensional views of the data by optimizing an index function over
+all possible projections. Projections can obscure non-uniform patterns
+near the data center, or hollowness. These features may be visible in
+non-linear mappings (such as multidimensional scaling \citep{mds}), but
+these methods often lack interpretability. \citet{laa2019slice}
+introduced a slice tour that shows sections through high-dimensions
+instead of projections, and helps to reveal hidden structure. Showing
+sections can also be useful in combination with conditional function or
+model visualization \citep[\citet{sliceplorer}]{JSSv081i05}.
 
 The space of sections of high-dimensional space is larger than the space
 of projections. The slice tour is based on projections, considering an
-observation to be in the slice if its within a fixed distance of the
+observation to be in the slice if it is within a fixed distance of the
 projection plane, thus simplifying the space to be explored. This
 definition of a slice allows for the comparison of distributions of
 points inside and outside the slice. This is an unguided process, and
@@ -149,11 +148,11 @@ selected projections in an animation. The interpolation allows the
 viewer to interpret each view in the context of the previously seen
 projection, thus providing additional insights compared to static
 projections. By observing how the data distribution changes under a
-rotation of the low-dimensional projection, the viewer can extrapolate
-from the low-dimensional shapes to the distribution in high dimensions.
-The underlying computational methods were described in \citet{BCAH05},
-and an implementation in R \citep{rlang} is available in the
-\texttt{tourr} package \citep{tourr}.
+rotation of the low-dimensional projection, the viewer extrapolates from
+the low-dimensional shapes to the distribution in high dimensions. The
+underlying computational methods were described in \citet{BCAH05}, and
+an implementation in R \citep{rlang} is available in the \texttt{tourr}
+package \citep{tourr}.
 
 The information available in projections can be complemented using
 \textit{sectioning} \citep{prosection}. Sections highlight (or ignore)
@@ -312,17 +311,17 @@ the difference in counts is below some threshold \(\varepsilon\),
     a - b, & \text{if $a - b > \varepsilon$}\\
     0, & \text{if $a-b \leq \varepsilon$.}
   \end{cases}
-\end{equation} Only bins where the difference is positive are summed.
-The \(\varepsilon\) avoids summing noise and suppresses an artificial
-dependence on the number of bins. The value of \(\varepsilon\) should be
-estimated based on the expected size of sampling fluctuation, which may
-depend on assuming a distribution, the number of samples \(N\), the
-number of bins \(K\), the slice radius \(h\) and the dimension \(p\). An
-estimate for \(\varepsilon\) assuming a uniform distribution inside a
-hypersphere is given in Section \ref{sec:epsilon}. If \(\varepsilon=0\)
-we get a symmetry in the definitions, \(I_A^{low}=I_A^{up}\). In
-general, the choice of index should match the intention, searching for
-regions of high (grain) or low (hole) density in the slice.
+\end{equation} The \(\varepsilon\) avoids summing noise and suppresses
+an artificial dependence on the number of bins. The value of
+\(\varepsilon\) should be estimated based on the expected size of
+sampling fluctuation, which may depend on assuming a distribution, the
+number of samples \(N\), the number of bins \(K\), the slice radius
+\(h\) and the dimension \(p\). An estimate for \(\varepsilon\) assuming
+a uniform distribution inside a hypersphere is given in Section
+\ref{sec:epsilon}. If \(\varepsilon=0\) we get a symmetry in the
+definitions, \(I_A^{low}=I_A^{up}\). In general, the choice of index
+should match the intention, searching for regions of high (grain) or low
+(hole) density in the slice.
 
 \hypertarget{sec:generalise}{%
 \subsubsection*{Generalised index}\label{sec:generalise}}
@@ -345,8 +344,8 @@ sensitivity to small differences (and thus might over-emphasize
 fluctuations), a large \(q\) will suppress fluctuations and is mainly
 sensitive to large differences (and might thus miss features that are
 too similar to the background distribution). Selecting \(q=1\)
-corresponds to an \(L_1\) type norm, and \(q=2\) to an \(L_2\) type
-norm. In addition we will also consider \(q=1/2\).
+corresponds to an \(L_1\) type norm, and \(q=1/2\) to an \(L_2\) type
+norm. In addition we will also consider \(q=2\).
 
 The overall range of plausible index values depends on \(q\) and in
 practice we use an estimate of the range to rescale the index value to
@@ -391,13 +390,15 @@ when using simulated data to examine multivariate models, like
 classification boundaries, the sampling scheme can produce points in a
 hypersphere upon which to make model predictions. On the other hand,
 observed data may require shaving off the corners. Note that,
-projections of several variables has a tendency to produce elliptical or
-spherical shapes, and because we are interested in interior structures
-the corners are not important. This can also be assisted by sphering the
-data during pre-processing. In addition, this approach is designed for
-reasonably small \(p\) so that the vast gap between spheres and cubes in
-high dimensions is not a concern. For very high-dimensional data, some
-dimension reduction is a necessary part of pre-processing.
+projections of several variables have a tendency to produce elliptical
+or spherical shapes, and because we are interested in interior
+structures the corners are not important.
+\textcolor{red}{(@diaconis1984 pointed out that most projections are approximately Gaussian, and @burningsage showed that the effect of piling near the center is sizable already with moderate number of dimensions, $p\approx10$.)}
+This can also be assisted by sphering the data during pre-processing. In
+addition, this approach is designed for reasonably small \(p\) so that
+the vast gap between spheres and cubes in high dimensions is not a
+concern. For very high-dimensional data, some dimension reduction is a
+necessary part of pre-processing.
 
 Here we will work with the assumption of a uniform distribution inside a
 hypersphere because it naturally captures how the relative slice volume
