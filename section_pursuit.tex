@@ -425,7 +425,8 @@ distribution we consider points that are uniformly distributed in a
 hypersphere, thus the angular distribution will be uniform across all
 values of \(\theta\), suggesting the use of \(K_{\theta}\) equidistant
 angular bins. This would also hold if the reference distribution was
-assumed to be multivariate normal.
+assumed to be a spherical distribution (e.g.~the product of i.i.d.
+univariate normals).
 
 \begin{figure}
 
@@ -440,16 +441,17 @@ The radial binning is more complicated. This is because the marginal
 radial distribution of the projected data depends on the assumed
 reference distribution as well as the data dimenson \(p\). As \(p\)
 increases, the projected data piles more in the center, for an assumed
-uniform, or a normal reference distribution. A varying radial bin size
-can be used to offset this effect, where the bounds of the \(K_r\)
-radial bins take into account the expected distribution of points given
-\(p\). However, the expected radial distribution will also differ
-between the projected data in a slice and a projection of the full data,
-so the effect is accounted for instead by reweighting bin counts. The
-aim is to adjust for the expected difference in distribution: after the
-reweighting, the expected counts in all radial bins is the same, and
-this needs to be adjusted separately for the data in the slice and the
-projected data. The calculations are as follows.
+spherical uniform or normal reference distribution \citep{burningsage}.
+A varying radial bin size can be used to offset this effect, where the
+bounds of the \(K_r\) radial bins take into account the reference
+distribution of points given \(p\). However, the expected radial
+distribution will also differ between the projected data in a slice and
+a projection of the full data, so the effect is accounted for instead by
+reweighting bin counts. The aim is to adjust for the expected difference
+in distribution: after the reweighting, the expected counts in all
+radial bins is the same, and this needs to be adjusted separately for
+the data in the slice and the projected data. The calculations are as
+follows.
 
 Consider the expected distribution to be a uniform distribution within a
 hypersphere in \(p\) dimensions projected onto a 2D plane. The
@@ -477,10 +479,10 @@ are within \(r/R<1/2\).
 
 While the radial distribution of the points projected from a full \(p\)
 dimensional hypersphere follows the CDF in Eq.(\ref{eq:cdf}), the
-distribution in the slice is approximately uniform in the disk (as long
-as \(h \ll R\)). Within the slice, the adjustment only accounts for
-relative areas in radial bins for a 2D uniform distribution. All weights
-can be calculated from the CDF.
+distribution in the slice can be made to be approximately uniform in the
+disk for some \(h \ll R\). Within the slice, the adjustment only
+accounts for relative areas in radial bins for a 2D uniform
+distribution. All weights can be calculated from the CDF.
 
 The fraction of points in the radial bin \(r_i\) with lower boundary
 \(r_i^l\) and upper boundary \(r_i^u\) is \begin{equation}
@@ -491,7 +493,7 @@ F_{i}(p, R) = F(r_i^u; p, R) - F(r_i^l; p, R).
 \(n_i = N_i / \sum_j N_j\). We define the bin-wise weights as
 \begin{equation}
 w_i(p, R, K_r) = \frac{1}{K_r F_i(p,R)},
-\end{equation} and the reweighed bin count as \begin{equation}
+\end{equation} and the reweighted bin count as \begin{equation}
 s_i(p, R, K_r) = n_i w_i(p, R, K_r)
 \label{eq:reweight}
 \end{equation} corresponding to the weighted relative number of points
@@ -655,9 +657,10 @@ index \(i\).
 \subsection{\texorpdfstring{Index behavior
 \label{sec:behaviour}}{Index behavior }}\label{index-behavior}}
 
-To examine the behavior of the generalized index for choices of \(q, K\)
-and \(\varepsilon\), a re-parametrization is used. Consider an outside
-distribution that is uniform across all \(K\) bins, \begin{equation}
+To examine the behavior of the generalized index for choices of \(q\),
+\(K\) and \(\varepsilon\), a re-parametrization is used. Consider an
+outside distribution that is uniform across all \(K\) bins,
+\begin{equation}
 c_{k} = \frac{1}{K},
 \end{equation} and a distribution inside the slice to be uniform across
 \(K' < K\) bins, \begin{equation}
@@ -849,16 +852,16 @@ work well:
 
 The slice display can be used to understand non-linear classification
 boundaries \citep{laa2019slice}, visualized following \citet{sam.11271}
-and using the classifly package \citep{classifly}. Classifly samples the
-design space and calculates model predictions. We can use section
-pursuit to identify slices that reveal the decision boundaries in the
-design space, by dropping sample points based on the assigned
-prediction. By selecting a class that is only predicted in a small
-region we generate the hollow features to be found by section pursuit.
-The resulting slice can then be viewed showing all assigned classes to
-resolve the boundary. An example using the classical olives data is
-discussed below, a second example studying classification boundaries is
-available in the Appendix.
+and using the \texttt{classifly} package \citep{classifly}.
+\texttt{classifly} samples the design space and calculates model
+predictions. We can use section pursuit to identify slices that reveal
+the decision boundaries in the design space, by dropping sample points
+based on the assigned prediction. By selecting a class that is only
+predicted in a small region we generate the hollow features to be found
+by section pursuit. The resulting slice can then be viewed showing all
+assigned classes to resolve the boundary. An example using the classical
+olives data is discussed below, a second example studying classification
+boundaries is available in the Appendix.
 
 \hypertarget{sec:olives}{%
 \subsubsection*{Olives data}\label{sec:olives}}
@@ -898,7 +901,7 @@ resolve the non-linear decision boundary.
 
 Next we run section pursuit on the reduced svm sample. We define the
 section pursuit index with polar binning, with 5 equidistant radial bins
-and 10 angular bins. The bin counts are reweighed according to Eq.
+and 10 angular bins. The bin counts are reweighted according to Eq.
 \ref{eq:reweight}. We set \(q=1\) and then optimize the index using the
 simulated annealing search (\texttt{search\_better}) available in the
 \texttt{tourr} package, starting form the slice defined by the
@@ -932,23 +935,23 @@ can use section pursuit to find visualizations that illustrate the
 boundaries. These are of interest in physics models for which we often
 have inequality constraints defining the allowed region of parameter
 space. By understanding the shape of this region we can gain physics
-insights guiding theoretical and experimental work. For example, the
-constraints might result in preferred parameter combinations hinting at
-a simpler underlying model, or we can reparametrise the allowed region
-to design targeted experiments to test the model further.
+insights to help guide theoretical and experimental work. For example,
+the constraints might result in preferred parameter combinations hinting
+at a simpler underlying model, or we can reparametrise the allowed
+region to design targeted experiments to test the model further.
 
 \hypertarget{sec:THDM}{%
-\subsubsection*{THDM}\label{sec:THDM}}
-\addcontentsline{toc}{subsubsection}{THDM}
+\subsubsection*{Two-Higgs-Doublet Model}\label{sec:THDM}}
+\addcontentsline{toc}{subsubsection}{Two-Higgs-Doublet Model}
 
 A certain type of particle that occurs in particle physics models is the
 so-called scalar (or Higgs) boson, with properties specified by a
-``potential'' which depends on a set of parameters. These are the basic
-parameters of the model and they allow one to calculate physical
-quantities such as the masses of the scalar particles and their
-interaction strengths. A common problem that arises in this context
-consists of finding the parameter space that leads to acceptable
-predictions, that satisfy known theoretical or experimental constraints.
+``potential'' which depends on a set of parameters. These basic
+parameters allow one to calculate physical quantities such as the masses
+of the scalar particles and their interaction strengths. A common
+problem that arises in this context consists of finding the parameter
+space that leads to acceptable predictions satisfying known theoretical
+or experimental constraints.
 
 For example, a two-Higgs-doublet model can be written under certain
 assumptions in terms of the parameter set

@@ -10,5 +10,8 @@ Their main concerns were relating to the applications, where we have made the fo
 We have fixed spelling mistakes and removed superflous information as suggested by the referee. We further have made these changes:
 
 - Indeed q=1/2 would correspond to the L2 norm, we have corrected this in the text.
-- We have added two references that explain the "tendency" of projections onto lower dimesions to produce elliptical shapes, and that this is noticable even from lower values of p.
+- We have added two references that explain the "tendency" of projections onto lower dimesions to produce elliptical shapes, and that this is noticable even from lower values of p. The second reference was also added when talking about piling near the center later.
+
+XXX check that packages and function names are formatted right!
+XXX last point: use this reasoning earlier?
 
