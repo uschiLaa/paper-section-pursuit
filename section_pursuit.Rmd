@@ -1230,10 +1230,10 @@ if(!file.exists("cache/olives.rda")){
   e1 <- rep(0, 5*10) # small sample so we do not use bound from estimated fluctuations
   idx <- slice_index(r_breaks_5, a_breaks_10, e1, bintype="polar", power=1,
                     reweight=T)
-  set.seed(128945)
+  set.seed(123321)
   thist <- save_history(d_tour,
-                        guided_section_tour(idx, v_rel=0.05, anchor = rep(0,4)),
-                        rescale = F)
+                        guided_section_tour(idx, v_rel=0.05, anchor = rep(0,4), max.tries = 50, search_f = search_better),
+                        rescale = F, start = p_mat_1)
 
   thist <- as.list(thist)
   prj1 <- thist[[1]]
@@ -1257,7 +1257,7 @@ if(!file.exists("cache/olives.rda")){
   o_with_final <- o_samples %>%
     add_column(P1 = d_p_f[,1]) %>%
     add_column(P2 = d_p_f[,2])
-
+  
   p1 <- ggplot(data=o_samples[d_s_2[,1]<h,],
                mapping=aes(x=palmitoleic, y=stearic, color=(area=="West-Liguria"))) +
     geom_point(size=0.2) +
@@ -1368,7 +1368,8 @@ if(!file.exists("cache/olives.rda")){
 blank <- ggplot() +theme_minimal()
 p1d <- p1d +
   theme(legend.position = "right") +
-  scale_colour_brewer(name = 'Area', palette="Dark2", labels = c('other', 'West-Liguria'))
+  scale_colour_brewer(name = 'Area', palette="Dark2", labels = c('other', 'West-Liguria')) +
+  theme(legend.text = element_text(size=rel(3.1)))
 leg <- get_legend(p1d)
 p_leg <- as_ggplot(leg)
 p1d <- p1d + theme(legend.position = "none",
