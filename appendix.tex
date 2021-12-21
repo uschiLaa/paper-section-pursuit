@@ -4,13 +4,14 @@
 %
 \documentclass[
 ]{article}
-\usepackage{amsmath,amssymb}
 \usepackage{lmodern}
+\usepackage{amsmath}
 \usepackage{ifxetex,ifluatex}
 \ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
   \usepackage[T1]{fontenc}
   \usepackage[utf8]{inputenc}
   \usepackage{textcomp} % provide euro and other symbols
+  \usepackage{amssymb}
 \else % if luatex or xetex
   \usepackage{unicode-math}
   \defaultfontfeatures{Scale=MatchLowercase}
@@ -213,17 +214,17 @@ This data has 4021 observations in a 56 dimensional parameter space,
 that are grouped into 3 classes (Wang et al. 2018). Following the
 analysis in Cook, Laa, and Valencia (2018) we only consider the first
 six principal components, and train an svm classification model with
-radial kernel. We again use classifly and select the resulting sample
-points inside a 6D hypersphere after individual centering and scaling
-each of the variables.
+radial kernel. We again use \texttt{classifly} and select the resulting
+sample points inside a 6D hypersphere after individual centering and
+scaling each of the variables.
 
 For this example, the classifier wraps tightly around two of the groups
 (DIS and jets), and most of the space is filled by the third group
 (VBP). We select only the samples predicting the VBP class, generating a
 sample with a small hollow region to be found by section pursuit. We
 again use the index with polar binning, with 5 equidistant radial bins
-and 8 angular bins. We set \(q=1\) and use the tourr function
-search\_better to find the view with the maximum index value.
+and 8 angular bins. We set \(q=1\) and use the \texttt{tourr} function
+\texttt{search\_better} to find the view with the maximum index value.
 
 The result is shown in Fig. \ref{fig:pdffit}, comparing the starting
 projection (top row) and the final view (bottom row). In the final slice
