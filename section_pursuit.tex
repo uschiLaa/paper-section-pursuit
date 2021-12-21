@@ -841,7 +841,7 @@ work well:
   We use the index as defined in Eq. \ref{eq:index}.
 \item
   When binning we set \(n_r=5\) and \(n_{\theta}=8\) or \(10\).
-  \textcolor{red}{Here we have to consider the trade-off between resolution and required sample size. Note that the preferred relative resolution in radius and angle will be different depending on the input data and type of structure. In practice we suggest to try a few different settings to find the combination that works best.}
+  \textcolor{red}{Here we have to consider the trade-off between resolution and required sample size. Note that the preferred relative resolution in radius and angle can be different depending on the input data and the type of structure. This typically requires testing different settings, similar to how we might look at histograms with different binnings to understand a distribution. Ideally we select the number of bins that allows to resolve the features in the data without introducing any artifacts.}
 \item
   For our examples, a slice radius \(h=0.25\) worked well for scaled
   data (standard deviation = 1).
@@ -922,7 +922,7 @@ section pursuit has found a plane that leads to a linear decision
 boundary on the projected data.
 
 \begin{figure}
-\includegraphics[width=1\linewidth]{section_pursuit_files/figure-latex/olives-1} \caption{SVM classification of the West-Liguria region (orange) against all other regions (green) in the olives data. The first and second row are projections onto pairs of variables, the last row shows the final result obtained via section pursuit. The first and second column show the svm classification in a thin slice and as a full projection, the third column shows the projected data. The last column shows guides, including the axes for the final view at the bottom.}\label{fig:olives}
+\includegraphics[width=1\linewidth]{section_pursuit_files/figure-latex/olives-1} \caption{SVM classification of the West-Liguria area against all other areas in the olives data. The first and second row are projections onto pairs of variables, the last row shows the final result obtained via section pursuit. The first and second column show the svm classification in a thin slice and as a full projection, the third column shows the projected data. The last column shows guides, including the axes for the final view at the bottom.}\label{fig:olives}
 \end{figure}
 
 \hypertarget{inequality-condition}{%

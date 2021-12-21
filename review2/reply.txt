@@ -3,7 +3,7 @@ We thank the reviewer for their feedback and detailed editing suggestions.
 Their main concerns were relating to the applications, where we have made the following changes:
 
 - To avoid the impression of cherry picking a starting plane we now start from the uninteresting slice in the olives example. Because of the noisy index function we have also adjusted the optimization scheme to avoid getting trapped in local optima, which allows us to identify a similar slice as previously.
-- We agree that the result in the particle physics example is not fully satisfying, but believe that this is a more general issue of working out how to better interpret a slice view. We have added a paragraph describing the value of the result, and pointing out the need for additional work for better interpretaition.
+- We have added a paragraph describing the value of the result, and pointing out the need for additional work for better interpretaition.
 - The number of bins (both radial and angular) is always a trade-off between the resolution and required sample size. The guess from the referee that these were determined through trial and error is correct, and the preferred values will be different depending on the input data. We have added some specifications to Section 5.1.
 - The referee is correct, the removed subset is added back in (with color coding) for the final visualization. As suggested, we have added a sentence in the summary to explain this step.
 
