@@ -3,14 +3,14 @@ We thank the reviewer for their feedback and detailed editing suggestions.
 Their main concerns were relating to the applications, where we have made the following changes:
 
 - To avoid the impression of cherry picking a starting plane we now start from the uninteresting slice in the olives example. Because of the noisy index function we have also adjusted the optimization scheme to avoid getting trapped in local optima, which allows us to identify a similar slice as previously.
-- We have added a paragraph describing the value of the result, and pointing out the need for additional work for better interpretaition.
+- We have added a paragraph describing the value of the result, and pointing out the need for additional work for better interpretation.
 - The number of bins (both radial and angular) is always a trade-off between the resolution and required sample size. The guess from the referee that these were determined through trial and error is correct, and the preferred values will be different depending on the input data. We have added some specifications to Section 5.1.
 - The referee is correct, the removed subset is added back in (with color coding) for the final visualization. As suggested, we have added a sentence in the summary to explain this step.
 
-We have fixed spelling and formatting mistakes and removed superflous information, as suggested by the referee. We further have made these changes:
+We have fixed spelling and formatting mistakes and removed superfluous information, as suggested by the referee. We further have made these changes:
 
 - Indeed q=1/2 would correspond to the L2 norm, we have corrected this in the text.
-- We have added two references that explain the "tendency" of projections onto lower dimesions to produce elliptical shapes, and that this is noticable even from lower values of p. The second reference was also added when talking about piling near the center later.
+- We have added two references that explain the "tendency" of projections onto lower dimensions to produce elliptical shapes, and that this is noticeable even from lower values of p. The second reference was also added when talking about piling near the center later.
 - We have rephrased the paragraph first mentioning point shaving, to primarily point out that the corners are not so important since we look for features hidden near the center, before discussing the piling effect in projections.
 
 
