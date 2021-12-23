@@ -51,8 +51,8 @@ University; $^{b}$School of Physics and Astronomy, Monash
 University; $^{c}$University of Natural Resources and Life Sciences,
 Vienna, Department of Landscape, Spatial and Infrastructure Sciences,
 Institute of Statistics, Peter-Jordan-Straße 82/I, 1190 Vienna,
-Austria; $^{d}$Statistics Department, The Wharton School, University of
-Pennsylvania}
+Austria; $^{d}$Flatiron Institute, Simons Foundation, 162 Fifth Avenue,
+New York, NY 10010, USA}
 }
 
 \thanks{CONTACT Ursula
@@ -204,7 +204,9 @@ hollowness is hidden in projections of the data, as shown in the final
 column of Figure \ref{fig:allSlices}. It is much simpler to define
 slices on high-dimensional spheres than cubes, and this is the approach
 used for all the data in this paper. Data defined in a cube is trimmed
-or supplemented to be contained in a sphere.
+or supplemented to be contained in a sphere, which we would not expect
+to lose important information because the focus is on detecting hidden
+features in the center of the distribution.
 
 \begin{figure}
 
@@ -1077,7 +1079,7 @@ size, the number of data points quickly grows with the number of
 dimensions. The applications we have studied here are considering
 simulated data in up to seven dimensions. In the case of larger
 parameter space we recommend to first reduce dimensionality: in the
-olives-data example we have selected variables based on prior knowledge,
+olives data example we have selected variables based on prior knowledge,
 in the PDFSense example in the Appendix we have used principal component
 analysis prior to the application of section pursuit. The method is not
 appropriate for small sample size data, in those cases interactive
@@ -1109,9 +1111,10 @@ The authors gratefully acknowledge the support of the Australian
 Research Council. This article was created with \texttt{knitr}
 \citep{knitr} and R Markdown \citep{rmarkdown} with embedded code, using
 the \texttt{tidyverse} \citep{tidyverse} packages. We thank the Wharton
-Statistics department for their hospitality while part of this work was
-conducted. Open access funding provided by University of Natural
-Resources and Life Sciences Vienna (BOKU).
+Statistics Department at the University of Pennsylvania for their
+hospitality while part of this work was conducted and Buja was on their
+faculty. Open access funding provided by University of Natural Resources
+and Life Sciences Vienna (BOKU).
 
 \hypertarget{supplementary-material}{%
 \section*{Supplementary material}\label{supplementary-material}}
